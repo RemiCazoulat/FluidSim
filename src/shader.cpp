@@ -1,7 +1,7 @@
 //
 // Created by remi.cazoulat on 28/06/2024.
 //
-#include "shader.h"
+#include "../headers/shader.h"
 
 
 constexpr float vertices[] = {

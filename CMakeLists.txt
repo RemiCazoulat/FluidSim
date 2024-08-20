@@ -5,11 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(GLNucFu
         fluid2D.cpp
-        shader.h
-        compute.h
-        compute.cpp
-        includes.h
-        shader.cpp
+        headers/shader.h
+        headers/compute.h
+        src/compute.cpp
+        headers/includes.h
+        src/shader.cpp
 )
 
 add_subdirectory(thirdparty/glfw)

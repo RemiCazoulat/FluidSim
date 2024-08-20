@@ -1,5 +1,5 @@
-#include "shader.h"
-#include "compute.h"
+#include "headers/shader.h"
+#include "headers/compute.h"
 
 
 GLFWwindow* window;

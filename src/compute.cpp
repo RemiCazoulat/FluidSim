@@ -1,8 +1,8 @@
 //
 // Created by remi.cazoulat on 28/06/2024.
 //
-#include "compute.h"
-#include "shader.h"
+#include "../headers/compute.h"
+#include "../headers/shader.h"
 
 void printWorkGroupsCapabilities() {
     int workgroup_count[3];
