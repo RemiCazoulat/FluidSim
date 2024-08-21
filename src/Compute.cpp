@@ -1,8 +1,8 @@
 //
 // Created by remi.cazoulat on 28/06/2024.
 //
-#include "../headers/compute.h"
-#include "../headers/shader.h"
+#include "../headers/Compute.h"
+#include "../headers/Shader.h"
 
 void printWorkGroupsCapabilities() {
     int workgroup_count[3];
@@ -41,20 +41,12 @@ GLuint createComputeProgram(const char* computePath) {
     return program;
 }
 // Function to execute a compute shader
-void execute(const GLuint & program, const GLuint & densTex, const GLuint & densTexTransit, const int & width, const int & height) {
+void execute(const GLuint & program, const int & width, const int & height) {
     glUseProgram(program);
-    glBindImageTexture (1, densTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture (2, densTexTransit, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     for(int i = 0; i < 10; i ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
-    /*
-    glCopyImageSubData(
-        densTexTransit,GL_TEXTURE_2D,0, 0, 0, 0,
-        densTex, GL_TEXTURE_2D, 0, 0, 0, 0,
-        width, height, 1);
-    */
 }
 
 void cleanCompute(const GLuint & computeShader) {

@@ -1,5 +1,5 @@
-#include "headers/shader.h"
-#include "headers/compute.h"
+#include "headers/Render.h"
+#include "headers/Compute.h"
 
 
 GLFWwindow* window;
@@ -163,12 +163,12 @@ int main() {
     printf("[DEBUG] init textures done \n");
 
     // ---------- { Compute program }----------
-    const GLuint computeProgram = createComputeProgram("../glsl/cPhysics.glsl");
+    const GLuint computePhysics = createComputeProgram("../glsl/cPhysics.glsl");
     const GLuint computeReplace = createComputeProgram("../glsl/cReplace.glsl");
 
     printf("[DEBUG] init compute done \n");
     //Compute shader that will calculate the new density and velocity using the old values
-    glUseProgram(computeProgram);
+    glUseProgram(computePhysics);
     glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
     glBindImageTexture (1, densTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture (2, densTexTransit, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -180,36 +180,35 @@ int main() {
 
 
     // ---------- { Shader program }----------
+    /*
     createGeometry();
-    const GLuint shaderProgram = createShaderProgram("../glsl/vShader.glsl","../glsl/fShader.glsl");
+    const GLuint shaderProgram = createRenderProgram("../glsl/vShader.glsl","../glsl/fShader.glsl");
     glUseProgram(shaderProgram);
     bindingUniformTex(shaderProgram, "velTex", 0);
     bindingUniformTex(shaderProgram, "densTex", 1);
     printf("[DEBUG] init shader done \n");
+    */
+    const Render render;
+    const GLuint renderProgram = Render::createRenderProgram("../glsl/vShader.glsl","../glsl/fShader.glsl");
+    bindingUniformTex(renderProgram, "velTex", 0);
+    bindingUniformTex(renderProgram, "densTex", 1);
+    printf("[DEBUG] init shader done \n");
+
+
 
     // ---------- { Main render loop }----------
     while (!glfwWindowShouldClose(window)) {
-
-        glUseProgram(computeProgram);
-        for(int i = 0; i < 200; i ++) {
-            glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        }
-
-        glUseProgram(computeReplace);
-        glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-
-        render(shaderProgram, velTex, densTex);
+        execute(computePhysics, gridWidth, gridHeight);
+        execute(computeReplace, gridWidth, gridHeight);
+        render.makeRender(renderProgram, velTex, densTex);
 
         // Swap buffers and poll for events
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     // Clean up
-    cleanShader(shaderProgram);
-    cleanCompute(computeProgram);
+    render.cleanRender(renderProgram);
+    cleanCompute(computePhysics);
     glfwDestroyWindow(window);
     glfwTerminate();
 
