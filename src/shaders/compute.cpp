@@ -1,8 +1,8 @@
 //
 // Created by remi.cazoulat on 28/06/2024.
 //
-#include "../headers/Compute.h"
-#include "../headers/Shader.h"
+#include "../../include/shaders/compute.h"
+#include "../../include/shaders/shader.h"
 
 void printWorkGroupsCapabilities() {
     int workgroup_count[3];
@@ -41,12 +41,9 @@ GLuint createComputeProgram(const char* computePath) {
     return program;
 }
 // Function to execute a compute shader
-void execute(const GLuint & program, const int & width, const int & height) {
-    glUseProgram(program);
-    for(int i = 0; i < 10; i ++) {
-        glDispatchCompute(width / 64,height / 1,1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    }
+void execute(const int & width, const int & height) {
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void cleanCompute(const GLuint & computeShader) {

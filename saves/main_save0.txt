@@ -1,5 +1,5 @@
-#include "headers/Render.h"
-#include "headers/Compute.h"
+#include "../../include/shaders/render.h"
+#include "../../include/shaders/compute.h"
 
 
 GLFWwindow* window;
@@ -124,14 +124,14 @@ int main() {
     const int gridSizex2 = gridSize * 2;
     auto* vel = new GLfloat[gridSizex2]();
     auto* density = new GLfloat[gridSize]();
-    auto* densityTransi = new GLfloat[gridSize]();
+    const auto* densityTransi = new GLfloat[gridSize]();
 
     printf("[DEBUG] init arrays \n");
 
-    auto circleCoord = glm::vec2(128 / 2, 72 / 8);
-    float radius = 20.0;
+    constexpr auto circleCoord = glm::vec2(128 / 2, 72 / 8);
     for(int j = 0; j < gridHeight ; j ++) {
         for(int i = 0; i < gridWidth; i ++) {
+            constexpr float radius = 20.0;
             const float distance = glm::distance(glm::vec2(i, j), circleCoord);
             density[(i + j * gridWidth)] = distance < radius ? 1.0 : 0.2;
 
@@ -163,8 +163,8 @@ int main() {
     printf("[DEBUG] init textures done \n");
 
     // ---------- { Compute program }----------
-    const GLuint computePhysics = createComputeProgram("../glsl/cPhysics.glsl");
-    const GLuint computeReplace = createComputeProgram("../glsl/cReplace.glsl");
+    const GLuint computePhysics = createComputeProgram("../shaders/cPhysics.glsl");
+    const GLuint computeReplace = createComputeProgram("../shaders/replace.glsl");
 
     printf("[DEBUG] init compute done \n");
     //Compute shader that will calculate the new density and velocity using the old values
@@ -182,14 +182,14 @@ int main() {
     // ---------- { Shader program }----------
     /*
     createGeometry();
-    const GLuint shaderProgram = createRenderProgram("../glsl/vShader.glsl","../glsl/fShader.glsl");
+    const GLuint shaderProgram = createRenderProgram("../shaders/vShader.shaders","../shaders/fShader.shaders");
     glUseProgram(shaderProgram);
     bindingUniformTex(shaderProgram, "velTex", 0);
     bindingUniformTex(shaderProgram, "densTex", 1);
     printf("[DEBUG] init shader done \n");
     */
     const Render render;
-    const GLuint renderProgram = Render::createRenderProgram("../glsl/vShader.glsl","../glsl/fShader.glsl");
+    const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
     bindingUniformTex(renderProgram, "velTex", 0);
     bindingUniformTex(renderProgram, "densTex", 1);
     printf("[DEBUG] init shader done \n");
@@ -198,8 +198,15 @@ int main() {
 
     // ---------- { Main render loop }----------
     while (!glfwWindowShouldClose(window)) {
-        execute(computePhysics, gridWidth, gridHeight);
-        execute(computeReplace, gridWidth, gridHeight);
+        glUseProgram(computePhysics);
+        for(int i = 0; i < 200; i ++) {
+            glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        }
+
+        glUseProgram(computeReplace);
+        glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         render.makeRender(renderProgram, velTex, densTex);
 
         // Swap buffers and poll for events

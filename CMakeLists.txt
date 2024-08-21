@@ -4,16 +4,16 @@ project(FluidSim)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(FluidSim
-        main.cpp
-        headers/shader.h
-        headers/compute.h
-        src/compute.cpp
-        headers/includes.h
-        src/shader.cpp
-        src/Fluid2D.cpp
-        headers/Fluid2D.h
-        src/Render.cpp
-        headers/Render.h
+        src/main.cpp
+        include/shaders/shader.h
+        include/shaders/compute.h
+        src/shaders/compute.cpp
+        include/libraries.h
+        src/shaders/shader.cpp
+        src/sim/fluid2D.cpp
+        include/sim/fluid2D.h
+        src/shaders/render.cpp
+        include/shaders/render.h
 )
 
 add_subdirectory(thirdparty/glfw)

@@ -2,7 +2,7 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../headers/Render.h"
+#include "../../include/shaders/render.h"
 
 void Render::createGeometry() {
     glGenVertexArrays(1, &VAO);
@@ -52,7 +52,7 @@ Render::Render() {
     printf("TEST");
 }
 
-GLuint Render::createRenderProgram(const char* vertexPath, const char* fragmentPath) {
+GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
     const std::string vertexCode = readShaderCode(vertexPath);
     const std::string fragmentCode = readShaderCode(fragmentPath);
     const GLuint vertexShader = compileShader(vertexCode.c_str(), GL_VERTEX_SHADER);
@@ -85,7 +85,6 @@ void Render::makeRender(const GLuint &renderProgram, const GLuint &velTex, const
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Render::cleanRender(const GLuint & renderProgram) const {
