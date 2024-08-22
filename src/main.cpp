@@ -36,25 +36,7 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
     }
 }
 
-GLuint createTextureVec2(const GLfloat * data, const int width, const int height) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, data);
-    return texture;
-}
-GLuint createTextureVec1(const GLfloat * data, const int width, const int height) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return texture;
+
 }
 // ------------------------------------------------------
 // ------------------------------------------------------
@@ -72,14 +54,20 @@ int main() {
     gridWidth = 128 /2;
     gridHeight = 72 /2;
     pixelPerCell = 32;
+
+    // ---------- { Init Window }----------
+    const int windowWidth = pixelPerCell * gridWidth;
+    const int windowHeight = pixelPerCell * gridHeight;
+    printf("init window size :  %i %i", windowWidth, windowHeight);
+    initWindow(windowWidth, windowHeight);
+
+
     const int gridSize = (gridWidth) * (gridHeight);
     const int gridSizex2 = gridSize * 2;
     auto* vel = new GLfloat[gridSizex2]();
     auto* grid = new GLfloat[gridSize]();
     const auto* results = new GLfloat[gridSize]();
     auto* density = new GLfloat[gridSize]();
-
-    printf("[DEBUG] init arrays \n");
 
     constexpr auto circleCoord = glm::vec2(128 / 2, 72 / 8);
     for(int j = 0; j < gridHeight ; j ++) {
@@ -106,32 +94,16 @@ int main() {
         }
     }
 
-    printf("[DEBUG] init arrays values \n");
-
-
-    // ---------- { Init Window }----------
-    const int windowWidth = pixelPerCell * gridWidth;
-    const int windowHeight = pixelPerCell * gridHeight;
-    printf("[DEBUG] init window size :  %i %i", windowWidth, windowHeight);
-    initWindow(windowWidth, windowHeight);
-    printf("[DEBUG] init window done \n");
-
     // ---------- { Init Textures }----------
     const GLuint velTex = createTextureVec2(vel, gridWidth, gridHeight);
     const GLuint gridTex = createTextureVec1(grid, gridWidth, gridHeight);
     const GLuint resultsTex = createTextureVec1(results, gridWidth, gridHeight);
-
     const GLuint densTex = createTextureVec1(density, gridWidth, gridHeight);
-
-    printf("[DEBUG] init textures done \n");
 
     // ---------- { Compute program }----------
     const GLuint computeProjection = createComputeProgram("../shaders/computes/projection.glsl");
-    printf("[DEBUG] init computeProjection done \n");
-
     const GLuint computeCombineProj = createComputeProgram("../shaders/computes/combine_proj.glsl");
 
-    printf("[DEBUG] init computes done \n");
     glUseProgram(computeProjection);
     glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
     glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -142,16 +114,7 @@ int main() {
     glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-
-    // ---------- { Shader program }----------
-    /*
-    createGeometry();
-    const GLuint shaderProgram = createRenderProgram("../shaders/vShader.shaders","../shaders/fShader.shaders");
-    glUseProgram(shaderProgram);
-    bindingUniformTex(shaderProgram, "velTex", 0);
-    bindingUniformTex(shaderProgram, "densTex", 1);
-    printf("[DEBUG] init shader done \n");
-    */
+    // ---------- { Render program }----------
     const Render render;
     const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
     bindingUniformTex(renderProgram, "velTex", 0);
@@ -170,7 +133,6 @@ int main() {
             glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
-
 
         render.makeRender(renderProgram, velTex, densTex, VEL);
 

@@ -6,6 +6,13 @@
 #define FLUID2D_H
 
 #include "../../include/libraries.h"
+#include "../../include/shaders/compute.h"
+#include "../../include/shaders/shader.h"
+
+GLuint createTextureVec2(const GLfloat * data, int width, int height);
+GLuint createTextureVec1(const GLfloat * data, int width, int height);
+
+
 
 class fluid2DGpu {
     GLuint velocityTex;
@@ -15,13 +22,14 @@ class fluid2DGpu {
     GLuint combineProjProgram;
 
     GLfloat* vel;
-    GLfloat* dens;
+    GLfloat* pressure;
     GLfloat* grid;
     GLfloat* results;
 
     int width;
     int heigth;
     int pixelsPerCell;
+    float fluidDensity;
 
 public:
     fluid2DGpu(int width, int heigth, int pixelsPerCell, float fluidDensity);
