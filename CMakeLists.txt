@@ -14,6 +14,8 @@ add_executable(FluidSim
         include/sim/fluid2D.h
         src/shaders/render.cpp
         include/shaders/render.h
+        src/sim/fluid2DCpu.cpp
+        include/sim/fluid2DCpu.h
 )
 
 add_subdirectory(thirdparty/glfw)

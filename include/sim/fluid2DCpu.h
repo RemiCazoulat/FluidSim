@@ -9,17 +9,17 @@
 
 class fluid2DCpu {
 
-    uint width;
-    uint height;
+    int width;
+    int height;
 
-    GLfloat[] vel;
-    GLfloat[] dens;
-    GLfloat[] is_border;
+    GLfloat* vel;
+    GLfloat* dens;
+    GLfloat* is_border;
 public:
-    fluid2DCpu(const float width, const float height);
+    fluid2DCpu(int width, int height);
     ~fluid2DCpu();
-    void compute_gravity(const float timeStep)
-    void projection(const int subStep, const float o);
+    void compute_gravity(const float timeStep);
+    void projection(const int subStep, const float o) const;
     void advection(const int timeStep);
     GLfloat* get_vel();
     GLfloat* get_dens();
