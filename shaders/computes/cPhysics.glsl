@@ -12,31 +12,8 @@ float k = 20;
 float timeStep = 0.1;
 
 
-vec2 difVel(ivec2 coord) {
-    vec2 dif = (
-    imageLoad(vel, ivec2(coord.x + 1, coord.y)).xy -
-    imageLoad(vel, ivec2(coord.x - 1, coord.y)).xy +
-    imageLoad(vel, ivec2(coord.x, coord.y + 1)).xy -
-    imageLoad(vel, ivec2(coord.x, coord.y - 1)).xy) / 2.0;
-    return dif;
-}
 
-float lerp(float a, float b, float k) {
-    return a + (b - a) * k;
-}
 
-float advection(ivec2 coord) {
-    float nextDens = 0.0;
-
-    vec2 nextDensCoord = vec2(coord) - imageLoad(density0, coord).xy * timeStep;
-    vec2 flooredDensCoord = floor(nextDensCoord);
-    vec2 fractedDensCoord = fract(nextDensCoord);
-    float z1 = lerp(imageLoad(density0, ivec2(flooredDensCoord)).x, imageLoad(density0, ivec2(flooredDensCoord) + ivec2(1, 0)).x, fractedDensCoord.x);
-    float z2 = lerp(imageLoad(density0, ivec2(flooredDensCoord) + ivec2(0, 1)).x, imageLoad(density0, ivec2(flooredDensCoord) + ivec2(1, 1)).x, fractedDensCoord.x);
-    nextDens = lerp(z1, z2, fractedDensCoord.y);
-
-    return nextDens;
-}
 
 bool checkBoundaries(ivec2 coord) {
     ivec2 size = imageSize(density0);

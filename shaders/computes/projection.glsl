@@ -6,13 +6,10 @@ layout (rg32f, binding = 0) uniform image2D vel;
 layout (r32f, binding = 1) uniform image2D grid;
 layout (r32f, binding = 2) uniform image2D results;
 
-
-
 // Variables à passer en uniform
 float h = 1;
 float density = 1.0;
 float timeStep = 0.1;
-
 float o = 1.9;
 
 
@@ -24,13 +21,15 @@ void main() {
     int j = coord[1];
     int width = size[0];
     int height = size[1];
-    if (i == 0 || j == 0 || i == width - 1 || j == height - 1) return;
+    if (i == 0 || j == 0 || i == width - 1 || j == height - 1) {
+        return;
+    }
 
     float uij = imageLoad(vel, coord).x;
     float vij = imageLoad(vel, coord).y;
     float ui1j = imageLoad(vel, ivec2(i + 1, j)).x;
     float vij1 = imageLoad(vel, ivec2(i, j + 1)).y;
-    d = o * (ui1j - uij + vij1 - vij);
+    float d = o * (ui1j - uij + vij1 - vij);
 
     float sip = imageLoad(grid, ivec2(i + 1, j)).x;
     float sim = imageLoad(grid, ivec2(i - 1, j)).x;
@@ -47,6 +46,5 @@ void main() {
     if (s == 0.0) return;
     float result = d / s;
 
-
-    imageStore(results, coord, result);
+    imageStore(results, coord, vec4(result, 0.0, 0.0, 0.0));
 }

@@ -72,7 +72,7 @@ int main() {
     gridWidth = 128 /2;
     gridHeight = 72 /2;
     pixelPerCell = 32;
-    const int gridSize = (gridWidth + 2) * (gridHeight + 2);
+    const int gridSize = (gridWidth) * (gridHeight);
     const int gridSizex2 = gridSize * 2;
     auto* vel = new GLfloat[gridSizex2]();
     auto* grid = new GLfloat[gridSize]();
@@ -87,7 +87,7 @@ int main() {
         const int jg = j * gridWidth;
         for(int i = 0; i < gridWidth; i ++) {
             const int index = i + jg;
-            if (i == 0 || i == gridWidth || j == 0 || j == gridHeight) {
+            if (i == 0 || i == gridWidth - 1 || j == 0 || j == gridHeight - 1) {
                 grid[index] = 0.0;
             }
             else {
@@ -128,16 +128,16 @@ int main() {
 
     // ---------- { Compute program }----------
     const GLuint computeProjection = createComputeProgram("../shaders/computes/projection.glsl");
+    printf("[DEBUG] init computeProjection done \n");
+
     const GLuint computeCombineProj = createComputeProgram("../shaders/computes/combine_proj.glsl");
 
-    printf("[DEBUG] init compute done \n");
-    //Compute shader that will calculate the new density and velocity using the old values
+    printf("[DEBUG] init computes done \n");
     glUseProgram(computeProjection);
     glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
     glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-    // Compute shader that will swap the old and new values while reinit the old values to 0
     glUseProgram(computeCombineProj);
     glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
     glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -163,7 +163,7 @@ int main() {
 
     // ---------- { Main render loop }----------
     while (!glfwWindowShouldClose(window)) {
-        for(int i = 0; i < 200; i ++) {
+        for(int i = 0; i < 1; i ++) {
             glUseProgram(computeProjection);
             glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -172,10 +172,13 @@ int main() {
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
-        // TODO : Appeler le shader advection pour calculer la densité finale afin de voir qql chose à l'affichage ou faire l'affichage en fonction de la velocité
-        render.makeRender(renderProgram, velTex, densTex);
+        /* TODO : Appeler le shader advection pour calculer la densité finale afin de voir qql chose à l'affichage
+         * ou faire l'affichage en fonction de la velocité
+         *
+         */
 
-        // Swap buffers and poll for events
+        render.makeRender(renderProgram, velTex, densTex, VEL);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

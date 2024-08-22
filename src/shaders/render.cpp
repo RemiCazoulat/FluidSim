@@ -4,6 +4,8 @@
 
 #include "../../include/shaders/render.h"
 
+
+
 void Render::createGeometry() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -75,7 +77,7 @@ GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
 }
 
 
-void Render::makeRender(const GLuint &renderProgram, const GLuint &velTex, const GLuint &densTex) const {
+void Render::makeRender(const GLuint &renderProgram, const GLuint &velTex, const GLuint &densTex, const R_MODE renderingMode) const {
     glUseProgram(renderProgram);
     glClear(GL_COLOR_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);

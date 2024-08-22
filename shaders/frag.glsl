@@ -7,8 +7,7 @@ out vec4 fragColor;
 uniform sampler2D velTex;
 uniform sampler2D densTex;
 
-
 void main(){
-    vec3 currentDens = texture(densTex, TexCoords).xxx;
-    fragColor = vec4(currentDens, 1.0);
+    vec3 color = texture(velTex, TexCoords).xyy;
+    fragColor = vec4(color, 1.0);
 }
