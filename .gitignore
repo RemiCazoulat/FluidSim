@@ -47,6 +47,7 @@ include/divisible/*
 
 .idea/
 .idea\
+.idea\*
 
 build/**/*
 
