@@ -10,8 +10,8 @@ add_executable(FluidSim
         src/shaders/compute.cpp
         include/libraries.h
         src/shaders/shader.cpp
-        src/sim/fluid2D.cpp
-        include/sim/fluid2D.h
+        src/sim/fluid2DGpu.cpp
+        include/sim/fluid2DGpu.h
         src/shaders/render.cpp
         include/shaders/render.h
         src/sim/fluid2DCpu.cpp

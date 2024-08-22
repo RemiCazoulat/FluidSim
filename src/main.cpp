@@ -76,9 +76,8 @@ int main() {
     const int gridSizex2 = gridSize * 2;
     auto* vel = new GLfloat[gridSizex2]();
     auto* grid = new GLfloat[gridSize]();
-    auto* results = new GLfloat[gridSize]();
+    const auto* results = new GLfloat[gridSize]();
     auto* density = new GLfloat[gridSize]();
-    const auto* densityTransi = new GLfloat[gridSize]();
 
     printf("[DEBUG] init arrays \n");
 
@@ -172,10 +171,6 @@ int main() {
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
-        /* TODO : Appeler le shader advection pour calculer la densité finale afin de voir qql chose à l'affichage
-         * ou faire l'affichage en fonction de la velocité
-         *
-         */
 
         render.makeRender(renderProgram, velTex, densTex, VEL);
 
