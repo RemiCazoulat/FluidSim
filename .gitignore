@@ -1,5 +1,7 @@
-# Compiled Object files
+# OS-specific files
 **/.DS_Store
+
+# Compiled Object files
 *.slo
 *.lo
 *.o
@@ -14,22 +16,23 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
 
+# Fortran module files
+*.mod
+*.smod
+
 # Executables
 *.exe
 *.out
 *.app
 
-**/cmake-build-debug
+# CMake generated files
+**/cmake-build-debug/
 **/CMakeCache.txt
 **/cmake_install.cmake
 **/install_manifest.txt
@@ -40,18 +43,14 @@
 **/CMakeScripts
 **/compile_commands.json
 
-include/divisible/*
+# CLion/IntelliJ specific files
+**/.idea/
+
+# Build directories
+build/
+lib/
+bin/
 
 
-## Local 
-
-.idea/
-.idea\
-.idea\*
-
-build/**/*
-
-
-lib/*
-bin/*
+# Test binaries
 test/test_runner
