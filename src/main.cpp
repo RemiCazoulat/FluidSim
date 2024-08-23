@@ -1,5 +1,10 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
+#include "../include/sim/fluid2DGpu.h"
+#include "../include/sim/fluid2DCpu.h"
+
+
+//#define USE_GPU
 
 
 GLFWwindow* window;
@@ -37,7 +42,7 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 }
 
 
-}
+
 // ------------------------------------------------------
 // ------------------------------------------------------
 // ------------------------------------------------------
@@ -62,58 +67,6 @@ int main() {
     initWindow(windowWidth, windowHeight);
 
 
-    const int gridSize = (gridWidth) * (gridHeight);
-    const int gridSizex2 = gridSize * 2;
-    auto* vel = new GLfloat[gridSizex2]();
-    auto* grid = new GLfloat[gridSize]();
-    const auto* results = new GLfloat[gridSize]();
-    auto* density = new GLfloat[gridSize]();
-
-    constexpr auto circleCoord = glm::vec2(128 / 2, 72 / 8);
-    for(int j = 0; j < gridHeight ; j ++) {
-        const int jg = j * gridWidth;
-        for(int i = 0; i < gridWidth; i ++) {
-            const int index = i + jg;
-            if (i == 0 || i == gridWidth - 1 || j == 0 || j == gridHeight - 1) {
-                grid[index] = 0.0;
-            }
-            else {
-                grid[index] = 1.0;
-            }
-            constexpr float radius = 20.0;
-            const float distance = glm::distance(glm::vec2(i, j), circleCoord);
-            density[index] = distance < radius ? 1.0 : 0.2;
-
-            if( j > gridHeight / 2 - 10 && j < gridHeight / 2 + 10) {
-                vel[index * 2] = 1.0;
-                vel[index * 2 + 1] = 0.0;
-            } else {
-                vel[index * 2] = 0.0;
-                vel[index * 2 + 1] = 0.0;
-            }
-        }
-    }
-
-    // ---------- { Init Textures }----------
-    const GLuint velTex = createTextureVec2(vel, gridWidth, gridHeight);
-    const GLuint gridTex = createTextureVec1(grid, gridWidth, gridHeight);
-    const GLuint resultsTex = createTextureVec1(results, gridWidth, gridHeight);
-    const GLuint densTex = createTextureVec1(density, gridWidth, gridHeight);
-
-    // ---------- { Compute program }----------
-    const GLuint computeProjection = createComputeProgram("../shaders/computes/projection.glsl");
-    const GLuint computeCombineProj = createComputeProgram("../shaders/computes/combine_proj.glsl");
-
-    glUseProgram(computeProjection);
-    glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-    glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
-    glUseProgram(computeCombineProj);
-    glBindImageTexture (0, velTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-    glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
     // ---------- { Render program }----------
     const Render render;
     const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
@@ -123,31 +76,41 @@ int main() {
 
 
 
-    // ---------- { Main render loop }----------
+#ifdef USE_GPU
+    // ---------- { GPU }----------
+    const auto* fluid = new fluid2DGpu(gridWidth, gridHeight, pixelPerCell, 1.0);
     while (!glfwWindowShouldClose(window)) {
-        for(int i = 0; i < 1; i ++) {
-            glUseProgram(computeProjection);
-            glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-            glUseProgram(computeCombineProj);
-            glDispatchCompute(gridWidth / 64,gridHeight / 1,1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        }
-
-        render.makeRender(renderProgram, velTex, densTex, VEL);
-
+        fluid->projection(10, 0.1);
+        render.makeRender(renderProgram, fluid->velocityTex, fluid->pressureTex, VEL);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    delete fluid;
+#else
+    // ---------- { CPU }----------
+    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 1.0);
+    auto previousTime = static_cast<float>(glfwGetTime());
+    float currentTime = 0.0;
+    float deltaTime = 0.0;
+    while (!glfwWindowShouldClose(window)) {
+        currentTime = static_cast<float>(glfwGetTime());
+        deltaTime = currentTime - previousTime;
+        previousTime = currentTime;
+
+        fluid->compute_gravity(0.1);
+        fluid->projection(10, deltaTime, 1.9);
+        GLuint velocityTex = createTextureVec2(fluid->velocity, gridWidth, gridHeight);
+        GLuint pressureTex = createTextureVec1(fluid->pressure, gridWidth, gridHeight);
+        render.makeRender(renderProgram, velocityTex, pressureTex, VEL);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+    delete fluid;
+#endif
     // Clean up
     render.cleanRender(renderProgram);
-    cleanCompute(computeProjection);
-    cleanCompute(computeCombineProj);
     glfwDestroyWindow(window);
     glfwTerminate();
-
-    delete[] vel;
-    delete[] density;
 
     return 0;
 }

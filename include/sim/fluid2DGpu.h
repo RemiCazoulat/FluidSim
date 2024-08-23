@@ -9,19 +9,17 @@
 #include "../../include/shaders/compute.h"
 #include "../../include/shaders/shader.h"
 
-GLuint createTextureVec2(const GLfloat * data, int width, int height);
-GLuint createTextureVec1(const GLfloat * data, int width, int height);
+
 
 
 
 class fluid2DGpu {
-    GLuint velocityTex;
-    GLuint pressureTex;
+
 
     GLuint projectionProgram;
     GLuint combineProjProgram;
 
-    GLfloat* vel;
+    GLfloat* velocity;
     GLfloat* pressure;
     GLfloat* grid;
     GLfloat* results;
@@ -32,7 +30,12 @@ class fluid2DGpu {
     float fluidDensity;
 
 public:
+    GLuint velocityTex;
+    GLuint pressureTex;
+
     fluid2DGpu(int width, int heigth, int pixelsPerCell, float fluidDensity);
+    ~fluid2DGpu();
+    void projection(int subStep, float timeStep) const;
 
 };
 
