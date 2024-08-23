@@ -24,6 +24,8 @@ public:
     void compute_gravity(float timeStep) const;
     void projection(int subStep, float timeStep, float o) const;
     void advection(float timeStep);
+    [[nodiscard]] GLfloat find_max_pressure() const;
+    [[nodiscard]] GLfloat find_min_pressure() const;
 
 
 

@@ -90,8 +90,8 @@ int main() {
     // ---------- { CPU }----------
     const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 1.0);
     auto previousTime = static_cast<float>(glfwGetTime());
-    float currentTime = 0.0;
-    float deltaTime = 0.0;
+    float currentTime;
+    float deltaTime;
     while (!glfwWindowShouldClose(window)) {
         currentTime = static_cast<float>(glfwGetTime());
         deltaTime = currentTime - previousTime;
@@ -101,6 +101,8 @@ int main() {
         fluid->projection(10, deltaTime, 1.9);
         GLuint velocityTex = createTextureVec2(fluid->velocity, gridWidth, gridHeight);
         GLuint pressureTex = createTextureVec1(fluid->pressure, gridWidth, gridHeight);
+        GLfloat max = fluid->find_max_pressure();
+        GLfloat min = fluid->find_min_pressure();
         render.makeRender(renderProgram, velocityTex, pressureTex, VEL);
         glfwSwapBuffers(window);
         glfwPollEvents();

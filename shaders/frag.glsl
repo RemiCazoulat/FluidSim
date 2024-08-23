@@ -4,10 +4,10 @@ in vec2 TexCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D velTex;
-uniform sampler2D densTex;
+uniform sampler2D velocityTex;
+uniform sampler2D pressureTex;
 
 void main(){
-    vec3 color = texture(velTex, TexCoords).xyy;
+    vec3 color = texture(pressureTex, TexCoords).xxx;
     fragColor = vec4(color, 1.0);
 }

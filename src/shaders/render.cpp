@@ -77,13 +77,13 @@ GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
 }
 
 
-void Render::makeRender(const GLuint &renderProgram, const GLuint &velTex, const GLuint &densTex, const R_MODE renderingMode) const {
+void Render::makeRender(const GLuint &renderProgram, const GLuint &velocityTex, const GLuint &pressureTex, const R_MODE renderingMode) const {
     glUseProgram(renderProgram);
     glClear(GL_COLOR_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, velTex);
+    glBindTexture(GL_TEXTURE_2D, velocityTex);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, densTex);
+    glBindTexture(GL_TEXTURE_2D, pressureTex);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
