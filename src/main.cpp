@@ -90,7 +90,7 @@ int main() {
     delete fluid;
 #else
     // ---------- { CPU }----------
-    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 0.01);
+    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 0.1);
     auto previousTime = static_cast<float>(glfwGetTime());
 
     while (!glfwWindowShouldClose(window)) {
@@ -100,7 +100,7 @@ int main() {
 
         delta_time = 1.f / 60;
         fluid->compute_gravity(delta_time);
-        fluid->projection(30, delta_time, 1.9);
+        fluid->projection(1, delta_time, 1.1);
         fluid->calculate_pressure_color();
         GLuint pressureColorTex = createTextureVec1(fluid->pressure_color, gridWidth, gridHeight);
         GLuint isBorderTex = createTextureVec1(fluid->is_border, gridWidth, gridHeight);
