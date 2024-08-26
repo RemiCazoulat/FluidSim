@@ -80,10 +80,12 @@ GLfloat fluid_density::find_min_pressure() const {
 
 void fluid_density::set_bnd(int b) {
     int bound = width > height ? width : height;
-    for (int i = 1 ; i < bound ; i++ ) {
+    for (int i = 1 ; i < bound - 1; i++ ) {
         if(i < width) {
-            pressure[IX(i,0 )] = b==2 ? –x[IX(i,1)] : x[IX(i,1)];
-            pressure[IX(i,N+1)] = b==2 ? –x[IX(i,N)] : x[IX(i,N)];
+            int i0 = i;
+            int iw = i + (height - 1) * width;
+            pressure[i0] = b==2 ? –pressure[IX(i,1)] : pressure[IX(i,1)];
+            pressure[iw] = b==2 ? –pressure[IX(i,N)] : pressure[IX(i,N)];
         }
         if(i < height) {
             pressure[IX(0 ,i)] = b==1 ? –x[IX(1,i)] : x[IX(1,i)];
