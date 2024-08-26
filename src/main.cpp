@@ -56,9 +56,11 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 // ---{ N }---
 int main() {
     // Init grid
-    gridWidth = 128 /2;
-    gridHeight = 72 /2;
-    pixelPerCell = 32;
+    gridWidth = 128 ;
+    gridHeight = 72 ;
+    //gridWidth = 6;
+    //gridHeight = 4;
+    pixelPerCell = 16;
 
     // ---------- { Init Window }----------
     const int windowWidth = pixelPerCell * gridWidth;
@@ -88,25 +90,31 @@ int main() {
     delete fluid;
 #else
     // ---------- { CPU }----------
-    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 1.0);
+    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 0.01);
     auto previousTime = static_cast<float>(glfwGetTime());
-    float currentTime;
-    float deltaTime;
+
     while (!glfwWindowShouldClose(window)) {
-        currentTime = static_cast<float>(glfwGetTime());
-        deltaTime = currentTime - previousTime;
+        const auto currentTime = static_cast<float>(glfwGetTime());
+        float delta_time = currentTime - previousTime;
         previousTime = currentTime;
 
-        fluid->compute_gravity(0.1);
-        fluid->projection(10, deltaTime, 1.9);
-        GLuint velocityTex = createTextureVec2(fluid->velocity, gridWidth, gridHeight);
-        GLuint pressureTex = createTextureVec1(fluid->pressure, gridWidth, gridHeight);
-        GLfloat max = fluid->find_max_pressure();
-        GLfloat min = fluid->find_min_pressure();
-        render.makeRender(renderProgram, velocityTex, pressureTex, VEL);
+        delta_time = 1.f / 60;
+        fluid->compute_gravity(delta_time);
+        fluid->projection(30, delta_time, 1.9);
+        fluid->calculate_pressure_color();
+        GLuint pressureColorTex = createTextureVec1(fluid->pressure_color, gridWidth, gridHeight);
+        GLuint isBorderTex = createTextureVec1(fluid->is_border, gridWidth, gridHeight);
+        render.makeRender(renderProgram, pressureColorTex, isBorderTex);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    /*
+    fluid->compute_gravity(0.1);
+    fluid->projection(50, 0.1, 1.9);
+    fluid->calculate_pressure_color();
+    auto str = fluid->to_string(false, false, false, true);
+    */
     delete fluid;
 #endif
     // Clean up

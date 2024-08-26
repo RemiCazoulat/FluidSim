@@ -21,7 +21,7 @@ class Render {
     void createGeometry();
 public:
     Render();
-    void makeRender(const GLuint & renderProgram, const GLuint & velocityTex, const GLuint & pressureTex, const R_MODE renderingMode) const;
+    void makeRender(const GLuint &renderProgram, const GLuint &pressureColorTex, const GLuint &isBorderTex) const;
     void cleanRender(const GLuint & renderProgram) const;
 };
 

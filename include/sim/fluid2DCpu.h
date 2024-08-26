@@ -6,6 +6,8 @@
 #define FLUIDSIM_FLUID2DCPU_H
 
 #include "../../include/libraries.h"
+#include <sstream>
+#include <iomanip>
 
 class fluid2DCpu {
 
@@ -15,15 +17,25 @@ class fluid2DCpu {
     float fluid_density;
 
 
-    GLfloat* is_border;
+
+
+
+
 public:
-    GLfloat* velocity;
+    GLfloat* is_border;
     GLfloat* pressure;
-    fluid2DCpu(int width, int height, int pixelsPerCell, float fluidDensity);
+    GLfloat* velocity;
+    GLfloat* pressure_color;
+
+    fluid2DCpu(int width, int height, int pixels_per_cell, float fluid_density);
     ~fluid2DCpu();
-    void compute_gravity(float timeStep) const;
-    void projection(int subStep, float timeStep, float o) const;
-    void advection(float timeStep);
+    void compute_gravity(float time_step) const;
+    void projection(int sub_step, float time_step, float o) const;
+    void advection(float time_step);
+    void calculate_pressure_color() const;
+
+    void print_pressure() const;
+
     [[nodiscard]] GLfloat find_max_pressure() const;
     [[nodiscard]] GLfloat find_min_pressure() const;
 
