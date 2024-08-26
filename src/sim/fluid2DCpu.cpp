@@ -6,11 +6,11 @@
 
 #include "../../thirdparty/glfw/src/internal.h"
 
-fluid2DCpu::fluid2DCpu(const int width, const int height, const int pixels_per_cell, const float fluid_density){
+fluid2DCpu::fluid2DCpu(const int width, const int height, const float fluid_density){
     this->width = width;
     this->height = height;
-    this->pixelsPerCell = pixels_per_cell;
     this->fluid_density = fluid_density;
+    this->grid_spacing = 1.f / static_cast<float>(height);
     const int gridSize = width * height;
     velocity = new GLfloat[gridSize * 2]();
     pressure = new GLfloat[gridSize]();
@@ -28,8 +28,8 @@ fluid2DCpu::fluid2DCpu(const int width, const int height, const int pixels_per_c
             }
         }
     }
-    int jmin = height / 2 - 2;
-    int jmax = jmin + 4;
+    const int jmin = height / 2 - 2;
+    const int jmax = jmin + 4;
 
     for(int j = jmin; j < jmax; j ++) {
         velocity[(j * width + 1) * 2 ] = 2;
@@ -95,7 +95,7 @@ void fluid2DCpu::projection(const int sub_step, const float time_step, const flo
                 velocity[ijp * 2 + 1] = Vijp;
 
                 float p = pressure[ij];
-                p += (d / s) * (fluid_density / time_step);
+                p += (d / s) * (fluid_density * grid_spacing / time_step);
                 pressure[ij] = p;
             }
         }

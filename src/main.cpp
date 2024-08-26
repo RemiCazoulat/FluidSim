@@ -90,7 +90,7 @@ int main() {
     delete fluid;
 #else
     // ---------- { CPU }----------
-    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, pixelPerCell, 0.1);
+    const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, 0.1);
     auto previousTime = static_cast<float>(glfwGetTime());
 
     while (!glfwWindowShouldClose(window)) {
