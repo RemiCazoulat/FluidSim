@@ -30,7 +30,7 @@ public:
     [[nodiscard]] GLfloat find_max_pressure() const;
     [[nodiscard]] GLfloat find_min_pressure() const;
 
-    void set_bnd(int b);
+    void set_bound(int b);
 };
 
 

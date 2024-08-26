@@ -98,7 +98,7 @@ int main() {
         float delta_time = currentTime - previousTime;
         previousTime = currentTime;
 
-        delta_time = 1.f / 60;
+        delta_time = 1.f / 600000;
         fluid->compute_gravity(delta_time);
         fluid->projection(1, delta_time, 1.1);
         fluid->calculate_pressure_color();
