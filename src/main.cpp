@@ -7,17 +7,29 @@
 
 //#define USE_GPU
 
-
 GLFWwindow* window;
-double mouseX, mouseY;
-bool leftButtonPressed = false;
-bool rightButtonPressed = false;
+float force_x = 0.0f, force_y = 0.0f, mouse_x = 0.0f, mouse_y = 0.0f;
+int mouse_pressed = 0;
 
-int gridWidth;
-int gridHeight;
-int pixelPerCell;
+int width;
+int height;
+int cell_size;
 
-// Init Window, GLFW and GLAD
+
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        mouse_pressed = 1;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        mouse_pressed = 0;
+    }
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    mouse_x = static_cast<float>(xpos);
+    mouse_y = static_cast<float>(ypos);
+}
+
 void initWindow(const int & windowWidth, const int & windowHeight) {
     // Initialize GLFW
     if (!glfwInit()) {
@@ -27,8 +39,6 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // Create variables
-
     // Create a GLFW window
     window = glfwCreateWindow(windowWidth, windowHeight, "OpenGL 2D Fluid", nullptr, nullptr);
     if (!window) {
@@ -36,39 +46,28 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
         glfwTerminate();
     }
     glfwMakeContextCurrent(window);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     // Load OpenGL functions using glfwGetProcAddress
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize OpenGL context" << std::endl;
     }
 }
 
-
-
-// ------------------------------------------------------
-// ------------------------------------------------------
-// ------------------------------------------------------
-// -----------{ Main function }--------------------------
-// ------------------------------------------------------
-// ------------------------------------------------------
-// ------------------------------------------------------
-// ---{ M }---
-// ---{ A }---
-// ---{ I }---
-// ---{ N }---
+// -------------------------------------------------
+// -----------{ Main function }---------------------
+// -------------------------------------------------
 int main() {
     // Init grid
-    gridWidth = 128 ;
-    gridHeight = 72 ;
-    //gridWidth = 6;
-    //gridHeight = 4;
-    pixelPerCell = 16;
+    width = 128 * 2 ;
+    height = 72 * 2;
+    cell_size = 16 / 2;
 
     // ---------- { Init Window }----------
-    const int windowWidth = pixelPerCell * gridWidth;
-    const int windowHeight = pixelPerCell * gridHeight;
-    printf("init window size :  %i %i", windowWidth, windowHeight);
-    initWindow(windowWidth, windowHeight);
-
+    const int window_width = cell_size * width;
+    const int window_height = cell_size * height;
+    printf("init window size :  %i %i", window_width, window_height);
+    initWindow(window_width, window_height);
 
     // ---------- { Render program }----------
     const Render render;
@@ -76,8 +75,6 @@ int main() {
     bindingUniformTex(renderProgram, "velTex", 0);
     bindingUniformTex(renderProgram, "densTex", 1);
     printf("[DEBUG] init shader done \n");
-
-
 
 #ifdef USE_GPU
     // ---------- { GPU }----------
@@ -105,16 +102,15 @@ int main() {
     }
     delete fluid;
     */
-    auto* fluid = new stable_fluid(gridWidth, gridHeight, 1, 1);
+    auto* fluid = new stable_fluid(width, height, cell_size, 1, 1);
     //auto previousTime = static_cast<float>(glfwGetTime());
     while (!glfwWindowShouldClose(window)) {
-        //const auto currentTime = static_cast<float>(glfwGetTime());
-        //float delta_time = currentTime - previousTime;
-        //previousTime = currentTime;
         constexpr float dt = 1.f / 60;
+        fluid->watch_inputs(mouse_pressed, mouse_x, mouse_y, force_x, force_y);
         fluid->velocity_step(dt);
         fluid->density_step(dt);
-        GLuint colorTex = createTextureVec1(fluid->dens, gridWidth, gridHeight);
+        fluid->draw(VELOCITY);
+        GLuint colorTex = createTextureVec3(fluid->color, width, height);
         render.makeRender(renderProgram, colorTex);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -122,7 +118,6 @@ int main() {
     delete fluid;
 #endif
 
-    // Clean up
     render.cleanRender(renderProgram);
     glfwDestroyWindow(window);
     glfwTerminate();
