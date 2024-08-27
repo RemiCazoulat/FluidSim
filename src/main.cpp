@@ -2,6 +2,7 @@
 #include "../../include/shaders/compute.h"
 #include "../include/sim/fluid2DGpu.h"
 #include "../include/sim/fluid2DCpu.h"
+#include "../include/sim/stable_fluid.h"
 
 
 //#define USE_GPU
@@ -89,15 +90,9 @@ int main() {
     }
     delete fluid;
 #else
-    // ---------- { CPU }----------
+    /*
     const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, 0.1);
-    auto previousTime = static_cast<float>(glfwGetTime());
-
     while (!glfwWindowShouldClose(window)) {
-        const auto currentTime = static_cast<float>(glfwGetTime());
-        float delta_time = currentTime - previousTime;
-        previousTime = currentTime;
-
         delta_time = 1.f / 600000;
         fluid->compute_gravity(delta_time);
         fluid->projection(1, delta_time, 1.1);
@@ -108,15 +103,25 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    /*
-    fluid->compute_gravity(0.1);
-    fluid->projection(50, 0.1, 1.9);
-    fluid->calculate_pressure_color();
-    auto str = fluid->to_string(false, false, false, true);
+    delete fluid;
     */
+    auto* fluid = new stable_fluid(gridWidth, gridHeight, 1, 1);
+    //auto previousTime = static_cast<float>(glfwGetTime());
+    while (!glfwWindowShouldClose(window)) {
+        //const auto currentTime = static_cast<float>(glfwGetTime());
+        //float delta_time = currentTime - previousTime;
+        //previousTime = currentTime;
+        constexpr float dt = 1.f / 60;
+        fluid->velocity_step(dt);
+        fluid->density_step(dt);
+        GLuint colorTex = createTextureVec1(fluid->dens, gridWidth, gridHeight);
+        render.makeRender(renderProgram, colorTex);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
     delete fluid;
 #endif
+
     // Clean up
     render.cleanRender(renderProgram);
     glfwDestroyWindow(window);

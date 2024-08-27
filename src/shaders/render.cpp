@@ -77,17 +77,13 @@ GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
 }
 
 
-void Render::makeRender(const GLuint &renderProgram, const GLuint &pressureColorTex, const GLuint &isBorderTex) const {
+void Render::makeRender(const GLuint &renderProgram, const GLuint &colorTex) const {
     glUseProgram(renderProgram);
     const GLint locPressureColorTex = glGetUniformLocation(renderProgram, "pressureColorTex");
     glUniform1i(locPressureColorTex, 0);  // Lier pressureColorTex à GL_TEXTURE0
-    const GLint locIsBorderTex = glGetUniformLocation(renderProgram, "isBorderTex");
-    glUniform1i(locIsBorderTex, 1);  // Lier isBorderTex à GL_TEXTURE1
     // Activer et lier les textures
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, pressureColorTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, isBorderTex);
+    glBindTexture(GL_TEXTURE_2D, colorTex);
     // Rendu
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(VAO);
@@ -95,6 +91,8 @@ void Render::makeRender(const GLuint &renderProgram, const GLuint &pressureColor
     glBindVertexArray(0);
 
 }
+
+
 
 void Render::cleanRender(const GLuint & renderProgram) const {
     glDeleteProgram(renderProgram);

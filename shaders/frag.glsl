@@ -4,17 +4,11 @@ in vec2 TexCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D pressureColorTex;
-uniform sampler2D isBorderTex;
+uniform sampler2D colorTex;
 
 
 void main(){
     vec3 color;
-    if (texture(isBorderTex, TexCoords).x != 0.0) {
-        color = texture(pressureColorTex, TexCoords).xyz;
-    }
-    else {
-        color = vec3(0.0, 0.0, 0.0);
-    }
+    color = texture(colorTex, TexCoords).xyz;
     fragColor = vec4(color, 1.0);
 }

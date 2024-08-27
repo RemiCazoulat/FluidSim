@@ -2,12 +2,12 @@
 // Created by remi.cazoulat on 26/08/2024.
 //
 
-#include "../../include/sim/fluid_density.h"
+#include "../../include/sim/stable_fluid.h"
 
 #define SWAP(x0,x) {float* tmp = x0; x0 = x; x = tmp;}
 
 
-fluid_density::fluid_density(const int width,const int height, const float diff, const float visc) {
+stable_fluid::stable_fluid(const int width,const int height, const float diff, const float visc) {
     this->width = width;
     this->height = height;
     this->grid_spacing = 1.f / static_cast<float>(height);
@@ -36,7 +36,7 @@ fluid_density::fluid_density(const int width,const int height, const float diff,
     }
 }
 
-fluid_density::~fluid_density() {
+stable_fluid::~stable_fluid() {
     delete[] is_b;
     delete[] u;
     delete[] v;
@@ -47,11 +47,11 @@ fluid_density::~fluid_density() {
     delete[] color;
 }
 
-void fluid_density::add_source(GLfloat * x, const GLfloat* s,const float dt) const {
+void stable_fluid::add_source(GLfloat * x, const GLfloat* s,const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt*s[i];
 }
 
-void fluid_density::diffuse(const int b, GLfloat* x, GLfloat* x0, const float diff, const float dt) const {
+void stable_fluid::diffuse(const int b, GLfloat* x, GLfloat* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < 20 ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -72,7 +72,7 @@ void fluid_density::diffuse(const int b, GLfloat* x, GLfloat* x0, const float di
     }
 }
 
-void fluid_density::advect(const int b, GLfloat * z, const GLfloat * z0, const GLfloat * u, const GLfloat * v, const float dt) const {
+void stable_fluid::advect(const int b, GLfloat * z, const GLfloat * z0, const GLfloat * u, const GLfloat * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
@@ -109,7 +109,7 @@ void fluid_density::advect(const int b, GLfloat * z, const GLfloat * z0, const G
 }
 
 
-void fluid_density::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div) const {
+void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div) const {
     const float h = 1.0f / static_cast<float>(height);
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -118,11 +118,8 @@ void fluid_density::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div
         for (int i = 1 ; i <= width - 1 ; i++ ) {
             div[i + jw] = -0.5f * h * (u[i + 1 + jw] - u[i - 1 + jw] + v[i + j1w] - v[i + j0w]);
             p[i + jw] = 0;
-            /*
-            div[IX(i,j)] = -0.5*h*(u[IX(i+1,j)]-u[IX(i-1,j)]+
-            v[IX(i,j+1)]-v[IX(i,j-1)]);
-            p[IX(i,j)] = 0;
-            */
+            //div[IX(i,j)] = -0.5*h*(u[IX(i+1,j)]-u[IX(i-1,j)]+v[IX(i,j+1)]-v[IX(i,j-1)]);
+            //p[IX(i,j)] = 0;
         }
     }
     set_bound (0, div);
@@ -133,23 +130,33 @@ void fluid_density::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div
             const int j1w = (j + 1) * width;
             const int j0w = (j - 1) * width;
             for (int i = 1 ; i <= width - 1 ; i++ ) {
-
+                p[i + jw] = (
+                    div[i + jw] +
+                    p[i - 1 + jw] +
+                    p[i + 1 + jw] +
+                    p[i + j0w] +
+                    p[i + j1w]) / 4;
                 //p[IX(i,j)] = (div[IX(i,j)]+p[IX(i-1,j)]+p[IX(i+1,j)]+ p[IX(i,j-1)]+p[IX(i,j+1)])/4;
             }
         }
         set_bound (0, p );
     }
     for (int j = 1 ; j < height - 1 ; j++ ) {
+        const int jw = j * width;
+        const int j1w = (j + 1) * width;
+        const int j0w = (j - 1) * width;
         for (int i = 1 ; i <= width - 1 ; i++ ) {
-            u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
-            v[IX(i,j)] -= 0.5*(p[IX(i,j+1)]-p[IX(i,j-1)])/h;
+            u[i + jw] -= 0.5f * (p[i + 1 + jw] - p [i - 1 + jw]) / h;
+            v[i + jw] -= 0.5f * (p[i + j1w] - p [i + j0w]) / h;
+            //u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
+            //v[IX(i,j)] -= 0.5*(p[IX(i,j+1)]-p[IX(i,j-1)])/h;
         }
     }
     set_bound (1, u );
     set_bound (2, v );
 }
 
-void fluid_density::density_step(const float dt) {
+void stable_fluid::density_step(const float dt) {
     // x : dens
     // x0 : dens_prev
     add_source(dens, dens_prev, dt);
@@ -158,7 +165,7 @@ void fluid_density::density_step(const float dt) {
 
 }
 
-void fluid_density::velocity_step(const float dt) {
+void stable_fluid::velocity_step(const float dt) {
     // u : u
     // u0 : u_prev
     // v : v
@@ -173,18 +180,18 @@ void fluid_density::velocity_step(const float dt) {
     project (u, v, u_prev, v_prev);
 }
 
-void fluid_density::set_color() const {
+void stable_fluid::set_color() const {
 }
 
-GLfloat fluid_density::find_max_dens() const {
+GLfloat stable_fluid::find_max_dens() const {
     return 0;
 }
 
-GLfloat fluid_density::find_min_dens() const {
+GLfloat stable_fluid::find_min_dens() const {
     return 0;
 }
 
-void fluid_density::set_bound(const int b, GLfloat * x) const {
+void stable_fluid::set_bound(const int b, GLfloat * x) const {
     constexpr int i0 = 0;
     constexpr int i1 = 1;
     const int iN1 = width - 1;
