@@ -7,30 +7,42 @@
 
 #include "../../include/libraries.h"
 
-
 class fluid_density {
     int width;
     int height;
-    float density;
     float grid_spacing;
+    float diff;
+    float visc;
 public:
-    GLfloat* is_border;
-    GLfloat* pressure;
-    GLfloat* velocity;
-    GLfloat* pressure_color;
+    GLfloat* is_b;
+    GLfloat* dens;
+    GLfloat* dens_prev;
+    GLfloat* u;
+    GLfloat* u_prev;
+    GLfloat* v;
+    GLfloat* v_prev;
+    GLfloat* color;
 
-    fluid_density(int width, int height, float fluid_density);
+    fluid_density(int width, int height, float diff, float visc);
     ~fluid_density();
-    void compute_gravity(float dt) const;
-    void diffusion(int sub_step, float dt, float diff) const;
-    void advection(float time_step);
-    void clearing_divergence();
-    void calculate_pressure_color() const;
 
-    [[nodiscard]] GLfloat find_max_pressure() const;
-    [[nodiscard]] GLfloat find_min_pressure() const;
+    void add_source(GLfloat *x, const GLfloat *s, float dt) const;
 
-    void set_bound(int b);
+    void diffuse(int b, GLfloat *x, GLfloat *x0, float diff, float dt) const;
+    void advect(int b, GLfloat *z, const GLfloat *z0, const GLfloat *u, const GLfloat *v, float dt) const;
+
+    void project(GLfloat *u, GLfloat *v, GLfloat *p, GLfloat *div) const;
+
+    void density_step(float dt);
+
+    void velocity_step(float dt);
+
+    void set_color() const;
+
+    [[nodiscard]] GLfloat find_max_dens() const;
+    [[nodiscard]] GLfloat find_min_dens() const;
+
+    void set_bound(int b, GLfloat *x) const;
 };
 
 
