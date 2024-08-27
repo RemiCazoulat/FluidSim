@@ -66,7 +66,6 @@ int main() {
     // ---------- { Init Window }----------
     const int window_width = cell_size * width;
     const int window_height = cell_size * height;
-    printf("init window size :  %i %i", window_width, window_height);
     initWindow(window_width, window_height);
 
     // ---------- { Render program }----------
@@ -74,18 +73,8 @@ int main() {
     const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
     bindingUniformTex(renderProgram, "velTex", 0);
     bindingUniformTex(renderProgram, "densTex", 1);
-    printf("[DEBUG] init shader done \n");
 
 #ifdef USE_GPU
-    // ---------- { GPU }----------
-    const auto* fluid = new fluid2DGpu(gridWidth, gridHeight, pixelPerCell, 1.0);
-    while (!glfwWindowShouldClose(window)) {
-        fluid->projection(10, 0.1);
-        render.makeRender(renderProgram, fluid->velocityTex, fluid->pressureTex, VEL);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-    delete fluid;
 #else
     /*
     const auto* fluid = new fluid2DCpu(gridWidth, gridHeight, 0.1);
@@ -105,11 +94,11 @@ int main() {
     auto* fluid = new stable_fluid(width, height, cell_size, 1, 1);
     //auto previousTime = static_cast<float>(glfwGetTime());
     while (!glfwWindowShouldClose(window)) {
-        constexpr float dt = 1.f / 60;
+        constexpr float dt = 1.f / 6000;
         fluid->watch_inputs(mouse_pressed, mouse_x, mouse_y, force_x, force_y);
-        fluid->velocity_step(dt);
         fluid->density_step(dt);
-        fluid->draw(VELOCITY);
+        fluid->velocity_step(dt);
+        fluid->draw(DENSITY);
         GLuint colorTex = createTextureVec3(fluid->color, width, height);
         render.makeRender(renderProgram, colorTex);
         glfwSwapBuffers(window);

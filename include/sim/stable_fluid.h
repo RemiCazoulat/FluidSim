@@ -36,13 +36,13 @@ public:
     stable_fluid(int width, int height, int cell_size, float diff, float visc);
     ~stable_fluid();
 
-    void add_source(GLfloat *x, const GLfloat *s, float dt) const;
-    void diffuse(int b, GLfloat *x, GLfloat *x0, float diff, float dt) const;
-    void advect(int b, GLfloat *z, const GLfloat *z0, const GLfloat *u, const GLfloat *v, float dt) const;
-    void project(GLfloat *u, GLfloat *v, GLfloat *p, GLfloat *div) const;
-    void set_bound(int b, GLfloat *x) const;
+    void add_source(GLfloat *x, const GLfloat *s, float dt);
+    void diffuse(int b, GLfloat *x, const GLfloat *x0, float diff, float dt);
+    void advect(int b, GLfloat *z, const GLfloat *z0, const GLfloat *u, const GLfloat *v, float dt);
+    void project(GLfloat *u, GLfloat *v, GLfloat *p, GLfloat *div);
+    void set_bound(int b, GLfloat *x);
 
-    void watch_inputs(int mouse_pressed, float mouse_x, float mouse_y, float &force_x, float &force_y) const;
+    void watch_inputs(int mouse_pressed, float mouse_x, float mouse_y, float &force_x, float &force_y);
     void density_step(float dt);
     void velocity_step(float dt);
 

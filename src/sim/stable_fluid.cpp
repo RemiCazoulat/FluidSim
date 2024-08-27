@@ -48,11 +48,11 @@ stable_fluid::~stable_fluid() {
     delete[] color;
 }
 
-void stable_fluid::add_source(GLfloat * x, const GLfloat* s,const float dt) const {
-    for (int i = 0; i < width * height; i++ ) x[i] += dt*s[i];
+void stable_fluid::add_source(GLfloat * x, const GLfloat* s,const float dt) {
+    for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void stable_fluid::diffuse(const int b, GLfloat* x, GLfloat* x0, const float diff, const float dt) const {
+void stable_fluid::diffuse(const int b, GLfloat* x, const GLfloat* x0, const float diff, const float dt) {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < 20 ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -65,7 +65,7 @@ void stable_fluid::diffuse(const int b, GLfloat* x, GLfloat* x0, const float dif
                 const int i1j = jw + i + 1;
                 const int ij0 = j0w + i;
                 const int ij1 = j1w + i;
-                x0[ij] = x[ij] + a * (x0[i0j] + x0[i1j] + x0[ij0] + x0[ij1]) / ( 1 + 4 * a);
+                x[ij] = x0[ij] + a * (x[i0j] + x[i1j] + x[ij0] + x[ij1]) / ( 1 + 4 * a);
                 //x[IX(i,j)] = (x0[IX(i,j)] + a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/(1+4*a);
             }
         }
@@ -73,12 +73,12 @@ void stable_fluid::diffuse(const int b, GLfloat* x, GLfloat* x0, const float dif
     }
 }
 
-void stable_fluid::advect(const int b, GLfloat * z, const GLfloat * z0, const GLfloat * u, const GLfloat * v, const float dt) const {
+void stable_fluid::advect(const int b, GLfloat * z, const GLfloat * z0, const GLfloat * u, const GLfloat * v, const float dt) {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
         const int jw = j * width;
-        for (int i = 1; i<= width - 1; i++ ) {
+        for (int i = 1; i < width - 1; i++ ) {
             float y = static_cast<float>(j) - dt0h * v[i + jw];
             float x = static_cast<float>(i) - dt0w * u[i + jw];
 
@@ -110,13 +110,13 @@ void stable_fluid::advect(const int b, GLfloat * z, const GLfloat * z0, const GL
 }
 
 
-void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div) const {
+void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div) {
     const float h = 1.0f / static_cast<float>(height);
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
-        for (int i = 1 ; i <= width - 1 ; i++ ) {
+        for (int i = 1 ; i < width - 1 ; i++ ) {
             div[i + jw] = -0.5f * h * (u[i + 1 + jw] - u[i - 1 + jw] + v[i + j1w] - v[i + j0w]);
             p[i + jw] = 0;
             //div[IX(i,j)] = -0.5*h*(u[IX(i+1,j)]-u[IX(i-1,j)]+v[IX(i,j+1)]-v[IX(i,j-1)]);
@@ -130,7 +130,7 @@ void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div)
             const int jw = j * width;
             const int j1w = (j + 1) * width;
             const int j0w = (j - 1) * width;
-            for (int i = 1 ; i <= width - 1 ; i++ ) {
+            for (int i = 1 ; i < width - 1 ; i++ ) {
                 p[i + jw] = (
                     div[i + jw] +
                     p[i - 1 + jw] +
@@ -146,7 +146,7 @@ void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div)
         const int jw = j * width;
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
-        for (int i = 1 ; i <= width - 1 ; i++ ) {
+        for (int i = 1 ; i < width - 1 ; i++ ) {
             u[i + jw] -= 0.5f * (p[i + 1 + jw] - p [i - 1 + jw]) / h;
             v[i + jw] -= 0.5f * (p[i + j1w] - p [i + j0w]) / h;
             //u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
@@ -156,7 +156,9 @@ void stable_fluid::project(GLfloat * u, GLfloat * v, GLfloat * p, GLfloat * div)
     set_bound (1, u );
     set_bound (2, v );
 }
-void stable_fluid::watch_inputs(const int mouse_pressed,const float mouse_x,const float mouse_y, float &force_x, float &force_y) const {
+void stable_fluid::watch_inputs(const int mouse_pressed,const float mouse_x,const float mouse_y, float &force_x, float &force_y) {
+
+    //u_prev[width / 2 + height / 2 * width ] = 100.0f;
 
     if (mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;  // Suppose que la fenêtre est de 800x800
@@ -164,7 +166,7 @@ void stable_fluid::watch_inputs(const int mouse_pressed,const float mouse_x,cons
 
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
             // Ajoute de la densité à la position de la souris
-            dens_prev[i + j * width] += 100.0f;
+            dens_prev[i + j * width] += 1.0f;
 
             // Ajoute une force dans les directions X et Y (par exemple, un simple mouvement de la souris)
             u_prev[i + j * width] += (mouse_x - force_x) * 0.1f;  // La force dépend du déplacement de la souris
@@ -210,7 +212,7 @@ void stable_fluid::draw(const DRAW_MODE mode=VELOCITY) const {
         const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
         for (int j = 1 ; j < height - 1 ; j++ ) {
             const int jw = j * width;
-            for (int i = 1 ; i <= width - 1 ; i++ ) {
+            for (int i = 1 ; i < width - 1 ; i++ ) {
                 const int ij = i + jw;
                 const float x = u[ij];
                 const float y = v[ij];
@@ -244,7 +246,7 @@ void stable_fluid::draw(const DRAW_MODE mode=VELOCITY) const {
         const float delta = max - min;
         for (int j = 1 ; j < height - 1 ; j++ ) {
             const int jw = j * width;
-            for (int i = 1 ; i <= width - 1 ; i++ ) {
+            for (int i = 1 ; i < width - 1 ; i++ ) {
                 const int ij = i + jw;
                 float x = dens[ij];
                 x = (x + delta - max) / delta;
@@ -260,7 +262,7 @@ GLfloat stable_fluid::find_max(const GLfloat* x) const {
     GLfloat max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
-        for (int i = 1 ; i <= width - 1 ; i++ ) {
+        for (int i = 1 ; i < width - 1 ; i++ ) {
             if(const int ij = i + jw; x[ij] > max) max = x[ij];
         }
     }
@@ -271,14 +273,14 @@ GLfloat stable_fluid::find_min(const GLfloat* x) const {
     GLfloat min = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
-        for (int i = 1 ; i <= width - 1 ; i++ ) {
+        for (int i = 1 ; i < width - 1 ; i++ ) {
             if(const int ij = i + jw; x[ij] < min) min = x[ij];
         }
     }
     return min;
 }
 
-void stable_fluid::set_bound(const int b, GLfloat * x) const {
+void stable_fluid::set_bound(const int b, GLfloat * x) {
     constexpr int i0 = 0;
     constexpr int i1 = 1;
     const int iN1 = width - 1;
