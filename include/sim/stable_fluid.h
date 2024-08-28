@@ -13,43 +13,53 @@
 
 enum DRAW_MODE {
     DENSITY,
-    VELOCITY
+    VELOCITY,
+    MIXED
 };
 
 class stable_fluid {
     int width;
     int height;
     int cell_size;
+    int sub_step;
     float grid_spacing;
     float diff;
     float visc;
 public:
-    GLfloat* is_b;
-    GLfloat* dens;
-    GLfloat* dens_prev;
-    GLfloat* u;
-    GLfloat* u_prev;
-    GLfloat* v;
-    GLfloat* v_prev;
-    GLfloat* color;
+    float* is_b;
+    float* dens;
+    float* dens_prev;
+    float* dens_permanent;
+    float* u;
+    float* v;
+    float *u_permanent;
+    float *v_permanent;
+    float* u_prev;
+    float* v_prev;
+    float* color;
 
-    stable_fluid(int width, int height, int cell_size, float diff, float visc);
+    stable_fluid(int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~stable_fluid();
 
-    void add_source(GLfloat *x, const GLfloat *s, float dt);
-    void diffuse(int b, GLfloat *x, const GLfloat *x0, float diff, float dt);
-    void advect(int b, GLfloat *z, const GLfloat *z0, const GLfloat *u, const GLfloat *v, float dt);
-    void project(GLfloat *u, GLfloat *v, GLfloat *p, GLfloat *div);
-    void set_bound(int b, GLfloat *x);
+    void add_source(float *x, const float *s, float dt) const;
+    void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
+    void advect(int b, float *z, const float *z0, const float *u, const float *v, float dt) const;
+    void project(float *u, float *v, float *p, float *div) const;
+    void set_bound(int b, float *x) const;
 
-    void watch_inputs(int mouse_pressed, float mouse_x, float mouse_y, float &force_x, float &force_y);
     void density_step(float dt);
     void velocity_step(float dt);
 
+    void add_dens(int x, int y) const;
+    void add_permanent_dens(int x, int y, float radius) const;
+    void add_vel(int x, int y, float u_intensity, float v_intensity) const;
+    void add_permanent_vel(int x, int y, float u_intensity, float v_intensity) const;
+    void add_all_perm_step() const;
+
 
     void draw(DRAW_MODE mode) const;
-    [[nodiscard]] GLfloat find_max(const GLfloat *x) const;
-    [[nodiscard]] GLfloat find_min(const GLfloat* x) const;
+    [[nodiscard]] float find_max(const float* x) const;
+    [[nodiscard]] float find_min(const float* x) const;
 
 };
 
