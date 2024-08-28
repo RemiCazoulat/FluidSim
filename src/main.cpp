@@ -128,7 +128,7 @@ int main() {
         fluid->add_all_perm_step();
         fluid->velocity_step(dt);
         fluid->density_step(dt);
-        fluid->draw(MIXED);
+        fluid->draw(VELOCITY);
 
         GLuint colorTex = createTextureVec3(fluid->color, width, height);
         render.makeRender(renderProgram, colorTex);

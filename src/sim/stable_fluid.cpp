@@ -36,10 +36,12 @@ stable_fluid::stable_fluid(const int width,const int height, const int cell_size
             else is_b[index] = 1.0;
         }
     }
+    /*
     for (int j = height / 4; j < height - 1 - height / 4; j++) {
         add_permanent_vel(1, j, 0.0f, 10.0f);
         //u_prev[j * width] = 1.0f;
     }
+    */
 }
 
 stable_fluid::~stable_fluid() {
@@ -56,7 +58,7 @@ stable_fluid::~stable_fluid() {
     delete[] color;
 }
 
-void stable_fluid::add_source(float * x, const float* s,const float dt) const {
+void stable_fluid::add_source(float* x, const float* s,const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
@@ -79,6 +81,7 @@ void stable_fluid::diffuse(const int b, float* x, const float* x0, const float d
     //printf("diffuse good");
 }
 
+
 void stable_fluid::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
@@ -88,13 +91,13 @@ void stable_fluid::advect(const int b, float * z, const float * z0, const float 
             float x = static_cast<float>(i) - dt0w * u[i + jw];
             float y = static_cast<float>(j) - dt0h * v[i + jw];
 
-            if (x < 0.5) x = 0.5;
-            if (x > width - 1 + 0.5) x = 0.5f + static_cast<float>(width - 1);
+            if (x < 0.5) x = 0.;
+            if (x > static_cast<float>(width) - 2) x = static_cast<float>(width - 2);
             const int i0 = static_cast<int>(x);
             const int i1 = i0 + 1;
 
-            if (y < 0.5) y = 0.5;
-            if (y > height - 1 + 0.5) y = 0.5f + static_cast<float>(height - 1);
+            if (y < 0.5) y = 0.;
+            if (y > static_cast<float>(height) - 2) y = static_cast<float>(height - 2);
             const int j0 = static_cast<int>(y);
             const int j1 = j0 + 1;
 
