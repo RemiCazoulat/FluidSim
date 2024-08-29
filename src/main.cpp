@@ -1,15 +1,15 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-#include "../include/sim/fluid2DGpu.h"
-#include "../include/sim/fluid2DCpu.h"
 #include "../include/sim/eulerianFluid2dCpu.h"
+#include "../../include/sim/fluid.h"
 
 
-//#define USE_GPU
+enum SIM_MODE {
+    CPU,
+    GPU
+};
 
 GLFWwindow* window;
-
-
 int width;
 int height;
 int cell_size;
@@ -36,10 +36,8 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
     }
 }
 
-// -------------------------------------------------
-// -----------{ Main function }---------------------
-// -------------------------------------------------
 int main() {
+    ///////// Control Panel ////////
     // grid infos
     constexpr float res = 2.f;
     width = static_cast<int>(128.f * res);
@@ -50,21 +48,28 @@ int main() {
     constexpr float viscosity_rate = 0.00000001f;
     constexpr int sub_step = 20;
     // simulation infos
+    constexpr SIM_MODE mode = CPU;
     constexpr float time_accel = 1.f;
     constexpr DRAW_MODE draw_mode = DENSITY;
 
-    // ---------- { Init Window }----------
+    ///////// Init Window ///////
     const int window_width = cell_size * width;
     const int window_height = cell_size * height;
     initWindow(window_width, window_height);
 
-    // ---------- { Render program }----------
+    ///////// Render program ///////
     const Render render;
     const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
     bindingUniformTex(renderProgram, "colorTex", 0);
 
-
-    auto* fluid = new eulerianFluid2dCpu(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
+    ///////// Main loop ///////
+    fluid* fluid;
+    if constexpr (mode == CPU) {
+        fluid = new eulerianFluid2dCpu(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
+    }
+    else {
+        fluid = nullptr;
+    }
     auto previousTime = static_cast<float>(glfwGetTime());
     while (!glfwWindowShouldClose(window)) {
         const auto currentTime = static_cast<float>(glfwGetTime());
@@ -79,11 +84,10 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    ///////// Clean up ///////
     delete fluid;
     render.cleanRender(renderProgram);
     glfwDestroyWindow(window);
     glfwTerminate();
-
     return 0;
 }

@@ -96,13 +96,26 @@ void eulerianFluid2dCpu::diffuse(const int b, float* x, const float* x0, const f
             for (int i = 1 ; i < width - 1; i++ ) {
                 const int i0 = i - 1;
                 const int i1 = i + 1;
-                x[i + jw] = (x0[i + jw] + a * (x[i0 + jw] + x[i1 + jw] + x[i + j0] + x[i + j1])) / (1 + 4 * a);
+
+                const float s0n = is_b[i0 + jw];
+                const float s1n = is_b[i1 + jw];
+                const float sn0 = is_b[i + j0];
+                const float sn1 = is_b[i + j1];
+                const float s = s0n + s1n + sn0 + sn1;
+                const float d =
+                    x[i0 + jw] * s0n +
+                    x[i1 + jw] * s1n +
+                    x[i + j0 ] * sn0 +
+                    x[i + j1 ] * sn1;
+
+                x[i + jw] = (x0[i + jw] + a * d) / (1 + s * a);
+
+                //x[i + jw] = (x0[i + jw] + a * (x[i0 + jw] + x[i1 + jw] + x[i + j0] + x[i + j1])) / (1 + 4 * a);
                 //x[IX(i,j)] = (x0[IX(i,j)] + a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/(1+4*a);
             }
         }
-        set_bound(b, x);
+        //set_bound(b, x);
     }
-    //printf("diffuse good");
 }
 
 
@@ -321,7 +334,7 @@ void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, cons
     }
 }
 
-float* eulerianFluid2dCpu::draw(const DRAW_MODE mode=VELOCITY) const {
+float *eulerianFluid2dCpu::draw(const DRAW_MODE mode) const override{
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);

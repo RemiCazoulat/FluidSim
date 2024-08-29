@@ -7,17 +7,10 @@
 #ifndef FLUID_DENSITY_H
 #define FLUID_DENSITY_H
 
-
-
 #include "../../include/libraries.h"
+#include "fluid.h"
 
-enum DRAW_MODE {
-    DENSITY,
-    VELOCITY,
-    MIXED
-};
-
-class eulerianFluid2dCpu {
+class eulerianFluid2dCpu final : public fluid{
     GLFWwindow* window;
     int width;
     int height;
@@ -38,10 +31,6 @@ class eulerianFluid2dCpu {
     float* u_prev;
     float* v_prev;
     float* color;
-public:
-
-    eulerianFluid2dCpu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~eulerianFluid2dCpu();
 
     void add_source(float *x, const float *s, float dt) const;
     void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
@@ -49,24 +38,23 @@ public:
     void project(float *u, float *v, float *p, float *div) const;
     void set_bound(int b, float *x) const;
 
-    void density_step(float dt);
-    void velocity_step(float dt);
-
     void add_dens(int x, int y) const;
     void add_permanent_dens(int x, int y, float radius) const;
     void add_vel(int x, int y, float u_intensity, float v_intensity) const;
     void add_permanent_vel(int x, int y, float u_intensity, float v_intensity) const;
     void add_all_perm_step() const;
 
-    void inputs_step() const;
-
-
-    [[nodiscard]] float* draw(DRAW_MODE mode) const;
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
+public:
 
+    eulerianFluid2dCpu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    ~eulerianFluid2dCpu() override;
+
+    void inputs_step() const override;
+    void density_step(float dt) override;
+    void velocity_step(float dt) override;
+    [[nodiscard]] float* draw(DRAW_MODE mode) const override;
 };
-
-
 
 #endif //FLUID_DENSITY_H
