@@ -94,6 +94,7 @@ void eulerianFluid2dCpu::diffuse(const int b, float* x, const float* x0, const f
             const int j0 = (j - 1) * width;
             const int j1 = (j + 1) * width;
             for (int i = 1 ; i < width - 1; i++ ) {
+                if(is_b[i + jw] == 0.0f) continue;
                 const int i0 = i - 1;
                 const int i1 = i + 1;
 
@@ -122,23 +123,23 @@ void eulerianFluid2dCpu::diffuse(const int b, float* x, const float* x0, const f
 void eulerianFluid2dCpu::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
-    int nbr_of_z_moved = 0;
     for (int j = 1; j < height - 1; j++ ) {
         const int jw = j * width;
         for (int i = 1; i < width - 1; i++ ) {
+            if(is_b[i + jw] == 0.0f) continue;
             const float deltax = dt0w * u[i + jw];
             const float deltay = dt0h * v[i + jw];
+
             float x = static_cast<float>(i) - deltax;
             float y = static_cast<float>(j) - deltay;
 
-
-            if (x < 0.5) x = 0.5;
-            if (x > static_cast<float>(width) - 2 + 0.5) x = static_cast<float>(width - 2) + 0.5f;
+            if (x < 1.5) x = 1.5;
+            if (x > static_cast<float>(width) - 3 + 0.5) x = static_cast<float>(width) - 3 + 0.5f;
             const int i0 = static_cast<int>(x);
             const int i1 = i0 + 1;
 
-            if (y < 0.5) y = 0.5;
-            if (y > static_cast<float>(height) - 2 + 0.5) y = static_cast<float>(height - 2) + 0.5f;
+            if (y < 1.5) y = 1.5;
+            if (y > static_cast<float>(height) - 3 + 0.5) y = static_cast<float>(height) - 3 + 0.5f;
             const int j0 = static_cast<int>(y);
             const int j1 = j0 + 1;
 
@@ -148,13 +149,11 @@ void eulerianFluid2dCpu::advect(const int b, float * z, const float * z0, const 
             const float t0 = 1 - t1;
             const float new_z = s0 * (t0 * z0[i0 + j0 * width] + t1 * z0[i0 + j1 * width]) +
                                 s1 * (t0 * z0[i1 + j0 * width] + t1 * z0[i1 + j1 * width]);
-            if(new_z != 0.0) nbr_of_z_moved ++;
             z[i + jw] = new_z;
         }
     }
     //printf("nbr_of_z_moved : %d / %d\n", nbr_of_z_moved, width * height);
-    set_bound(b, z);
-    //printf("advect good");
+    //set_bound(b, z);
 }
 
 
@@ -165,44 +164,76 @@ void eulerianFluid2dCpu::project(float * u, float * v, float * p, float * div) c
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
         for (int i = 1 ; i < width - 1 ; i++ ) {
-            div[i + jw] = -0.5f * h * (u[i + 1 + jw] - u[i - 1 + jw] + v[i + j1w] - v[i + j0w]);
             p[i + jw] = 0;
+            if(is_b[i + jw] == 0.0f) continue;
+            const int i0 = i - 1;
+            const int i1 = i + 1;
+            /*
+            const float s0n = is_b[i0 + jw];
+            const float s1n = is_b[i1 + jw];
+            const float sn0 = is_b[i + j0w];
+            const float sn1 = is_b[i + j1w];
+            const float s = s0n + s1n + sn0 + sn1;
+            */
+            const float d =
+                u[i1 + jw] -
+                u[i0 + jw] +
+                v[i + j1w] -
+                v[i + j0w];
+
+            div[i + jw] = -0.5f * h * d;
             //div[IX(i,j)] = -0.5*h*(u[IX(i+1,j)]-u[IX(i-1,j)]+v[IX(i,j+1)]-v[IX(i,j-1)]);
             //p[IX(i,j)] = 0;
         }
     }
-    set_bound (0, div);
-    set_bound (0, p);
+    //set_bound (0, div);
+    //set_bound (0, p);
     for (int k = 0; k < sub_step ;k++ ) {
         for (int j = 1 ; j < height - 1 ; j++ ) {
             const int jw = j * width;
             const int j1w = (j + 1) * width;
             const int j0w = (j - 1) * width;
             for (int i = 1 ; i < width - 1 ; i++ ) {
+                if(is_b[i + jw] == 0.0f) continue;
+                const int i0 = i - 1;
+                const int i1 = i + 1;
+                const float s0n = is_b[i0 + jw];
+                const float s1n = is_b[i1 + jw];
+                const float sn0 = is_b[i + j0w];
+                const float sn1 = is_b[i + j1w];
+                const float s = s0n + s1n + sn0 + sn1;
                 p[i + jw] = (
                     div[i + jw] +
-                    p[i - 1 + jw] +
-                    p[i + 1 + jw] +
-                    p[i + j0w] +
-                    p[i + j1w]) / 4;
+                    p[i0 + jw] * s0n +
+                    p[i1 + jw] * s1n +
+                    p[i + j0w] * sn0 +
+                    p[i + j1w] * sn1) / s;
+
                 //p[IX(i,j)] = (div[IX(i,j)]+p[IX(i-1,j)]+p[IX(i+1,j)]+ p[IX(i,j-1)]+p[IX(i,j+1)])/4;
             }
         }
-        set_bound (0, p );
+        //set_bound (0, p );
     }
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
         for (int i = 1 ; i < width - 1 ; i++ ) {
-            u[i + jw] -= 0.5f * (p[i + 1 + jw] - p [i - 1 + jw]) / h;
-            v[i + jw] -= 0.5f * (p[i + j1w] - p [i + j0w]) / h;
+            if(is_b[i + jw] == 0.0f) continue;
+            const int i0 = i - 1;
+            const int i1 = i + 1;
+            const float s0n = is_b[i0 + jw];
+            const float s1n = is_b[i1 + jw];
+            const float sn0 = is_b[i + j0w];
+            const float sn1 = is_b[i + j1w];
+            u[i + jw] -= (p[i1 + jw] * s1n - p [i0 + jw] * s0n) / (h * (s1n + s0n));
+            v[i + jw] -= (p[i + j1w] * sn1 - p [i + j0w] * sn0) / (h * (sn1 + sn0));
             //u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
             //v[IX(i,j)] -= 0.5*(p[IX(i,j+1)]-p[IX(i,j-1)])/h;
         }
     }
-    set_bound (1, u );
-    set_bound (2, v );
+    //set_bound (1, u );
+    //set_bound (2, v );
     //printf("project good");
 }
 
@@ -334,7 +365,7 @@ void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, cons
     }
 }
 
-float *eulerianFluid2dCpu::draw(const DRAW_MODE mode) const override{
+float *eulerianFluid2dCpu::draw(const DRAW_MODE mode) const {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);

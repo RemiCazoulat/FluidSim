@@ -37,20 +37,26 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 }
 
 int main() {
-    ///////// Control Panel ////////
-    // grid infos
-    constexpr float res = 2.f;
-    width = static_cast<int>(128.f * res);
-    height = static_cast<int>(72.f * res);
-    cell_size = static_cast<int>(16.f / res);
-    // fluid infos
-    constexpr float diffusion_rate = 0.0001f;
-    constexpr float viscosity_rate = 0.00000001f;
-    constexpr int sub_step = 20;
-    // simulation infos
-    constexpr SIM_MODE mode = CPU;
-    constexpr float time_accel = 1.f;
-    constexpr DRAW_MODE draw_mode = DENSITY;
+
+
+
+/**/    ///////// Control Panel ////////
+/**/    // grid infos
+/**/    constexpr float res = 2.f;
+/**/    width = static_cast<int>(128.f * res);
+/**/    height = static_cast<int>(72.f * res);
+/**/    cell_size = static_cast<int>(16.f / res);
+/**/    // fluid infos
+/**/    constexpr float diffusion_rate = 0.0001f;
+/**/    constexpr float viscosity_rate = 0.00000001f;
+/**/    constexpr int sub_step = 20;
+/**/    // simulation infos
+/**/    constexpr SIM_MODE mode = CPU;
+/**/    constexpr float time_accel = 1.f;
+/**/    constexpr DRAW_MODE draw_mode = VELOCITY;
+/**/
+/**/    ///////// End of control Panel ////////
+
 
     ///////// Init Window ///////
     const int window_width = cell_size * width;
