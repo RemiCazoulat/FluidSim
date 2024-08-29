@@ -1,13 +1,33 @@
 //
 // Created by remi.cazoulat on 26/08/2024.
 //
-#include "../../include/sim/stable_fluid.h"
-
-
+#include "../../include/sim/eulerianFluid2dCpu.h"
 
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
-stable_fluid::stable_fluid(const int width,const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+float force_x = 0.0f, force_y = 0.0f, mouse_x = 0.0f, mouse_y = 0.0f;
+int left_mouse_pressed = 0, right_mouse_pressed = 0;
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        left_mouse_pressed = 1;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        left_mouse_pressed = 0;
+    }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        right_mouse_pressed = 1;
+    } else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+        right_mouse_pressed = 0;
+    }
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    mouse_x = static_cast<float>(xpos);
+    mouse_y = static_cast<float>(ypos);
+}
+
+eulerianFluid2dCpu::eulerianFluid2dCpu(GLFWwindow* window,const int width,const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+    this->window = window;
     this->width = width;
     this->height = height;
     this->cell_size = cell_size;
@@ -39,14 +59,16 @@ stable_fluid::stable_fluid(const int width,const int height, const int cell_size
 
     for (int i = width / 4; i < width - 1 - width / 4; i++) {
         for(int j = -3; j < 3; j ++) {
-            add_permanent_vel(i, height - height / 4 + j, 0.f, 100.0f);
+            add_permanent_vel(i, height - height / 4 + j, 0.f, 20.0f);
         }
-        //u_prev[j * width] = 1.0f;
     }
+    add_permanent_dens(width / 2, height / 2, 1.f);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
 
 }
 
-stable_fluid::~stable_fluid() {
+eulerianFluid2dCpu::~eulerianFluid2dCpu() {
     delete[] is_b;
     delete[] u;
     delete[] v;
@@ -60,11 +82,11 @@ stable_fluid::~stable_fluid() {
     delete[] color;
 }
 
-void stable_fluid::add_source(float* x, const float* s,const float dt) const {
+void eulerianFluid2dCpu::add_source(float* x, const float* s,const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void stable_fluid::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
+void eulerianFluid2dCpu::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -84,7 +106,7 @@ void stable_fluid::diffuse(const int b, float* x, const float* x0, const float d
 }
 
 
-void stable_fluid::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
+void eulerianFluid2dCpu::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     int nbr_of_z_moved = 0;
@@ -123,8 +145,8 @@ void stable_fluid::advect(const int b, float * z, const float * z0, const float 
 }
 
 
-void stable_fluid::project(float * u, float * v, float * p, float * div) const {
-    const float h = 1.0f / static_cast<float>(height);
+void eulerianFluid2dCpu::project(float * u, float * v, float * p, float * div) const {
+    const float h = grid_spacing;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
         const int j1w = (j + 1) * width;
@@ -171,7 +193,7 @@ void stable_fluid::project(float * u, float * v, float * p, float * div) const {
     //printf("project good");
 }
 
-void stable_fluid::density_step(const float dt) {
+void eulerianFluid2dCpu::density_step(const float dt) {
     // x : dens
     // x0 : dens_prev
     add_source(dens, dens_prev, dt);
@@ -180,7 +202,7 @@ void stable_fluid::density_step(const float dt) {
     //printf("----{density_step good}----");
 }
 
-void stable_fluid::velocity_step(const float dt) {
+void eulerianFluid2dCpu::velocity_step(const float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
     SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
@@ -195,7 +217,7 @@ void stable_fluid::velocity_step(const float dt) {
 }
 
 
-void stable_fluid::set_bound(const int b, float* x) const {
+void eulerianFluid2dCpu::set_bound(const int b, float* x) const {
     constexpr int i0 = 0;
     constexpr int i1 = 1;
     const int iN1 = width - 1;
@@ -223,11 +245,11 @@ void stable_fluid::set_bound(const int b, float* x) const {
     x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // Coin haut droit
 }
 
-void stable_fluid::add_dens(const int x, const int y) const {
-    dens_prev[x + y * width] += 1.0f;
+void eulerianFluid2dCpu::add_dens(const int x, const int y) const {
+    dens_prev[x + y * width] += 0.5f;
 }
 
-void stable_fluid::add_permanent_dens(const int x, const int y, const float radius) const {
+void eulerianFluid2dCpu::add_permanent_dens(const int x, const int y, const float radius) const {
     for(int j = 0; j < height; j++) {
         const int jw = j * width;
         for(int i = 0; i < width; i++) {
@@ -235,29 +257,50 @@ void stable_fluid::add_permanent_dens(const int x, const int y, const float radi
             const auto dx = static_cast<float>(i - x);
             const auto dy = static_cast<float>(j - y);
             if (std::sqrt(dx * dx + dy * dy) < radius) {
-                dens_permanent[ij] = 100.0f;
+                dens_permanent[ij] = 1.0f;
             }
         }
     }
 }
 
-void stable_fluid::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void eulerianFluid2dCpu::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_prev[x + y * width] = u_intensity;
     u_prev[x + y * width] = v_intensity;
 }
 
-void stable_fluid::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void eulerianFluid2dCpu::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_permanent[x + y * width] = u_intensity;
     v_permanent[x + y * width] = v_intensity;
 }
 
-void stable_fluid::add_all_perm_step() const {
+void eulerianFluid2dCpu::add_all_perm_step() const {
     for(int i = 0; i < width * height; i ++) {
-        if(dens_permanent[i] > 0.0f) dens_prev[i] += 1.0f;
+        if(dens_permanent[i] > 0.0f) dens_prev[i] += 0.01f;
         if(u_permanent[i] > 0.0f) u_prev[i] += u_permanent[i];
         if(v_permanent[i] > 0.0f) v_prev[i] += v_permanent[i];
     }
 }
+
+void eulerianFluid2dCpu::inputs_step() const  {
+
+    if (left_mouse_pressed || right_mouse_pressed) {
+        const int i = static_cast<int>(mouse_x) / cell_size;
+        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+
+        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
+            if(left_mouse_pressed) {
+                add_vel(i, j, (mouse_x - force_x) * 100.f, (mouse_y - force_y) * 100.f);
+                force_x = mouse_x;
+                force_y = mouse_y;
+            }
+            if(right_mouse_pressed) {
+                add_dens(i, j);
+            }
+        }
+    }
+    add_all_perm_step();
+}
+
 void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
     constexpr float s = 1.f;
@@ -278,7 +321,7 @@ void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, cons
     }
 }
 
-void stable_fluid::draw(const DRAW_MODE mode=VELOCITY) const {
+float* eulerianFluid2dCpu::draw(const DRAW_MODE mode=VELOCITY) const {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -318,9 +361,10 @@ void stable_fluid::draw(const DRAW_MODE mode=VELOCITY) const {
             color[ij * 3 + 2] = b;
         }
     }
+    return color;
 }
 
-float stable_fluid::find_max(const float* x) const {
+float eulerianFluid2dCpu::find_max(const float* x) const {
     float max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -331,7 +375,7 @@ float stable_fluid::find_max(const float* x) const {
     return max;
 }
 
-float stable_fluid::find_min(const float* x) const {
+float eulerianFluid2dCpu::find_min(const float* x) const {
     float min = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;

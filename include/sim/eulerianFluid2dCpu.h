@@ -17,7 +17,8 @@ enum DRAW_MODE {
     MIXED
 };
 
-class stable_fluid {
+class eulerianFluid2dCpu {
+    GLFWwindow* window;
     int width;
     int height;
     int cell_size;
@@ -25,7 +26,7 @@ class stable_fluid {
     float grid_spacing;
     float diff;
     float visc;
-public:
+
     float* is_b;
     float* dens;
     float* dens_prev;
@@ -37,9 +38,10 @@ public:
     float* u_prev;
     float* v_prev;
     float* color;
+public:
 
-    stable_fluid(int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~stable_fluid();
+    eulerianFluid2dCpu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    ~eulerianFluid2dCpu();
 
     void add_source(float *x, const float *s, float dt) const;
     void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
@@ -56,8 +58,10 @@ public:
     void add_permanent_vel(int x, int y, float u_intensity, float v_intensity) const;
     void add_all_perm_step() const;
 
+    void inputs_step() const;
 
-    void draw(DRAW_MODE mode) const;
+
+    [[nodiscard]] float* draw(DRAW_MODE mode) const;
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
 

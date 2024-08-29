@@ -79,8 +79,6 @@ GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
 
 void Render::makeRender(const GLuint &renderProgram, const GLuint &colorTex) const {
     glUseProgram(renderProgram);
-    const GLint locPressureColorTex = glGetUniformLocation(renderProgram, "pressureColorTex");
-    glUniform1i(locPressureColorTex, 0);  // Lier pressureColorTex à GL_TEXTURE0
     // Activer et lier les textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, colorTex);
