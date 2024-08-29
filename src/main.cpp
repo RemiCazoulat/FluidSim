@@ -84,7 +84,7 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 // -------------------------------------------------
 int main() {
     // Init grid
-    constexpr float res = 2.f;
+    constexpr float res = 4.f;
     width = static_cast<int>(128.f * res);
     height = static_cast<int>(72.f * res);
     cell_size = static_cast<int>(16.f / res);
@@ -117,18 +117,18 @@ int main() {
     }
     delete fluid;
     */
-    auto* fluid = new stable_fluid(width, height, cell_size, 0.1, 1, 50);
+    auto* fluid = new stable_fluid(width, height, cell_size, 0.0001, 0.000001, 20);
     //auto previousTime = static_cast<float>(glfwGetTime());
     int i = 0;
     while (!glfwWindowShouldClose(window)) {
         //printf("====== Frame %d ======\n", i++);
-        constexpr float dt = 1.f / 6000;
+        constexpr float dt = 1.f / 60;
 
         watch_inputs(fluid);
         fluid->add_all_perm_step();
         fluid->velocity_step(dt);
         fluid->density_step(dt);
-        fluid->draw(VELOCITY);
+        fluid->draw(DENSITY);
 
         GLuint colorTex = createTextureVec3(fluid->color, width, height);
         render.makeRender(renderProgram, colorTex);

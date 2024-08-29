@@ -36,12 +36,14 @@ stable_fluid::stable_fluid(const int width,const int height, const int cell_size
             else is_b[index] = 1.0;
         }
     }
-    /*
-    for (int j = height / 4; j < height - 1 - height / 4; j++) {
-        add_permanent_vel(1, j, 0.0f, 10.0f);
+
+    for (int i = width / 4; i < width - 1 - width / 4; i++) {
+        for(int j = -3; j < 3; j ++) {
+            add_permanent_vel(i, height - height / 4 + j, 0.f, 100.0f);
+        }
         //u_prev[j * width] = 1.0f;
     }
-    */
+
 }
 
 stable_fluid::~stable_fluid() {
@@ -85,19 +87,23 @@ void stable_fluid::diffuse(const int b, float* x, const float* x0, const float d
 void stable_fluid::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
+    int nbr_of_z_moved = 0;
     for (int j = 1; j < height - 1; j++ ) {
         const int jw = j * width;
         for (int i = 1; i < width - 1; i++ ) {
-            float x = static_cast<float>(i) - dt0w * u[i + jw];
-            float y = static_cast<float>(j) - dt0h * v[i + jw];
+            const float deltax = dt0w * u[i + jw];
+            const float deltay = dt0h * v[i + jw];
+            float x = static_cast<float>(i) - deltax;
+            float y = static_cast<float>(j) - deltay;
 
-            if (x < 0.5) x = 0.;
-            if (x > static_cast<float>(width) - 2) x = static_cast<float>(width - 2);
+
+            if (x < 0.5) x = 0.5;
+            if (x > static_cast<float>(width) - 2 + 0.5) x = static_cast<float>(width - 2) + 0.5f;
             const int i0 = static_cast<int>(x);
             const int i1 = i0 + 1;
 
-            if (y < 0.5) y = 0.;
-            if (y > static_cast<float>(height) - 2) y = static_cast<float>(height - 2);
+            if (y < 0.5) y = 0.5;
+            if (y > static_cast<float>(height) - 2 + 0.5) y = static_cast<float>(height - 2) + 0.5f;
             const int j0 = static_cast<int>(y);
             const int j1 = j0 + 1;
 
@@ -105,11 +111,13 @@ void stable_fluid::advect(const int b, float * z, const float * z0, const float 
             const float s0 = 1 - s1;
             const float t1 = y - static_cast<float>(j0);
             const float t0 = 1 - t1;
-            z[i + jw] =
-               s0 * (t0 * z0[i0 + j0 * width] + t1 * z0[i0 + j1 * width]) +
-               s1 * (t0 * z0[i1 + j0 * width] + t1 * z0[i1 + j1 * width]);
+            const float new_z = s0 * (t0 * z0[i0 + j0 * width] + t1 * z0[i0 + j1 * width]) +
+                                s1 * (t0 * z0[i1 + j0 * width] + t1 * z0[i1 + j1 * width]);
+            if(new_z != 0.0) nbr_of_z_moved ++;
+            z[i + jw] = new_z;
         }
     }
+    //printf("nbr_of_z_moved : %d / %d\n", nbr_of_z_moved, width * height);
     set_bound(b, z);
     //printf("advect good");
 }
@@ -227,7 +235,7 @@ void stable_fluid::add_permanent_dens(const int x, const int y, const float radi
             const auto dx = static_cast<float>(i - x);
             const auto dy = static_cast<float>(j - y);
             if (std::sqrt(dx * dx + dy * dy) < radius) {
-                dens_permanent[ij] = 1.0f;
+                dens_permanent[ij] = 100.0f;
             }
         }
     }
