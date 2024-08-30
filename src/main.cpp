@@ -54,7 +54,7 @@ int main() {
 /**/constexpr SIM_MODE sim_mode = CPU;
 /**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
-/**/constexpr int add_radius = 20;
+/**/const int add_radius = 5 * res;
 /**/constexpr float add_intensity = 0.5f;
 /**////////// End of control Panel ////////
 

@@ -102,25 +102,10 @@ void fluSim2dcpu::diffuse(const int b, float* x, const float* x0, const float di
             const int jw0 = (j - 1) * width;
             const int jw1 = (j + 1) * width;
             for (int i = 1 ; i < width - 1; i++ ) {
-                //if(is_b[i + jw] == 0.0f) continue;
                 const int i0 = i - 1;
                 const int i1 = i + 1;
-
-                const float s0n = 1.0f/*is_b[i0 + jw]*/;
-                const float s1n = 1.0f/*is_b[i1 + jw]*/;
-                const float sn0 = 1.0f/*is_b[i + jw0]*/;
-                const float sn1 = 1.0f/*is_b[i + jw1]*/;
-                const float s = s0n + s1n + sn0 + sn1;
-                const float d =
-                    x[i0 + jw] * s0n +
-                    x[i1 + jw] * s1n +
-                    x[i + jw0] * sn0 +
-                    x[i + jw1] * sn1;
-
-                x[i + jw] = (x0[i + jw] + a * d) / (1 + s * a);
-
-                //x[i + jw] = (x0[i + jw] + a * (x[i0 + jw] + x[i1 + jw] + x[i + j0] + x[i + j1])) / (1 + 4 * a);
-                //x[IX(i,j)] = (x0[IX(i,j)] + a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/(1+4*a);
+                const float d = x[i0 + jw] + x[i1 + jw] + x[i + jw0] + x[i + jw1];
+                x[i + jw] = (x0[i + jw] + a * d) / (1 + 4 * a);
             }
         }
         set_bound(b, x);
@@ -134,7 +119,6 @@ void fluSim2dcpu::advect(const int b, float * z, const float * z0, const float *
     for (int j = 1; j < height - 1; j++ ) {
         const int jw = j * width;
         for (int i = 1; i < width - 1; i++ ) {
-            //if(is_b[i + jw] == 0.0f) continue;
             const float deltax = dt0w * u[i + jw];
             const float deltay = dt0h * v[i + jw];
 
@@ -160,7 +144,6 @@ void fluSim2dcpu::advect(const int b, float * z, const float * z0, const float *
             z[i + jw] = new_z;
         }
     }
-    //printf("nbr_of_z_moved : %d / %d\n", nbr_of_z_moved, width * height);
     set_bound(b, z);
 }
 
@@ -172,26 +155,11 @@ void fluSim2dcpu::project(float * u, float * v, float * p, float * div) const {
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
         for (int i = 1 ; i < width - 1 ; i++ ) {
-            p[i + jw] = 0;
-            //if(is_b[i + jw] == 0.0f) continue;
             const int i0 = i - 1;
             const int i1 = i + 1;
-            /*
-            const float s0n = is_b[i0 + jw];
-            const float s1n = is_b[i1 + jw];
-            const float sn0 = is_b[i + j0w];
-            const float sn1 = is_b[i + j1w];
-            const float s = s0n + s1n + sn0 + sn1;
-            */
-            const float d =
-                u[i1 + jw] -
-                u[i0 + jw] +
-                v[i + j1w] -
-                v[i + j0w];
-
+            const float d =u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
             div[i + jw] = -0.5f * h * d;
-            //div[IX(i,j)] = -0.5*h*(u[IX(i+1,j)]-u[IX(i-1,j)]+v[IX(i,j+1)]-v[IX(i,j-1)]);
-            //p[IX(i,j)] = 0;
+            p[i + jw] = 0;
         }
     }
     set_bound (0, div);
@@ -202,23 +170,10 @@ void fluSim2dcpu::project(float * u, float * v, float * p, float * div) const {
             const int j1w = (j + 1) * width;
             const int j0w = (j - 1) * width;
             for (int i = 1 ; i < width - 1 ; i++ ) {
-                //if(is_b[i + jw] == 0.0f) continue;
                 const int i0 = i - 1;
                 const int i1 = i + 1;
-                //const float s0n = is_b[i0 + jw];
-                //const float s1n = is_b[i1 + jw];
-                //const float sn0 = is_b[i + j0w];
-                //const float sn1 = is_b[i + j1w];
-                //const float s = s0n + s1n + sn0 + sn1;
-                const float s = 4;
                 p[i + jw] = (
-                    div[i + jw] +
-                    p[i0 + jw] /** s0n*/ +
-                    p[i1 + jw] /** s1n*/ +
-                    p[i + j0w] /** sn0*/ +
-                    p[i + j1w] /** sn1*/) / s;
-
-                //p[IX(i,j)] = (div[IX(i,j)]+p[IX(i-1,j)]+p[IX(i+1,j)]+ p[IX(i,j-1)]+p[IX(i,j+1)])/4;
+                    div[i + jw] + p[i0 + jw]  + p[i1 + jw]  + p[i + j0w]  + p[i + j1w]) / 4;
             }
         }
         set_bound (0, p );
@@ -228,24 +183,14 @@ void fluSim2dcpu::project(float * u, float * v, float * p, float * div) const {
         const int j1w = (j + 1) * width;
         const int j0w = (j - 1) * width;
         for (int i = 1 ; i < width - 1 ; i++ ) {
-            //if(is_b[i + jw] == 0.0f) continue;
             const int i0 = i - 1;
             const int i1 = i + 1;
-            //const float s0n = is_b[i0 + jw];
-            //const float s1n = is_b[i1 + jw];
-            //const float sn0 = is_b[i + j0w];
-            //const float sn1 = is_b[i + j1w];
-            //u[i + jw] -= (p[i1 + jw] * s1n - p [i0 + jw] * s0n) / (h * (s1n + s0n));
-            //v[i + jw] -= (p[i + j1w] * sn1 - p [i + j0w] * sn0) / (h * (sn1 + sn0));
             u[i + jw] -= (p[i1 + jw] - p [i0 + jw]) / (h * 2);
             v[i + jw] -= (p[i + j1w] - p [i + j0w]) / (h * 2);
-            //u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
-            //v[IX(i,j)] -= 0.5*(p[IX(i,j+1)]-p[IX(i,j-1)])/h;
         }
     }
     set_bound (1, u );
     set_bound (2, v );
-    //printf("project good");
 }
 
 void fluSim2dcpu::calculate_pressure(const float dt) const {
@@ -263,12 +208,9 @@ void fluSim2dcpu::calculate_pressure(const float dt) const {
 }
 
 void fluSim2dcpu::density_step(const float dt) {
-    // x : dens
-    // x0 : dens_prev
     add_source(dens, dens_prev, dt);
     SWAP(dens_prev, dens); diffuse(0, dens, dens_prev, diff, dt);
     SWAP(dens_prev, dens); advect( 0, dens, dens_prev, u, v, dt);
-    //printf("----{density_step good}----");
 }
 
 void fluSim2dcpu::velocity_step(const float dt) {
@@ -282,7 +224,6 @@ void fluSim2dcpu::velocity_step(const float dt) {
     advect (1, u, u_prev, u_prev, v_prev, dt );
     advect (2, v, v_prev, u_prev, v_prev, dt );
     project (u, v, u_prev, v_prev);
-    //printf("----{velocity_step good}----");
 }
 
 
@@ -296,12 +237,12 @@ void fluSim2dcpu::set_bound(const int b, float* x) const {
     const int jN1 = (height - 1) * width;
     const int jN2 = (height - 2) * width;
 
-    // Gérer les bords horizontaux (gauche et droite)
+    // Gérer les bords verticaux (haut et bas)
     for (int i = 1; i < width - 1; i++) {
         x[i + j0]  = b == 2 ? -x[i + j1] : x[i + j1];   // Bas
         x[i + jN1] = b == 2 ? -x[i + jN2] : x[i + jN2]; // Haut
     }
-    // Gérer les bords verticaux (haut et bas)
+    // Gérer les bords horizontaux (gauche et droite)
     for (int j = 1; j < height - 1; j++) {
         const int ji = j * width;
         x[i0 + ji]  = b == 1 ? -x[i1 + ji] : x[i1 + ji];   // Gauche
@@ -372,7 +313,6 @@ void fluSim2dcpu::inputs_step(const int r, const float intensity) const  {
                         }
                     }
                 }
-                //add_vel(i, j, (mouse_x - force_x) , (mouse_y - force_y));
                 force_x = mouse_x;
                 force_y = mouse_y;
             }
