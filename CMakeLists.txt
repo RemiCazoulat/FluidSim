@@ -19,6 +19,8 @@ add_executable(FluidSim
         src/sim/fluSim2dcpu.cpp
         include/sim/fluSim2dcpu.h
         include/sim/fluid.h
+        src/sim/fluSim2dCpu2.cpp
+        include/sim/fluSim2dCpu2.h
 )
 
 add_subdirectory(thirdparty/glfw)

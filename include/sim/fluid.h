@@ -4,6 +4,7 @@
 
 #ifndef FLUID_H
 #define FLUID_H
+
 enum DRAW_MODE {
     DENSITY,
     VELOCITY,

@@ -1,6 +1,7 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-#include "../include/sim/fluSim2dcpu.h"
+//#include "../include/sim/fluSim2dcpu.h"
+#include "../include/sim/fluSim2dCpu2.h"
 #include "../../include/sim/fluid.h"
 
 
@@ -72,7 +73,7 @@ int main() {
     ///////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new fluSim2dcpu(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
+        fluid = new fluSim2dCpu2(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
     }
     else {
         fluid = nullptr;
