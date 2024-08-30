@@ -186,8 +186,8 @@ void eulerianFluid2dCpu::project(float * u, float * v, float * p, float * div) c
             //p[IX(i,j)] = 0;
         }
     }
-    //set_bound (0, div);
-    //set_bound (0, p);
+    set_bound (0, div);
+    set_bound (0, p);
     for (int k = 0; k < sub_step ;k++ ) {
         for (int j = 1 ; j < height - 1 ; j++ ) {
             const int jw = j * width;
@@ -197,22 +197,23 @@ void eulerianFluid2dCpu::project(float * u, float * v, float * p, float * div) c
                 if(is_b[i + jw] == 0.0f) continue;
                 const int i0 = i - 1;
                 const int i1 = i + 1;
-                const float s0n = is_b[i0 + jw];
-                const float s1n = is_b[i1 + jw];
-                const float sn0 = is_b[i + j0w];
-                const float sn1 = is_b[i + j1w];
-                const float s = s0n + s1n + sn0 + sn1;
+                //const float s0n = is_b[i0 + jw];
+                //const float s1n = is_b[i1 + jw];
+                //const float sn0 = is_b[i + j0w];
+                //const float sn1 = is_b[i + j1w];
+                //const float s = s0n + s1n + sn0 + sn1;
+                const float s = 4;
                 p[i + jw] = (
                     div[i + jw] +
-                    p[i0 + jw] * s0n +
-                    p[i1 + jw] * s1n +
-                    p[i + j0w] * sn0 +
-                    p[i + j1w] * sn1) / s;
+                    p[i0 + jw] /** s0n*/ +
+                    p[i1 + jw] /** s1n*/ +
+                    p[i + j0w] /** sn0*/ +
+                    p[i + j1w] /** sn1*/) / s;
 
                 //p[IX(i,j)] = (div[IX(i,j)]+p[IX(i-1,j)]+p[IX(i+1,j)]+ p[IX(i,j-1)]+p[IX(i,j+1)])/4;
             }
         }
-        //set_bound (0, p );
+        set_bound (0, p );
     }
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -222,18 +223,20 @@ void eulerianFluid2dCpu::project(float * u, float * v, float * p, float * div) c
             if(is_b[i + jw] == 0.0f) continue;
             const int i0 = i - 1;
             const int i1 = i + 1;
-            const float s0n = is_b[i0 + jw];
-            const float s1n = is_b[i1 + jw];
-            const float sn0 = is_b[i + j0w];
-            const float sn1 = is_b[i + j1w];
-            u[i + jw] -= (p[i1 + jw] * s1n - p [i0 + jw] * s0n) / (h * (s1n + s0n));
-            v[i + jw] -= (p[i + j1w] * sn1 - p [i + j0w] * sn0) / (h * (sn1 + sn0));
+            //const float s0n = is_b[i0 + jw];
+            //const float s1n = is_b[i1 + jw];
+            //const float sn0 = is_b[i + j0w];
+            //const float sn1 = is_b[i + j1w];
+            //u[i + jw] -= (p[i1 + jw] * s1n - p [i0 + jw] * s0n) / (h * (s1n + s0n));
+            //v[i + jw] -= (p[i + j1w] * sn1 - p [i + j0w] * sn0) / (h * (sn1 + sn0));
+            u[i + jw] -= (p[i1 + jw] - p [i0 + jw]) / (h * 2);
+            v[i + jw] -= (p[i + j1w] - p [i + j0w]) / (h * 2);
             //u[IX(i,j)] -= 0.5*(p[IX(i+1,j)]-p[IX(i-1,j)])/h;
             //v[IX(i,j)] -= 0.5*(p[IX(i,j+1)]-p[IX(i,j-1)])/h;
         }
     }
-    //set_bound (1, u );
-    //set_bound (2, v );
+    set_bound (1, u );
+    set_bound (2, v );
     //printf("project good");
 }
 

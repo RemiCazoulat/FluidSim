@@ -53,7 +53,7 @@ int main() {
 /**/    // simulation infos
 /**/    constexpr SIM_MODE mode = CPU;
 /**/    constexpr float time_accel = 1.f;
-/**/    constexpr DRAW_MODE draw_mode = VELOCITY;
+/**/    constexpr DRAW_MODE draw_mode = DENSITY;
 /**/
 /**/    ///////// End of control Panel ////////
 
