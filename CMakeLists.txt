@@ -16,8 +16,8 @@ add_executable(FluidSim
         include/shaders/render.h
         src/sim/fluid2DCpu.cpp
         include/sim/fluid2DCpu.h
-        src/sim/eulerianFluid2dCpu.cpp
-        include/sim/eulerianFluid2dCpu.h
+        src/sim/fluSim2dcpu.cpp
+        include/sim/fluSim2dcpu.h
         include/sim/fluid.h
 )
 

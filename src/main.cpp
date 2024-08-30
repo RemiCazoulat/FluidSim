@@ -1,6 +1,6 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-#include "../include/sim/eulerianFluid2dCpu.h"
+#include "../include/sim/fluSim2dcpu.h"
 #include "../../include/sim/fluid.h"
 
 
@@ -40,22 +40,23 @@ int main() {
 
 
 
-/**/    ///////// Control Panel ////////
-/**/    // grid infos
-/**/    constexpr float res = 2.f;
-/**/    width = static_cast<int>(128.f * res);
-/**/    height = static_cast<int>(72.f * res);
-/**/    cell_size = static_cast<int>(16.f / res);
-/**/    // fluid infos
-/**/    constexpr float diffusion_rate = 0.0001f;
-/**/    constexpr float viscosity_rate = 0.00000001f;
-/**/    constexpr int sub_step = 20;
-/**/    // simulation infos
-/**/    constexpr SIM_MODE mode = CPU;
-/**/    constexpr float time_accel = 1.f;
-/**/    constexpr DRAW_MODE draw_mode = DENSITY;
-/**/
-/**/    ///////// End of control Panel ////////
+/**////////// Control Panel ////////
+/**/// grid infos
+/**/constexpr float res = 4.f;
+/**/width = static_cast<int>(128.f * res);
+/**/height = static_cast<int>(72.f * res);
+/**/cell_size = static_cast<int>(16.f / res);
+/**/// fluid infos
+/**/constexpr float diffusion_rate = 0.0001f;
+/**/constexpr float viscosity_rate = 0.00000001f;
+/**/constexpr int sub_step = 20;
+/**/// simulation infos
+/**/constexpr SIM_MODE sim_mode = CPU;
+/**/constexpr float time_accel = 1.f;
+/**/constexpr DRAW_MODE draw_mode = VELOCITY;
+/**/constexpr int add_radius = 20;
+/**/constexpr float add_intensity = 0.5f;
+/**////////// End of control Panel ////////
 
 
     ///////// Init Window ///////
@@ -70,8 +71,8 @@ int main() {
 
     ///////// Main loop ///////
     fluid* fluid;
-    if constexpr (mode == CPU) {
-        fluid = new eulerianFluid2dCpu(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
+    if constexpr (sim_mode == CPU) {
+        fluid = new fluSim2dcpu(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
     }
     else {
         fluid = nullptr;
@@ -81,9 +82,12 @@ int main() {
         const auto currentTime = static_cast<float>(glfwGetTime());
         const auto dt = (currentTime - previousTime) * time_accel;
         previousTime = currentTime;
-        fluid->inputs_step();
+        fluid->inputs_step(add_radius, add_intensity);
         fluid->velocity_step(dt);
         fluid->density_step(dt);
+        if constexpr (draw_mode == PRESSURE) {
+            fluid->calculate_pressure(dt);
+        }
         const auto* buffer = fluid->draw(draw_mode);
         GLuint colorTex = createTextureVec3(buffer, width, height);
         render.makeRender(renderProgram, colorTex);
