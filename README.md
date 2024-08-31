@@ -1,7 +1,8 @@
 # FluidSim
 The goal of this project is to achieve a non-compressible Eulerian fluid simulation using the finite element method. 
 
-Current state of the simulation : 
+Current state of the simulation using the VELOCITY display mode : 
+![](resources/images/fluid2.png)
 
 
 ## What is done 
