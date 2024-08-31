@@ -10,7 +10,7 @@
 #include "../../include/libraries.h"
 #include "fluid.h"
 
-class fluSim2dCpu2 final : public fluid {
+class simpleFlu final : public fluid {
     GLFWwindow* window;
     int width;
     int height;
@@ -35,7 +35,7 @@ class fluSim2dCpu2 final : public fluid {
 
     void add_source(float *x, const float *s, float dt) const;
     void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
-    void advect(int b, float *z, const float *z0, const float *u, const float *v, float dt) const;
+    void advect(int b, float *z, const float *z0, const float *u_vel, const float *v_vel, float dt) const;
     void project(float *u, float *v, float *p, float *div) const;
 
     void set_bound(int b, float *x) const;
@@ -50,8 +50,8 @@ class fluSim2dCpu2 final : public fluid {
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    fluSim2dCpu2(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~fluSim2dCpu2() override;
+    simpleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    ~simpleFlu() override;
 
     void inputs_step(int r, float intensity) const override;
     void density_step(float dt) override;

@@ -2,11 +2,11 @@
 // Created by Rémi on 21/08/2024.
 //
 #include <iostream>
-#include "../../include/sim/fluid2DCpu.h"
+#include "../../include/sim/firstFlu.h"
 
 #include "../../thirdparty/glfw/src/internal.h"
 
-fluid2DCpu::fluid2DCpu(const int width, const int height, const float fluid_density){
+firstFlu::firstFlu(const int width, const int height, const float fluid_density){
     this->width = width;
     this->height = height;
     this->fluid_density = fluid_density;
@@ -35,14 +35,14 @@ fluid2DCpu::fluid2DCpu(const int width, const int height, const float fluid_dens
         velocity[(j * width + 1) * 2 ] = 2;
     }
 }
-fluid2DCpu::~fluid2DCpu() {
+firstFlu::~firstFlu() {
     delete[] velocity;
     delete[] pressure;
     delete[] is_border;
     delete[] pressure_color;
 }
 
-void fluid2DCpu::compute_gravity(const float time_step) const {
+void firstFlu::compute_gravity(const float time_step) const {
     for (int j = 1; j < height; j ++) {
         const int jw = j * width;
         const int jwm = (j - 1) * width;
@@ -55,7 +55,7 @@ void fluid2DCpu::compute_gravity(const float time_step) const {
     }
 }
 
-void fluid2DCpu::projection(const int sub_step, const float time_step, const float o = 1.9) const {
+void firstFlu::projection(const int sub_step, const float time_step, const float o = 1.9) const {
     for(int j = 0; j < height; j ++) {
         const int jw = j * width;
         for(int i = 0; i < width; i ++) {
@@ -104,12 +104,12 @@ void fluid2DCpu::projection(const int sub_step, const float time_step, const flo
 
 
 
-void fluid2DCpu::advection(float time_step) {
+void firstFlu::advection(float time_step) {
 
 }
 
 
-void fluid2DCpu::calculate_pressure_color() const {
+void firstFlu::calculate_pressure_color() const {
     const float p_min = find_min_pressure();
     const float p_max = find_max_pressure();
     const float delta = p_max - p_min;
@@ -129,7 +129,7 @@ void fluid2DCpu::calculate_pressure_color() const {
     }
 }
 
-void fluid2DCpu::print_pressure() const {
+void firstFlu::print_pressure() const {
     std::string r = "Pressure : \n\n";
     for(int j = 0; j < height; j ++) {
         for(int i = 0; i < width; i ++) {
@@ -141,7 +141,7 @@ void fluid2DCpu::print_pressure() const {
 }
 
 
-GLfloat fluid2DCpu::find_max_pressure() const {
+GLfloat firstFlu::find_max_pressure() const {
     GLfloat max = 0;
     for (int j = 1; j < height - 1; j++) {
         const int jw = j * width;
@@ -152,7 +152,7 @@ GLfloat fluid2DCpu::find_max_pressure() const {
     }
     return max;
 }
-GLfloat fluid2DCpu::find_min_pressure() const {
+GLfloat firstFlu::find_min_pressure() const {
     GLfloat min = 1;
     for (int j = 1; j < height - 1; j++) {
         const int jw = j * width;

@@ -13,7 +13,7 @@
 
 
 
-class fluid2DGpu {
+class fluGpu {
 
 
     GLuint projectionProgram;
@@ -33,8 +33,8 @@ public:
     GLuint velocityTex;
     GLuint pressureTex;
 
-    fluid2DGpu(int width, int heigth, int pixelsPerCell, float fluidDensity);
-    ~fluid2DGpu();
+    fluGpu(int width, int heigth, int pixelsPerCell, float fluidDensity);
+    ~fluGpu();
     void projection(int subStep, float timeStep) const;
 
 };

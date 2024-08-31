@@ -2,13 +2,13 @@
 // Created by Rémi on 21/08/2024.
 //
 
-#ifndef FLUIDSIM_FLUID2DCPU_H
-#define FLUIDSIM_FLUID2DCPU_H
+#ifndef FLUIDSIM_FIRSTFLU_H
+#define FLUIDSIM_FIRSTFLU_H
 
 #include "../../include/libraries.h"
 
 
-class fluid2DCpu {
+class firstFlu {
 
     int width;
     int height;
@@ -21,8 +21,8 @@ public:
     GLfloat* velocity;
     GLfloat* pressure_color;
 
-    fluid2DCpu(int width, int height, float fluid_density);
-    ~fluid2DCpu();
+    firstFlu(int width, int height, float fluid_density);
+    ~firstFlu();
     void compute_gravity(float time_step) const;
     void projection(int sub_step, float time_step, float o) const;
     void advection(float time_step);
@@ -38,4 +38,4 @@ public:
 };
 
 
-#endif //FLUIDSIM_FLUID2DCPU_H
+#endif //FLUIDSIM_FIRSTFLU_H

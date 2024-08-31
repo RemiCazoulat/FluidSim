@@ -2,12 +2,12 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../../include/sim/fluid2DGpu.h"
+#include "../../include/sim/fluGpu.h"
 
 
 
 
-fluid2DGpu::fluid2DGpu(const int width, const int heigth, const int pixelsPerCell, const float fluidDensity) {
+fluGpu::fluGpu(const int width, const int heigth, const int pixelsPerCell, const float fluidDensity) {
     this->width = width;
     this->heigth = heigth;
     this->pixelsPerCell = pixelsPerCell;
@@ -65,7 +65,7 @@ fluid2DGpu::fluid2DGpu(const int width, const int heigth, const int pixelsPerCel
     glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 }
 
-fluid2DGpu::~fluid2DGpu() {
+fluGpu::~fluGpu() {
     delete[] velocity;
     delete[] grid;
     delete[] results;
@@ -73,7 +73,7 @@ fluid2DGpu::~fluid2DGpu() {
 }
 
 
-void fluid2DGpu::projection(int subStep, float timeStep) const {
+void fluGpu::projection(int subStep, float timeStep) const {
     for(int i = 0; i < 1; i ++) {
         glUseProgram(projectionProgram);
         glDispatchCompute(width / 64,heigth / 1,1);

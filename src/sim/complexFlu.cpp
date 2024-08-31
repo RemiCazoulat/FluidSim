@@ -1,8 +1,7 @@
- //
-// Created by remi.cazoulat on 30/08/2024.
 //
-
-#include "../../include/sim/fluSim2dCpu2.h"
+// Created by remi.cazoulat on 26/08/2024.
+//
+#include "../../include/sim/complexFlu.h"
 
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
@@ -32,8 +31,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     mouse_y = static_cast<float>(ypos);
 }
 
-
-fluSim2dCpu2::fluSim2dCpu2(GLFWwindow* window,const int width,const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+complexFlu::complexFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
     this->window = window;
     this->width = width;
     this->height = height;
@@ -77,7 +75,7 @@ fluSim2dCpu2::fluSim2dCpu2(GLFWwindow* window,const int width,const int height, 
 
 }
 
-fluSim2dCpu2::~fluSim2dCpu2() {
+complexFlu::~complexFlu() {
     delete[] is_b;
     delete[] u;
     delete[] v;
@@ -92,11 +90,11 @@ fluSim2dCpu2::~fluSim2dCpu2() {
     delete[] color;
 }
 
-void fluSim2dCpu2::add_source(float* x, const float* s,const float dt) const {
+void complexFlu::add_source(float* x, const float* s, const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void fluSim2dCpu2::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
+void complexFlu::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -115,7 +113,7 @@ void fluSim2dCpu2::diffuse(const int b, float* x, const float* x0, const float d
 }
 
 
-void fluSim2dCpu2::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
+void complexFlu::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
@@ -150,7 +148,7 @@ void fluSim2dCpu2::advect(const int b, float * z, const float * z0, const float 
 }
 
 
-void fluSim2dCpu2::project(float * u, float * v, float * p, float * div) const {
+void complexFlu::project(float * u, float * v, float * p, float * div) const {
     const float h = grid_spacing;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -195,7 +193,7 @@ void fluSim2dCpu2::project(float * u, float * v, float * p, float * div) const {
     set_bound (2, v );
 }
 
-void fluSim2dCpu2::calculate_pressure(const float dt) const {
+void complexFlu::calculate_pressure(const float dt) const {
     for(int j = 1; j < height - 1; j++) {
         const int jw = j * width;
         const int j0w = (j - 1) * width;
@@ -209,13 +207,13 @@ void fluSim2dCpu2::calculate_pressure(const float dt) const {
     }
 }
 
-void fluSim2dCpu2::density_step(const float dt) {
+void complexFlu::density_step(const float dt) {
     add_source(dens, dens_prev, dt);
     SWAP(dens_prev, dens); diffuse(0, dens, dens_prev, diff, dt);
     SWAP(dens_prev, dens); advect( 0, dens, dens_prev, u, v, dt);
 }
 
-void fluSim2dCpu2::velocity_step(const float dt) {
+void complexFlu::velocity_step(const float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
     SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
@@ -229,7 +227,7 @@ void fluSim2dCpu2::velocity_step(const float dt) {
 }
 
 
-void fluSim2dCpu2::set_bound(const int b, float* x) const {
+void complexFlu::set_bound(const int b, float* x) const {
     constexpr int i0 = 0;
     constexpr int i1 = 1;
     const int iN1 = width - 1;
@@ -257,11 +255,11 @@ void fluSim2dCpu2::set_bound(const int b, float* x) const {
     x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // Coin haut droit
 }
 
-void fluSim2dCpu2::add_dens(const int x, const int y) const {
+void complexFlu::add_dens(const int x, const int y) const {
     dens_prev[x + y * width] += 0.5f;
 }
 
-void fluSim2dCpu2::add_permanent_dens(const int x, const int y, const float radius) const {
+void complexFlu::add_permanent_dens(const int x, const int y, const float radius) const {
     for(int j = 0; j < height; j++) {
         const int jw = j * width;
         for(int i = 0; i < width; i++) {
@@ -275,17 +273,17 @@ void fluSim2dCpu2::add_permanent_dens(const int x, const int y, const float radi
     }
 }
 
-void fluSim2dCpu2::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void complexFlu::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_prev[x + y * width] = u_intensity;
     u_prev[x + y * width] = v_intensity;
 }
 
-void fluSim2dCpu2::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void complexFlu::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_permanent[x + y * width] = u_intensity;
     v_permanent[x + y * width] = v_intensity;
 }
 
-void fluSim2dCpu2::add_all_perm_step() const {
+void complexFlu::add_all_perm_step() const {
     for(int i = 0; i < width * height; i ++) {
         if(dens_permanent[i] > 0.0f) dens_prev[i] += 0.01f;
         if(u_permanent[i] > 0.0f) u_prev[i] += u_permanent[i];
@@ -293,7 +291,7 @@ void fluSim2dCpu2::add_all_perm_step() const {
     }
 }
 
-void fluSim2dCpu2::inputs_step(const int r, const float intensity) const  {
+void complexFlu::inputs_step(const int r, const float intensity) const  {
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
@@ -368,7 +366,7 @@ static void getSciColor(float val, const float min, const float max, float &r, f
     }
 }
 
-float *fluSim2dCpu2::draw(const DRAW_MODE mode) const {
+float *complexFlu::draw(const DRAW_MODE mode) const {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -405,7 +403,7 @@ float *fluSim2dCpu2::draw(const DRAW_MODE mode) const {
     return color;
 }
 
-float fluSim2dCpu2::find_max(const float* x) const {
+float complexFlu::find_max(const float* x) const {
     float max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -416,7 +414,7 @@ float fluSim2dCpu2::find_max(const float* x) const {
     return max;
 }
 
-float fluSim2dCpu2::find_min(const float* x) const {
+float complexFlu::find_min(const float* x) const {
     float min = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;

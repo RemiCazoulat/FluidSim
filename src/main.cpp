@@ -1,7 +1,7 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-//#include "../include/sim/fluSim2dcpu.h"
-#include "../include/sim/fluSim2dCpu2.h"
+//#include "../include/sim/complexFlu.h"
+#include "../include/sim/simpleFlu.h"
 #include "../../include/sim/fluid.h"
 
 
@@ -41,9 +41,9 @@ int main() {
 
 
 
-/**////////// Control Panel ////////
+///////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 4.f;
+/**/constexpr float res = 2.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
@@ -57,7 +57,7 @@ int main() {
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 5 * res;
 /**/constexpr float add_intensity = 0.5f;
-/**////////// End of control Panel ////////
+///////////// End of control Panel ////////
 
 
     ///////// Init Window ///////
@@ -73,7 +73,7 @@ int main() {
     ///////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new fluSim2dCpu2(window,width,height,cell_size,diffusion_rate,viscosity_rate,sub_step);
+        fluid = new simpleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
         fluid = nullptr;
