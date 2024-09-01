@@ -1,7 +1,8 @@
 # FluidSim
 The goal of this project is to achieve a non-compressible Eulerian fluid simulation using the finite element method. 
 
-Current state of the simulation : 
+Current state of the simulation using the VELOCITY display mode : 
+![](resources/images/fluid2.png)
 
 
 ## What is done 
@@ -13,4 +14,10 @@ Current state of the simulation :
 - Modifying bounds managment to simplify it and to easily add objects and obstacles (with a mask array)
 - Simplify projection function on CPU and see if it works well
 - passing everything on GPU using openGL to have better performance
+- add a third dimension
 - passing everything on GPU using Vulkan and compare the performance with the openGL simulation to si if Vulkan realy worth a try
+
+## future of the project
+- learn how to transform the fluid into a plasma, and add magnets
+- make a simulation of a rocket engine
+- make a simulation of a nuclear fusion reactor
