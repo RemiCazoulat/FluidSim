@@ -1,6 +1,6 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-//#include "../include/sim/complexFlu.h"
+#include "../include/sim/complexFlu.h"
 #include "../include/sim/simpleFlu.h"
 #include "../../include/sim/fluid.h"
 
@@ -50,7 +50,7 @@ int main() {
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
 /**/constexpr float viscosity_rate = 0.00000001f;
-/**/constexpr int sub_step = 20;
+/**/constexpr int sub_step = 50;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = CPU;
 /**/constexpr float time_accel = 1.f;
@@ -73,7 +73,7 @@ int main() {
     ///////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new simpleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
+        fluid = new complexFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
         fluid = nullptr;
