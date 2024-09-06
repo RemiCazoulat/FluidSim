@@ -119,6 +119,80 @@ void simpleFlu::diffuse(const int b, float* x, const float* x0, const float diff
     }
 }
 
+float avg_u(const int i,const int j, const float* u,const int width) {
+    const int jw = j * width;
+    const int j0w = (j - 1) * width;
+    return (u[i + j0w] + u[i + jw] + u[i+1 + j0w] + u[i+1 + j]) * 0.25f;
+}
+
+float avg_v(const int i,const int j, const float* v,const int width) {
+    const int jw = j * width;
+    const int j1w = (j + 1) * width;
+    return (v[i - 1 + jw] + v[i + jw] + v[i - 1 + j1w] + v[i + j1w]) * 0.25f;
+}
+
+
+float simpleFlu::interpolate(float x,float y,const float* t, const float dx, const float dy) const {
+    const float h = grid_spacing;
+    const float h1 = 1.f / h;
+
+    x = std::max(std::min(x, static_cast<float>(width) * h), h);
+    y = std::max(std::min(y, static_cast<float>(height) * h), h);
+
+    const float x0 = std::min(std::floor((x - dx) * h1), static_cast<float>(width) - 1.f);
+    const float x1 = std::min(x0 + 1, static_cast<float>(width) - 1.f);
+    const float tx = (x - dx - x0 * h) * h1;
+
+    const float y0 = std::min(std::floor((y - dy) * h1), static_cast<float>(height) - 1.f);
+    const float y1 = std::min(y0 + 1, static_cast<float>(height) - 1.f);
+    const float ty = (y - dy - y0 * h) * h1;
+
+    const float sx = 1.0f - tx;
+    const float sy = 1.0f - ty;
+
+    const auto widthf = static_cast<float>(width);
+    const float val = sx * sy * t[static_cast<int>(x0 + y0 * widthf)] +
+                tx * sy * t[static_cast<int>(x1 + y0 * widthf)] +
+                sx * ty * t[static_cast<int>(x0 + y1 * widthf)] +
+                tx * ty * t[static_cast<int>(x1 + y1 * widthf)];
+    return val;
+}
+
+
+
+void simpleFlu::advect_vel(const float dt) const {
+    const float h = grid_spacing;
+    const float h2 = 0.5f * h;
+    for (int j = 1; j < height - 1; j++ ) {
+        const int jw = j * width;
+        const int j0w = (j - 1) * width;
+        for (int i = 1; i < width - 1; i++ ) {
+            // u
+            if(is_b[i + jw] != 0.f && is_b[i - 1 + jw] != 0.f) {
+                float x = static_cast<float>(i) * h;
+                float y = static_cast<float>(j) * h + h2;
+                const float u_f = u_prev[i + jw];
+                const float v_f = avg_v(i, j, v_prev, width);
+                x -= dt * u_f;
+                y -= dt * v_f;
+                const float u_val = interpolate(x, y, u, 0.f, h2);
+                u[i + jw] = u_val;
+            }
+            // v
+            if(is_b[i + jw] != 0.f && is_b[i + j0w] != 0.f) {
+                float x = static_cast<float>(i) * h + h2;
+                float y = static_cast<float>(j) * h;
+                const float u_f = avg_u(i, j, u_prev, width);
+                const float v_f = v[i + jw];
+                x -= dt * u_f;
+                y -= dt * v_f;
+                const float v_val = interpolate(x, y, v_prev, h2, 0.f);
+                v[i + jw] = v_val;
+            }
+        }
+    }
+}
+
 
 void simpleFlu::advect(const int b, float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
@@ -154,7 +228,9 @@ void simpleFlu::advect(const int b, float * z, const float * z0, const float * u
     set_bound(b, z);
 }
 
-
+void simpleFlu::project_simple() const {
+    //TODO : Implement this function
+}
 void simpleFlu::project(float * u, float * v, float * p, float * div) const {
     const float h = grid_spacing;
     for (int j = 1 ; j < height - 1 ; j++ ) {
@@ -220,7 +296,10 @@ void simpleFlu::density_step(const float dt) {
     SWAP(dens_prev, dens); advect( 0, dens, dens_prev, u, v, dt);
 }
 
-void simpleFlu::velocity_step(const float dt) {
+
+
+
+void simpleFlu::velocity_step(float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
     SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
@@ -228,11 +307,9 @@ void simpleFlu::velocity_step(const float dt) {
     project (u, v, u_prev, v_prev);
     SWAP( u_prev, u );
     SWAP( v_prev, v);
-    advect (1, u, u_prev, u_prev, v_prev, dt );
-    advect (2, v, v_prev, u_prev, v_prev, dt );
+    advect_vel(dt);
     project (u, v, u_prev, v_prev);
 }
-
 
 void simpleFlu::set_bound(const int b, float* x) const {
     constexpr int i0 = 0;

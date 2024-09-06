@@ -43,14 +43,14 @@ int main() {
 
 ///////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 2.f;
+/**/constexpr float res = 4.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
 /**/constexpr float viscosity_rate = 0.00000001f;
-/**/constexpr int sub_step = 50;
+/**/constexpr int sub_step = 20;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = CPU;
 /**/constexpr float time_accel = 1.f;

@@ -35,11 +35,14 @@ class simpleFlu final : public fluid {
 
     void add_source(float *x, const float *s, float dt) const;
     void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
+    float interpolate(float x, float y, const float *t, float dx, float dy) const;
+    void advect_vel(float dt) const;
     void advect(int b, float *z, const float *z0, const float *u_vel, const float *v_vel, float dt) const;
+
+    void project_simple() const;
+
     void project(float *u, float *v, float *p, float *div) const;
-
     void set_bound(int b, float *x) const;
-
     void add_dens(int x, int y) const;
     void add_permanent_dens(int x, int y, float radius) const;
     void add_vel(int x, int y, float u_intensity, float v_intensity) const;
@@ -52,7 +55,6 @@ public:
 
     simpleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~simpleFlu() override;
-
     void inputs_step(int r, float intensity) const override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
