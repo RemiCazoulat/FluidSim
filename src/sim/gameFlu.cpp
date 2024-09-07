@@ -2,6 +2,7 @@
 // Created by remi.cazoulat on 26/08/2024.
 //
 #include "../../include/sim/gameFlu.h"
+#include "../../include/shaders/shader.h"
 
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
@@ -366,7 +367,7 @@ static void getSciColor(float val, const float min, const float max, float &r, f
     }
 }
 
-float *gameFlu::draw(const DRAW_MODE mode) const {
+GLuint gameFlu::draw(const DRAW_MODE mode) const {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -400,7 +401,8 @@ float *gameFlu::draw(const DRAW_MODE mode) const {
             color[ij * 3 + 2] = b;
         }
     }
-    return color;
+    GLuint colorTex = createTextureVec3(color, width, height);
+    return colorTex;
 }
 
 float gameFlu::find_max(const float* x) const {

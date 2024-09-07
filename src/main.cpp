@@ -43,7 +43,7 @@ int main() {
 
 ///////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 2.f;
+/**/constexpr float res = 4.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
@@ -89,8 +89,7 @@ int main() {
         if constexpr (draw_mode == PRESSURE) {
             fluid->calculate_pressure(dt);
         }
-        const auto* buffer = fluid->draw(draw_mode);
-        GLuint colorTex = createTextureVec3(buffer, width, height);
+        GLuint colorTex = fluid->draw(draw_mode);
         render.makeRender(renderProgram, colorTex);
         glfwSwapBuffers(window);
         glfwPollEvents();

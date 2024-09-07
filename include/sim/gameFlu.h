@@ -57,7 +57,7 @@ public:
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void calculate_pressure(float dt) const override;
-    [[nodiscard]] float* draw(DRAW_MODE mode) const override;
+    [[nodiscard]] GLuint draw(DRAW_MODE mode) const override;
 };
 
 #endif //FLUID_DENSITY_H
