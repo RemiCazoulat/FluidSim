@@ -1,6 +1,9 @@
  //
 // Created by remi.cazoulat on 30/08/2024.
 //
+// TODO : modifier project pour que ca colle avec le tableau is_b.
+//  appeler correctement is_vel_bound.
+//  On y est presque !
 
 #include "../../include/sim/simpleFlu.h"
 
@@ -229,7 +232,30 @@ void simpleFlu::advect(const int b, float * z, const float * z0, const float * u
 }
 
 void simpleFlu::project_simple() const {
-    //TODO : Implement this function
+    for(int k = 0; k < sub_step; k ++) {
+        for(int j = 1; j < height - 1; j ++) {
+            const int jw = j * width;
+            const int j1w = (j + 1) * width;
+            const int j0w = (j - 1) * width;
+            for(int i = 1; i < width - 1; i ++) {
+                const int i0 = i - 1;
+                const int i1 = i + 1;
+                if(is_b[i + jw] == 0.f) continue;
+                const float sx0 = is_b[i0 + jw];
+                const float sx1 = is_b[i1 + jw];
+                const float sy0 = is_b[i + j0w];
+                const float sy1 = is_b[i + j1w];
+                const float s = sx0 + sx1 + sy0 + sy1;
+                if (s == 0.f) continue;
+                const float divergence = u[i1 + jw] - u[i + jw] + v[i + j1w] - v[i + jw];
+                const float p = -divergence / s * 1.9f;
+                u[i + jw] -= sx0 * p;
+                u[i1 + jw] += sx1 * p;
+                v[i + jw] -= sy0 * p;
+                v[i + j1w] += sy1 * p;
+            }
+        }
+    }
 }
 void simpleFlu::project(float * u, float * v, float * p, float * div) const {
     const float h = grid_spacing;
@@ -240,7 +266,7 @@ void simpleFlu::project(float * u, float * v, float * p, float * div) const {
         for (int i = 1 ; i < width - 1 ; i++ ) {
             const int i0 = i - 1;
             const int i1 = i + 1;
-            const float d =u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
+            const float d = u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
             div[i + jw] = -0.5f * h * d;
             p[i + jw] = 0;
         }
@@ -305,10 +331,37 @@ void simpleFlu::velocity_step(float dt) {
     SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
     SWAP(v_prev, v); diffuse (2, v, v_prev, visc, dt);
     project (u, v, u_prev, v_prev);
+    //project_simple();
     SWAP( u_prev, u );
     SWAP( v_prev, v);
-    advect_vel(dt);
+    advect (1, u, u_prev, u_prev, v_prev, dt );
+    advect (2, v, v_prev, u_prev, v_prev, dt );
     project (u, v, u_prev, v_prev);
+    //advect_vel(dt);
+    //project_simple();
+}
+
+void simpleFlu::set_vel_bound() const {
+    for(int j = 1; j < height - 1; j ++) {
+        const int jw = j * width;
+        const int j0w = (j - 1) * width;
+        const int j1w = (j + 1) * width;
+        for(int i = 1; i < width - 1; i ++) {
+            const int i0 = i - 1;
+            const int i1 = i + 1;
+            float x = u[i + jw];
+            float y = v[i + jw];
+            const float s0x = is_b[i0 + jw];
+            const float s1x = is_b[i1 + jw];
+            const float s0y = is_b[i + j0w];
+            const float s1y = is_b[i + j1w];
+            if(x > 0.f && s1x == 0.f || x < 0.f && s0x == 0.f) x = -x;
+            if(y > 0.f && s1y == 0.f || y < 0.f && s0y == 0.f) y = -y;
+            u[i + jw] = x;
+            v[i + jw] = y;
+
+        }
+    }
 }
 
 void simpleFlu::set_bound(const int b, float* x) const {
@@ -321,22 +374,22 @@ void simpleFlu::set_bound(const int b, float* x) const {
     const int jN1 = (height - 1) * width;
     const int jN2 = (height - 2) * width;
 
-    // Gérer les bords verticaux (haut et bas)
+    // vertical borders (up and down)
     for (int i = 1; i < width - 1; i++) {
-        x[i + j0]  = b == 2 ? -x[i + j1] : x[i + j1];   // Bas
-        x[i + jN1] = b == 2 ? -x[i + jN2] : x[i + jN2]; // Haut
+        x[i + j0]  = b == 2 ? -x[i + j1] : x[i + j1];   // down
+        x[i + jN1] = b == 2 ? -x[i + jN2] : x[i + jN2]; // up
     }
-    // Gérer les bords horizontaux (gauche et droite)
+    // horizontal borders(right and left)
     for (int j = 1; j < height - 1; j++) {
         const int ji = j * width;
-        x[i0 + ji]  = b == 1 ? -x[i1 + ji] : x[i1 + ji];   // Gauche
-        x[iN1 + ji] = b == 1 ? -x[iN2 + ji] : x[iN2 + ji]; // Droite
+        x[i0 + ji]  = b == 1 ? -x[i1 + ji] : x[i1 + ji];   // Left
+        x[iN1 + ji] = b == 1 ? -x[iN2 + ji] : x[iN2 + ji]; // Right
     }
-    // Gérer les coins
-    x[i0  + j0]  = 0.5f * (x[i1  + j0] + x[i0  + j1]);  // Coin bas gauche
-    x[i0  + jN1] = 0.5f * (x[i1  + jN1] + x[i0  + jN2]); // Coin haut gauche
-    x[iN1 + j0]  = 0.5f * (x[iN2 + j0] + x[iN1 + j1]);   // Coin bas droit
-    x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // Coin haut droit
+    // corners (mean of the 2 nearest)
+    x[i0  + j0]  = 0.5f * (x[i1  + j0] + x[i0  + j1]);  // corner down left
+    x[i0  + jN1] = 0.5f * (x[i1  + jN1] + x[i0  + jN2]); // corner up left
+    x[iN1 + j0]  = 0.5f * (x[iN2 + j0] + x[iN1 + j1]);   // corner down right
+    x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // corner up right
 }
 
 void simpleFlu::add_dens(const int x, const int y) const {
@@ -411,7 +464,7 @@ void simpleFlu::inputs_step(const int r, const float intensity) const  {
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
     constexpr float s = 1.f;
-    const float v = std::sqrt(x * x + y * y) / 0.1f;
+    const float v = std::sqrt(x * x + y * y) / r_max;
     const int segment = static_cast<int>(h / 60) % 6;  // Determine dans quel segment H tombe
     const float f = h / 60 - static_cast<float>(segment);  // Facteur fractionnaire de H
     const float p = v * (1 - s);

@@ -60,6 +60,8 @@ public:
     void velocity_step(float dt) override;
     void calculate_pressure(float dt) const override;
     [[nodiscard]] float* draw(DRAW_MODE mode) const override;
+
+    void set_vel_bound() const;
 };
 
 

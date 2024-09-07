@@ -326,8 +326,8 @@ void complexFlu::inputs_step(const int r, const float intensity) const  {
 
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
-    constexpr float s = 1.f;
     const float v = std::sqrt(x * x + y * y) / r_max;
+    const float s = 1.0f;
     const int segment = static_cast<int>(h / 60) % 6;  // Determine dans quel segment H tombe
     const float f = h / 60 - static_cast<float>(segment);  // Facteur fractionnaire de H
     const float p = v * (1 - s);

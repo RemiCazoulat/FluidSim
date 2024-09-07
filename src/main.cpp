@@ -43,7 +43,7 @@ int main() {
 
 ///////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 4.f;
+/**/constexpr float res = 2.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
@@ -73,7 +73,7 @@ int main() {
     ///////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new complexFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
+        fluid = new simpleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
         fluid = nullptr;
