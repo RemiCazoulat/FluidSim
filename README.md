@@ -15,7 +15,8 @@ Current state of the simulation using the VELOCITY display mode :
 - Simplify projection function on CPU and see if it works well
 - passing everything on GPU using openGL to have better performance
 - add a third dimension
-- passing everything on GPU using Vulkan and compare the performance with the openGL simulation to si if Vulkan realy worth a try
+- passing everything on GPU using Vulkan and compare the performance with the openGL simulation to see if Vulkan realy worth a try
+- make a Qt interface to have better interactions with the simulation (optional)
 
 ## future of the project
 - learn how to transform the fluid into a plasma, and add magnets
