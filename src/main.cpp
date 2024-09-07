@@ -1,7 +1,7 @@
 #include "../../include/shaders/render.h"
 #include "../../include/shaders/compute.h"
-#include "../include/sim/complexFlu.h"
-#include "../include/sim/simpleFlu.h"
+#include "../include/sim/gameFlu.h"
+#include "../include/sim/obstacleFlu.h"
 #include "../../include/sim/fluid.h"
 
 
@@ -73,7 +73,7 @@ int main() {
     ///////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new simpleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
+        fluid = new obstacleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
         fluid = nullptr;

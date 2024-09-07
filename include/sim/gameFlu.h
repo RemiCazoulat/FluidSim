@@ -10,7 +10,7 @@
 #include "../../include/libraries.h"
 #include "fluid.h"
 
-class complexFlu final : public fluid{
+class gameFlu final : public fluid{
     GLFWwindow* window;
     int width;
     int height;
@@ -50,8 +50,8 @@ class complexFlu final : public fluid{
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    complexFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~complexFlu() override;
+    gameFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    ~gameFlu() override;
 
     void inputs_step(int r, float intensity) const override;
     void density_step(float dt) override;

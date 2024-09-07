@@ -1,7 +1,11 @@
+ //
+// Created by remi.cazoulat on 30/08/2024.
 //
-// Created by remi.cazoulat on 26/08/2024.
-//
-#include "../../include/sim/complexFlu.h"
+// TODO : modifier project pour que ca colle avec le tableau is_b.
+//  appeler correctement is_vel_bound.
+//  On y est presque !
+
+#include "../../include/sim/obstacleFlu.h"
 
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
@@ -31,7 +35,8 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     mouse_y = static_cast<float>(ypos);
 }
 
-complexFlu::complexFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+
+obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
     this->window = window;
     this->width = width;
     this->height = height;
@@ -75,7 +80,7 @@ complexFlu::complexFlu(GLFWwindow* window, const int width, const int height, co
 
 }
 
-complexFlu::~complexFlu() {
+obstacleFlu::~obstacleFlu() {
     delete[] is_b;
     delete[] u;
     delete[] v;
@@ -90,11 +95,11 @@ complexFlu::~complexFlu() {
     delete[] color;
 }
 
-void complexFlu::add_source(float* x, const float* s, const float dt) const {
+void obstacleFlu::add_source(float* x, const float* s, const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void complexFlu::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
+void obstacleFlu::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -102,36 +107,115 @@ void complexFlu::diffuse(const int b, float* x, const float* x0, const float dif
             const int jw0 = (j - 1) * width;
             const int jw1 = (j + 1) * width;
             for (int i = 1 ; i < width - 1; i++ ) {
+                if(is_b[i + jw] == 0.f) continue;
                 const int i0 = i - 1;
                 const int i1 = i + 1;
-                const float d = x[i0 + jw] + x[i1 + jw] + x[i + jw0] + x[i + jw1];
-                x[i + jw] = (x0[i + jw] + a * d) / (1 + 4 * a);
+                const float s0n = is_b[i0 + jw];
+                const float s1n = is_b[i1 + jw];
+                const float sn0 = is_b[i + jw0];
+                const float sn1 = is_b[i + jw1];
+                const float s = s0n + s1n + sn0 + sn1;
+                const float d = x[i0 + jw] * s0n + x[i1 + jw] * s1n + x[i + jw0] * sn0 + x[i + jw1] * sn1;
+                x[i + jw] = (x0[i + jw] + a * d) / (1 + s * a);
             }
         }
-        set_bound(b, x);
+    }
+}
+
+float avg_u(const int i,const int j, const float* u,const int width) {
+    const int jw = j * width;
+    const int j0w = (j - 1) * width;
+    return (u[i + j0w] + u[i + jw] + u[i+1 + j0w] + u[i+1 + j]) * 0.25f;
+}
+
+float avg_v(const int i,const int j, const float* v,const int width) {
+    const int jw = j * width;
+    const int j1w = (j + 1) * width;
+    return (v[i - 1 + jw] + v[i + jw] + v[i - 1 + j1w] + v[i + j1w]) * 0.25f;
+}
+
+
+float obstacleFlu::interpolate(float x, float y, const float* t, const float dx, const float dy) const {
+    const float h = grid_spacing;
+    const float h1 = 1.f / h;
+
+    x = std::max(std::min(x, static_cast<float>(width) * h), h);
+    y = std::max(std::min(y, static_cast<float>(height) * h), h);
+
+    const float x0 = std::min(std::floor((x - dx) * h1), static_cast<float>(width) - 1.f);
+    const float x1 = std::min(x0 + 1, static_cast<float>(width) - 1.f);
+    const float tx = (x - dx - x0 * h) * h1;
+
+    const float y0 = std::min(std::floor((y - dy) * h1), static_cast<float>(height) - 1.f);
+    const float y1 = std::min(y0 + 1, static_cast<float>(height) - 1.f);
+    const float ty = (y - dy - y0 * h) * h1;
+
+    const float sx = 1.0f - tx;
+    const float sy = 1.0f - ty;
+
+    const auto widthf = static_cast<float>(width);
+    const float val = sx * sy * t[static_cast<int>(x0 + y0 * widthf)] +
+                tx * sy * t[static_cast<int>(x1 + y0 * widthf)] +
+                sx * ty * t[static_cast<int>(x0 + y1 * widthf)] +
+                tx * ty * t[static_cast<int>(x1 + y1 * widthf)];
+    return val;
+}
+
+
+
+void obstacleFlu::advect_vel(const float dt) const {
+    const float h = grid_spacing;
+    const float h2 = 0.5f * h;
+    for (int j = 1; j < height - 1; j++ ) {
+        const int jw = j * width;
+        const int j0w = (j - 1) * width;
+        for (int i = 1; i < width - 1; i++ ) {
+            // u
+            if(is_b[i + jw] != 0.f && is_b[i - 1 + jw] != 0.f) {
+                float x = static_cast<float>(i) * h;
+                float y = static_cast<float>(j) * h + h2;
+                const float u_f = u_prev[i + jw];
+                const float v_f = avg_v(i, j, v_prev, width);
+                x -= dt * u_f;
+                y -= dt * v_f;
+                const float u_val = interpolate(x, y, u, 0.f, h2);
+                u[i + jw] = u_val;
+            }
+            // v
+            if(is_b[i + jw] != 0.f && is_b[i + j0w] != 0.f) {
+                float x = static_cast<float>(i) * h + h2;
+                float y = static_cast<float>(j) * h;
+                const float u_f = avg_u(i, j, u_prev, width);
+                const float v_f = v[i + jw];
+                x -= dt * u_f;
+                y -= dt * v_f;
+                const float v_val = interpolate(x, y, v_prev, h2, 0.f);
+                v[i + jw] = v_val;
+            }
+        }
     }
 }
 
 
-void complexFlu::advect(const int b, float * z, const float * z0, const float * u, const float * v, const float dt) const {
+void obstacleFlu::advect(const int b, float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
         const int jw = j * width;
         for (int i = 1; i < width - 1; i++ ) {
-            const float deltax = dt0w * u[i + jw];
-            const float deltay = dt0h * v[i + jw];
+            const float delta_x = dt0w * u_vel[i + jw];
+            const float delta_y = dt0h * v_vel[i + jw];
 
-            float x = static_cast<float>(i) - deltax;
-            float y = static_cast<float>(j) - deltay;
+            float x = static_cast<float>(i) - delta_x;
+            float y = static_cast<float>(j) - delta_y;
 
-            if (x < 1.5) x = 1.5;
-            if (x > static_cast<float>(width) - 3 + 0.5) x = static_cast<float>(width) - 3 + 0.5f;
+            if (x < 0.5) x = 0.5;
+            if (x > static_cast<float>(width) - 1.5) x = static_cast<float>(width) - 1.5f;
             const int i0 = static_cast<int>(x);
             const int i1 = i0 + 1;
 
             if (y < 1.5) y = 1.5;
-            if (y > static_cast<float>(height) - 3 + 0.5) y = static_cast<float>(height) - 3 + 0.5f;
+            if (y > static_cast<float>(height) - 1.5) y = static_cast<float>(height) - 1.5f;
             const int j0 = static_cast<int>(y);
             const int j1 = j0 + 1;
 
@@ -147,8 +231,33 @@ void complexFlu::advect(const int b, float * z, const float * z0, const float * 
     set_bound(b, z);
 }
 
-
-void complexFlu::project(float * u, float * v, float * p, float * div) const {
+void obstacleFlu::project_simple() const {
+    for(int k = 0; k < sub_step; k ++) {
+        for(int j = 1; j < height - 1; j ++) {
+            const int jw = j * width;
+            const int j1w = (j + 1) * width;
+            const int j0w = (j - 1) * width;
+            for(int i = 1; i < width - 1; i ++) {
+                const int i0 = i - 1;
+                const int i1 = i + 1;
+                if(is_b[i + jw] == 0.f) continue;
+                const float sx0 = is_b[i0 + jw];
+                const float sx1 = is_b[i1 + jw];
+                const float sy0 = is_b[i + j0w];
+                const float sy1 = is_b[i + j1w];
+                const float s = sx0 + sx1 + sy0 + sy1;
+                if (s == 0.f) continue;
+                const float divergence = u[i1 + jw] - u[i + jw] + v[i + j1w] - v[i + jw];
+                const float p = -divergence / s * 1.9f;
+                u[i + jw] -= sx0 * p;
+                u[i1 + jw] += sx1 * p;
+                v[i + jw] -= sy0 * p;
+                v[i + j1w] += sy1 * p;
+            }
+        }
+    }
+}
+void obstacleFlu::project(float * u, float * v, float * p, float * div) const {
     const float h = grid_spacing;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -157,7 +266,7 @@ void complexFlu::project(float * u, float * v, float * p, float * div) const {
         for (int i = 1 ; i < width - 1 ; i++ ) {
             const int i0 = i - 1;
             const int i1 = i + 1;
-            const float d =u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
+            const float d = u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
             div[i + jw] = -0.5f * h * d;
             p[i + jw] = 0;
         }
@@ -193,7 +302,7 @@ void complexFlu::project(float * u, float * v, float * p, float * div) const {
     set_bound (2, v );
 }
 
-void complexFlu::calculate_pressure(const float dt) const {
+void obstacleFlu::calculate_pressure(const float dt) const {
     for(int j = 1; j < height - 1; j++) {
         const int jw = j * width;
         const int j0w = (j - 1) * width;
@@ -207,27 +316,55 @@ void complexFlu::calculate_pressure(const float dt) const {
     }
 }
 
-void complexFlu::density_step(const float dt) {
+void obstacleFlu::density_step(const float dt) {
     add_source(dens, dens_prev, dt);
     SWAP(dens_prev, dens); diffuse(0, dens, dens_prev, diff, dt);
     SWAP(dens_prev, dens); advect( 0, dens, dens_prev, u, v, dt);
 }
 
-void complexFlu::velocity_step(const float dt) {
+
+
+
+void obstacleFlu::velocity_step(float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
     SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
     SWAP(v_prev, v); diffuse (2, v, v_prev, visc, dt);
     project (u, v, u_prev, v_prev);
+    //project_simple();
     SWAP( u_prev, u );
     SWAP( v_prev, v);
     advect (1, u, u_prev, u_prev, v_prev, dt );
     advect (2, v, v_prev, u_prev, v_prev, dt );
     project (u, v, u_prev, v_prev);
+    //advect_vel(dt);
+    //project_simple();
 }
 
+void obstacleFlu::set_vel_bound() const {
+    for(int j = 1; j < height - 1; j ++) {
+        const int jw = j * width;
+        const int j0w = (j - 1) * width;
+        const int j1w = (j + 1) * width;
+        for(int i = 1; i < width - 1; i ++) {
+            const int i0 = i - 1;
+            const int i1 = i + 1;
+            float x = u[i + jw];
+            float y = v[i + jw];
+            const float s0x = is_b[i0 + jw];
+            const float s1x = is_b[i1 + jw];
+            const float s0y = is_b[i + j0w];
+            const float s1y = is_b[i + j1w];
+            if(x > 0.f && s1x == 0.f || x < 0.f && s0x == 0.f) x = -x;
+            if(y > 0.f && s1y == 0.f || y < 0.f && s0y == 0.f) y = -y;
+            u[i + jw] = x;
+            v[i + jw] = y;
 
-void complexFlu::set_bound(const int b, float* x) const {
+        }
+    }
+}
+
+void obstacleFlu::set_bound(const int b, float* x) const {
     constexpr int i0 = 0;
     constexpr int i1 = 1;
     const int iN1 = width - 1;
@@ -237,29 +374,29 @@ void complexFlu::set_bound(const int b, float* x) const {
     const int jN1 = (height - 1) * width;
     const int jN2 = (height - 2) * width;
 
-    // Gérer les bords verticaux (haut et bas)
+    // vertical borders (up and down)
     for (int i = 1; i < width - 1; i++) {
-        x[i + j0]  = b == 2 ? -x[i + j1] : x[i + j1];   // Bas
-        x[i + jN1] = b == 2 ? -x[i + jN2] : x[i + jN2]; // Haut
+        x[i + j0]  = b == 2 ? -x[i + j1] : x[i + j1];   // down
+        x[i + jN1] = b == 2 ? -x[i + jN2] : x[i + jN2]; // up
     }
-    // Gérer les bords horizontaux (gauche et droite)
+    // horizontal borders(right and left)
     for (int j = 1; j < height - 1; j++) {
         const int ji = j * width;
-        x[i0 + ji]  = b == 1 ? -x[i1 + ji] : x[i1 + ji];   // Gauche
-        x[iN1 + ji] = b == 1 ? -x[iN2 + ji] : x[iN2 + ji]; // Droite
+        x[i0 + ji]  = b == 1 ? -x[i1 + ji] : x[i1 + ji];   // Left
+        x[iN1 + ji] = b == 1 ? -x[iN2 + ji] : x[iN2 + ji]; // Right
     }
-    // Gérer les coins
-    x[i0  + j0]  = 0.5f * (x[i1  + j0] + x[i0  + j1]);  // Coin bas gauche
-    x[i0  + jN1] = 0.5f * (x[i1  + jN1] + x[i0  + jN2]); // Coin haut gauche
-    x[iN1 + j0]  = 0.5f * (x[iN2 + j0] + x[iN1 + j1]);   // Coin bas droit
-    x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // Coin haut droit
+    // corners (mean of the 2 nearest)
+    x[i0  + j0]  = 0.5f * (x[i1  + j0] + x[i0  + j1]);  // corner down left
+    x[i0  + jN1] = 0.5f * (x[i1  + jN1] + x[i0  + jN2]); // corner up left
+    x[iN1 + j0]  = 0.5f * (x[iN2 + j0] + x[iN1 + j1]);   // corner down right
+    x[iN1 + jN1] = 0.5f * (x[iN2 + jN1] + x[iN1 + jN2]); // corner up right
 }
 
-void complexFlu::add_dens(const int x, const int y) const {
+void obstacleFlu::add_dens(const int x, const int y) const {
     dens_prev[x + y * width] += 0.5f;
 }
 
-void complexFlu::add_permanent_dens(const int x, const int y, const float radius) const {
+void obstacleFlu::add_permanent_dens(const int x, const int y, const float radius) const {
     for(int j = 0; j < height; j++) {
         const int jw = j * width;
         for(int i = 0; i < width; i++) {
@@ -273,17 +410,17 @@ void complexFlu::add_permanent_dens(const int x, const int y, const float radius
     }
 }
 
-void complexFlu::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void obstacleFlu::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_prev[x + y * width] = u_intensity;
     u_prev[x + y * width] = v_intensity;
 }
 
-void complexFlu::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void obstacleFlu::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
     u_permanent[x + y * width] = u_intensity;
     v_permanent[x + y * width] = v_intensity;
 }
 
-void complexFlu::add_all_perm_step() const {
+void obstacleFlu::add_all_perm_step() const {
     for(int i = 0; i < width * height; i ++) {
         if(dens_permanent[i] > 0.0f) dens_prev[i] += 0.01f;
         if(u_permanent[i] > 0.0f) u_prev[i] += u_permanent[i];
@@ -291,7 +428,7 @@ void complexFlu::add_all_perm_step() const {
     }
 }
 
-void complexFlu::inputs_step(const int r, const float intensity) const  {
+void obstacleFlu::inputs_step(const int r, const float intensity) const  {
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
@@ -326,8 +463,8 @@ void complexFlu::inputs_step(const int r, const float intensity) const  {
 
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
+    constexpr float s = 1.f;
     const float v = std::sqrt(x * x + y * y) / r_max;
-    const float s = 1.0f;
     const int segment = static_cast<int>(h / 60) % 6;  // Determine dans quel segment H tombe
     const float f = h / 60 - static_cast<float>(segment);  // Facteur fractionnaire de H
     const float p = v * (1 - s);
@@ -366,7 +503,7 @@ static void getSciColor(float val, const float min, const float max, float &r, f
     }
 }
 
-float *complexFlu::draw(const DRAW_MODE mode) const {
+float *obstacleFlu::draw(const DRAW_MODE mode) const {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -403,7 +540,7 @@ float *complexFlu::draw(const DRAW_MODE mode) const {
     return color;
 }
 
-float complexFlu::find_max(const float* x) const {
+float obstacleFlu::find_max(const float* x) const {
     float max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -414,7 +551,7 @@ float complexFlu::find_max(const float* x) const {
     return max;
 }
 
-float complexFlu::find_min(const float* x) const {
+float obstacleFlu::find_min(const float* x) const {
     float min = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;

@@ -16,11 +16,11 @@ add_executable(FluidSim
         include/shaders/render.h
         src/sim/firstFlu.cpp
         include/sim/firstFlu.h
-        src/sim/complexFlu.cpp
-        include/sim/complexFlu.h
+        src/sim/gameFlu.cpp
+        include/sim/gameFlu.h
         include/sim/fluid.h
-        src/sim/simpleFlu.cpp
-        include/sim/simpleFlu.h
+        src/sim/obstacleFlu.cpp
+        include/sim/obstacleFlu.h
 )
 
 add_subdirectory(thirdparty/glfw)

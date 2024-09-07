@@ -10,7 +10,7 @@
 #include "../../include/libraries.h"
 #include "fluid.h"
 
-class simpleFlu final : public fluid {
+class obstacleFlu final : public fluid {
     GLFWwindow* window;
     int width;
     int height;
@@ -53,8 +53,8 @@ class simpleFlu final : public fluid {
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    simpleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~simpleFlu() override;
+    obstacleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    ~obstacleFlu() override;
     void inputs_step(int r, float intensity) const override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
