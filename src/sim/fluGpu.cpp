@@ -216,7 +216,16 @@ void fluGpu::project(GLuint p, GLuint div) const {
 }
 
 void fluGpu::set_vel_bound() const {
+    glUseProgram(boundProgram);
+    glBindImageTexture(0, uTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, vTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 }
 
 void fluGpu::density_step(float dt) {
@@ -229,12 +238,14 @@ void fluGpu::velocity_step(float dt) {
     swap(u_prevTex, uTex); diffuse (uTex, u_prevTex, viscosity, dt);
     swap(v_prevTex, vTex); diffuse (vTex, v_prevTex, viscosity, dt);
     project (u_prevTex, v_prevTex);
+    set_vel_bound();
     swap(u_prevTex, uTex);
     swap(v_prevTex, vTex);
     advect (uTex, u_prevTex, u_prevTex, v_prevTex, dt);
     advect (vTex, v_prevTex, u_prevTex, v_prevTex, dt);
     set_vel_bound();
     project (u_prevTex, v_prevTex);
+    set_vel_bound();
 }
 
 void fluGpu::calculate_pressure(float dt) const {

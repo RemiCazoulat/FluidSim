@@ -251,6 +251,7 @@ void obstacleFlu::set_vel_bound() const {
         const int j0w = (j - 1) * width;
         const int j1w = (j + 1) * width;
         for(int i = 1; i < width - 1; i ++) {
+            if(grid[i + jw] == 0.f) continue;
             const int i0 = i - 1;
             const int i1 = i + 1;
             float x = u[i + jw];
