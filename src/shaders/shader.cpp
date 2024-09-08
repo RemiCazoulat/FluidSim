@@ -31,21 +31,19 @@ GLuint compileShader(const char* shaderCode, const GLenum shaderType) {
     return shader;
 }
 
-void createUniform1f(const GLuint & shaderProgram, const GLchar* name, const float & value) {
-    glUseProgram(shaderProgram);
-    const GLint location = glGetUniformLocation(shaderProgram, name);
+void createUniform1f(const GLuint & program, const GLchar* name, const float & value) {
+    glUseProgram(program);
+    const GLint location = glGetUniformLocation(program, name);
     glUniform1f(location, value);
     glUseProgram(0);
 }
 
-void bindingUniformTex(const GLuint & shaderProgram, const GLchar * name, const int & bindIndex) {
-    glUseProgram(shaderProgram);
-    const GLint texLoc = glGetUniformLocation(shaderProgram, name);
+void bindingUniformTex(const GLuint & program, const GLchar * name, const int & bindIndex) {
+    glUseProgram(program);
+    const GLint texLoc = glGetUniformLocation(program, name);
     glUniform1i(texLoc, bindIndex);
     glUseProgram(0);
 }
-
-
 
 GLuint createTextureVec1(const GLfloat * data, const int width, const int height) {
     GLuint texture;

@@ -34,14 +34,11 @@ class obstacleFlu final : public fluid {
     float* color;
 
     void add_source(float *x, const float *s, float dt) const;
-    void diffuse(int b, float *x, const float *x0, float diff, float dt) const;
-    void advect(int b, float *z, const float *z0, const float *u_vel, const float *v_vel, float dt) const;
+    void diffuse(float *x, const float *x0, float diff, float dt) const;
+    void advect(float *z, const float *z0, const float *u_vel, const float *v_vel, float dt) const;
     void project(float *p, float *div) const;
-    void add_dens(int x, int y) const;
-    void add_vel(int x, int y, float u_intensity, float v_intensity) const;
-    void add_permanent_dens(int x, int y, float radius) const;
-    void add_permanent_vel(int x, int y, float u_intensity, float v_intensity) const;
-    void add_all_permanent_step() const;
+    void add(int x, int y, float* t, float intensity) const;
+    void set_vel_bound() const;
 
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
@@ -49,13 +46,12 @@ public:
 
     obstacleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~obstacleFlu() override;
-    void inputs_step(int r, float intensity) const override;
+    void input_step(int r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void calculate_pressure(float dt) const override;
     [[nodiscard]] GLuint draw(DRAW_MODE mode) const override;
 
-    void set_vel_bound() const;
 };
 
 

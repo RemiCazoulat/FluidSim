@@ -14,7 +14,7 @@ class fluid {
 public:
     virtual ~fluid() = default;
 
-    virtual void inputs_step(int r, float intensity) const = 0;
+    virtual void input_step(int r, float intensity, float dt) = 0;
     virtual void density_step(float dt) = 0;
     virtual void velocity_step(float dt) = 0;
     virtual void calculate_pressure(float dt) const = 0;

@@ -70,17 +70,8 @@ obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, 
             if(std::sqrt(dist_x * dist_x + dist_y * dist_y) < r) grid[index] = 0.0;
         }
     }
-    /*
-    for (int i = width / 4; i < width - 1 - width / 4; i++) {
-        for(int j = -3; j < 3; j ++) {
-            add_permanent_vel(i, height - height / 4 + j, 0.f, 5.0f);
-        }
-    }
-    */
-    //add_permanent_dens(width / 2, height / 2, 1.f);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-
 }
 
 obstacleFlu::~obstacleFlu() {
@@ -102,7 +93,7 @@ void obstacleFlu::add_source(float* x, const float* s, const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void obstacleFlu::diffuse(const int b, float* x, const float* x0, const float diff, const float dt) const {
+void obstacleFlu::diffuse(float* x, const float* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -125,7 +116,7 @@ void obstacleFlu::diffuse(const int b, float* x, const float* x0, const float di
     }
 }
 
-void obstacleFlu::advect(const int b, float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
+void obstacleFlu::advect(float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
@@ -235,20 +226,20 @@ void obstacleFlu::calculate_pressure(const float dt) const {
 
 void obstacleFlu::density_step(const float dt) {
     add_source(dens, dens_prev, dt);
-    SWAP(dens_prev, dens); diffuse(0, dens, dens_prev, diff, dt);
-    SWAP(dens_prev, dens); advect( 0, dens, dens_prev, u, v, dt);
+    SWAP(dens_prev, dens); diffuse(dens, dens_prev, diff, dt);
+    SWAP(dens_prev, dens); advect(dens, dens_prev, u, v, dt);
 }
 
 void obstacleFlu::velocity_step(float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
-    SWAP(u_prev, u); diffuse (1, u, u_prev, visc, dt);
-    SWAP(v_prev, v); diffuse (2, v, v_prev, visc, dt);
+    SWAP(u_prev, u); diffuse (u, u_prev, visc, dt);
+    SWAP(v_prev, v); diffuse (v, v_prev, visc, dt);
     project (u_prev, v_prev);
     SWAP( u_prev, u );
     SWAP( v_prev, v);
-    advect (1, u, u_prev, u_prev, v_prev, dt );
-    advect (2, v, v_prev, u_prev, v_prev, dt );
+    advect (u, u_prev, u_prev, v_prev, dt);
+    advect (v, v_prev, u_prev, v_prev, dt);
     set_vel_bound();
     project (u_prev, v_prev);
 }
@@ -276,45 +267,12 @@ void obstacleFlu::set_vel_bound() const {
     }
 }
 
-void obstacleFlu::add_dens(const int x, const int y) const {
-    dens_prev[x + y * width] += 0.5f;
-}
-
-void obstacleFlu::add_permanent_dens(const int x, const int y, const float radius) const {
-    for(int j = 0; j < height; j++) {
-        const int jw = j * width;
-        for(int i = 0; i < width; i++) {
-            const int ij = i + jw;
-            const auto dx = static_cast<float>(i - x);
-            const auto dy = static_cast<float>(j - y);
-            if (std::sqrt(dx * dx + dy * dy) < radius) {
-                dens_permanent[ij] = 1.0f;
-            }
-        }
-    }
-}
-
-void obstacleFlu::add_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
+void obstacleFlu::add(const int x, const int y, float* t, const float intensity) const {
     if(grid[x + y * width] == 0.f) return;
-    u_prev[x + y * width] = u_intensity;
-    u_prev[x + y * width] = v_intensity;
+    t[x + y * width] += intensity;
 }
 
-void obstacleFlu::add_permanent_vel(const int x, const int y, const float u_intensity, const float v_intensity) const {
-    if(grid[x + y * width] == 0.f) return;
-    u_permanent[x + y * width] = u_intensity;
-    v_permanent[x + y * width] = v_intensity;
-}
-
-void obstacleFlu::add_all_permanent_step() const {
-    for(int i = 0; i < width * height; i ++) {
-        if(dens_permanent[i] > 0.0f) dens_prev[i] += 0.01f;
-        if(u_permanent[i] > 0.0f) u_prev[i] += u_permanent[i];
-        if(v_permanent[i] > 0.0f) v_prev[i] += v_permanent[i];
-    }
-}
-
-void obstacleFlu::inputs_step(const int r, const float intensity) const  {
+void obstacleFlu::input_step(const int r, const float intensity, const float dt) {
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
@@ -327,10 +285,18 @@ void obstacleFlu::inputs_step(const int r, const float intensity) const  {
                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
                             if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
                                 if(middle_mouse_pressed) {
-                                    add_permanent_vel(i + x, j + y, 0 , intensity);
+                                    add(i + x, j + y, u_permanent, 0);
+                                    add(i + x, j + y, v_permanent, intensity);
 
-                                } else {
-                                    add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
+                                }
+                                if (left_mouse_pressed){
+                                    //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
+                                    add(i + x,j + y, u_prev, (mouse_x - force_x));
+                                    add(i + x,j + y, v_prev, -(mouse_y - force_y));
+
+                                }
+                                if(right_mouse_pressed) {
+                                    add(i + x, j + y, dens_prev, intensity);
                                 }
                             }
                         }
@@ -339,12 +305,11 @@ void obstacleFlu::inputs_step(const int r, const float intensity) const  {
                 force_x = mouse_x;
                 force_y = mouse_y;
             }
-            if(right_mouse_pressed) {
-                add_dens(i, j);
-            }
         }
     }
-    add_all_permanent_step();
+    add_source(dens, dens_permanent, dt);
+    add_source(u, u_permanent, dt);
+    add_source(v, v_permanent, dt);
 }
 
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {

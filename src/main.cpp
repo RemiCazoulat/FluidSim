@@ -1,8 +1,6 @@
 #include "../../include/shaders/render.h"
-#include "../../include/shaders/compute.h"
-#include "../include/sim/gameFlu.h"
 #include "../include/sim/obstacleFlu.h"
-#include "../../include/sim/fluid.h"
+#include "../../include/sim/fluGpu.h"
 
 
 enum SIM_MODE {
@@ -38,12 +36,9 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 }
 
 int main() {
-
-
-
-///////////// Control Panel ////////
+// /////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 4.f;
+/**/constexpr float res = 2.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
@@ -57,20 +52,20 @@ int main() {
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 5 * res;
 /**/constexpr float add_intensity = 0.5f;
-///////////// End of control Panel ////////
+// /////////// End of control Panel ////////
 
 
-    ///////// Init Window ///////
+    // /////// Init Window ///////
     const int window_width = cell_size * width;
     const int window_height = cell_size * height;
     initWindow(window_width, window_height);
 
-    ///////// Render program ///////
+    // /////// Render program ///////
     const Render render;
     const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
     bindingUniformTex(renderProgram, "colorTex", 0);
 
-    ///////// Main loop ///////
+    // ////// Main loop ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
         fluid = new obstacleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
@@ -83,9 +78,11 @@ int main() {
         const auto currentTime = static_cast<float>(glfwGetTime());
         const auto dt = (currentTime - previousTime) * time_accel;
         previousTime = currentTime;
-        fluid->inputs_step(add_radius, add_intensity);
+
+        fluid->input_step(add_radius, add_intensity, dt);
         fluid->velocity_step(dt);
         fluid->density_step(dt);
+
         if constexpr (draw_mode == PRESSURE) {
             fluid->calculate_pressure(dt);
         }
@@ -94,7 +91,7 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    ///////// Clean up ///////
+    // /////// Clean up ///////
     delete fluid;
     render.cleanRender(renderProgram);
     glfwDestroyWindow(window);
