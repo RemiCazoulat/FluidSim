@@ -18,13 +18,11 @@ void main(){
     ivec2 i1j = ivec2(ij.x + 1, ij.y);
     ivec2 ij0 = ivec2(ij.x, ij.y - 1);
     ivec2 ij1 = ivec2(ij.x, ij.y + 1);
-
     const float s0n = imageLoad(grid, i0j).x;
     const float s1n = imageLoad(grid, i1j).x;
     const float sn0 = imageLoad(grid, ij0).x;
     const float sn1 = imageLoad(grid, ij1).x;
-    const float s = s0n + s1n + sn0 + sn1;
-
+    s = s0n + s1n + sn0 + sn1;
     const float x0n = imageLoad(x, i0j).x;
     const float x1n = imageLoad(x, i1j).x;
     const float xn0 = imageLoad(x, ij0).x;

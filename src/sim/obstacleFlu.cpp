@@ -207,7 +207,6 @@ void obstacleFlu::project(float * p, float * div) const {
             v[i + jw] -= (p[i + j1w] * s1y - p [i + j0w] * s0y) / (h * 2);
         }
     }
-    set_vel_bound();
 }
 
 void obstacleFlu::calculate_pressure(const float dt) const {
@@ -236,12 +235,14 @@ void obstacleFlu::velocity_step(float dt) {
     SWAP(u_prev, u); diffuse (u, u_prev, visc, dt);
     SWAP(v_prev, v); diffuse (v, v_prev, visc, dt);
     project (u_prev, v_prev);
+    set_vel_bound();
     SWAP( u_prev, u );
     SWAP( v_prev, v);
     advect (u, u_prev, u_prev, v_prev, dt);
     advect (v, v_prev, u_prev, v_prev, dt);
     set_vel_bound();
     project (u_prev, v_prev);
+    set_vel_bound();
 }
 
 void obstacleFlu::set_vel_bound() const {

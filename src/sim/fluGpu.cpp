@@ -141,30 +141,83 @@ void fluGpu::swap(GLuint x, GLuint y) const {
 }
 
 void fluGpu::diffuse(GLuint x, const GLuint x0, float diff, float dt) const {
+    const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
+    glUseProgram(diffuseProgram);
+    glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, x0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(addProgram, "a"), a);
+    for(int k = 0; k < sub_step; k ++) {
+        glDispatchCompute(width / 64,height / 1,1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
 }
 
 void fluGpu::advect(GLuint z, const GLuint z0, const GLuint u_vel, const GLuint v_vel, float dt) const {
+    const float dtw = dt * static_cast<float>(width);
+    const float dth = dt * static_cast<float>(height);
+    glUseProgram(advectProgram);
+    glBindImageTexture(0, z, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, z0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, u_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, v_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(addProgram, "dtw"), dtw);
+    glUniform1f(glGetUniformLocation(addProgram, "dth"), dth);
+    glUniform1i(glGetUniformLocation(addProgram, "width"), width);
+    glUniform1i(glGetUniformLocation(addProgram, "height"), height);
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 }
 
 void fluGpu::project(GLuint p, GLuint div) const {
-    /*
-    for(int i = 0; i < 1; i ++) {
-        glUseProgram(projectProgram);
-        glDispatchCompute(width / 64,height / 1,1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        glUseProgram(swapProgram);
+    glUseProgram(projectProgram);
+    glBindImageTexture(0, uTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, vTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, p, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, div, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(addProgram, "h"), grid_spacing);
+    GLint step_loc = glGetUniformLocation(addProgram, "step");
+
+    // step 1
+    glUniform1i(step_loc, 1);
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // step 2
+    glUniform1i(step_loc, 2);
+    for(int k = 0; k < sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
-     */
+
+    // step 3
+    glUniform1i(step_loc, 3);
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // unbind
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 }
 
 void fluGpu::set_vel_bound() const {
 
 }
-
 
 void fluGpu::density_step(float dt) {
 
