@@ -3,7 +3,7 @@
 layout (local_size_x = 64, local_size_y = 1) in;
 
 layout (r32f, binding = 0) uniform image2D u;
-layout (r32f, binding = 1) uniform image2D u;
+layout (r32f, binding = 1) uniform image2D v;
 layout (r32f, binding = 2) uniform image2D p;
 layout (r32f, binding = 3) uniform image2D div;
 layout (r32f, binding = 4) uniform image2D grid;

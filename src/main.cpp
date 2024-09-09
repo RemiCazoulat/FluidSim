@@ -45,9 +45,9 @@ int main() {
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
 /**/constexpr float viscosity_rate = 0.00000001f;
-/**/constexpr int sub_step = 20;
+/**/constexpr int sub_step = 25;
 /**/// simulation infos
-/**/constexpr SIM_MODE sim_mode = CPU;
+/**/constexpr SIM_MODE sim_mode = GPU;
 /**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 5 * res;
@@ -71,7 +71,7 @@ int main() {
         fluid = new obstacleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
-        fluid = nullptr;
+        fluid = new fluGpu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     auto previousTime = static_cast<float>(glfwGetTime());
     while (!glfwWindowShouldClose(window)) {

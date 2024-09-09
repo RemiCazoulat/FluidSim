@@ -13,6 +13,6 @@ void createUniform1f(const GLuint & program, const GLchar* name, const float & v
 void bindingUniformTex(const GLuint & program, const GLchar * name, const int & bindIndex);
 GLuint createTextureVec1(const GLfloat * data, int width, int height);
 GLuint createTextureVec2(const GLfloat * data, int width, int height);
-GLuint createTextureVec3(const GLfloat * data, int width, int height);
+GLuint createTextureVec4(const GLfloat * data, int width, int height);
 
 #endif //SHADER_H

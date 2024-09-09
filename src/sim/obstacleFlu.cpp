@@ -54,9 +54,9 @@ obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, 
     dens_prev = new float[gridSize]();
     dens_permanent = new float[gridSize]();
     pressure = new float[gridSize]();
-    color = new float[gridSize * 3]();
+    color = new float[gridSize * 4]();
 
-    const float r = 10.f;
+    constexpr float r = 10.f;
     const int circle_x = width / 2;
     const int circle_y = height / 2;
     for (int j = 0; j < height; j ++) {
@@ -201,8 +201,6 @@ void obstacleFlu::project(float * p, float * div) const {
             const float s1x = grid[i1 + jw];
             const float s0y = grid[i + j0w];
             const float s1y = grid[i + j1w];
-            const float sx = s0x + s1x;
-            const float sy = s0y + s1y;
             u[i + jw] -= (p[i1 + jw] * s1x - p [i0 + jw] * s0x) / (h * 2);
             v[i + jw] -= (p[i + j1w] * s1y - p [i + j0w] * s0y) / (h * 2);
         }
@@ -229,14 +227,14 @@ void obstacleFlu::density_step(const float dt) {
     SWAP(dens_prev, dens); advect(dens, dens_prev, u, v, dt);
 }
 
-void obstacleFlu::velocity_step(float dt) {
+void obstacleFlu::velocity_step(const float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
     SWAP(u_prev, u); diffuse (u, u_prev, visc, dt);
     SWAP(v_prev, v); diffuse (v, v_prev, visc, dt);
     project (u_prev, v_prev);
     set_vel_bound();
-    SWAP( u_prev, u );
+    SWAP( u_prev, u);
     SWAP( v_prev, v);
     advect (u, u_prev, u_prev, v_prev, dt);
     advect (v, v_prev, u_prev, v_prev, dt);
@@ -385,12 +383,13 @@ GLuint obstacleFlu::draw(const DRAW_MODE mode) const {
                 const float min_p = find_min(pressure);
                 getSciColor(pressure[ij], min_p, max_p, r, g, b);
             }
-            color[ij * 3 + 0] = r;
-            color[ij * 3 + 1] = g;
-            color[ij * 3 + 2] = b;
+            color[ij * 4 + 0] = r;
+            color[ij * 4 + 1] = g;
+            color[ij * 4 + 2] = b;
+            color[ij * 4 + 3] = 1.0;
         }
     }
-    GLuint colorTex = createTextureVec3(color, width, height);
+    const GLuint colorTex = createTextureVec4(color, width, height);
     return colorTex;
 }
 

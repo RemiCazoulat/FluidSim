@@ -25,9 +25,6 @@ class fluGpu final : public fluid {
 
     // arrays
     float* grid;
-    float* dens_prev;
-    float* u_prev;
-    float* v_prev;
     float* dens_permanent;
     float* u_permanent;
     float* v_permanent;
@@ -39,6 +36,8 @@ class fluGpu final : public fluid {
     GLuint projectProgram;
     GLuint boundProgram;
     GLuint swapProgram;
+    GLuint drawProgram;
+
 
     // textures
     GLuint gridTex;
@@ -56,7 +55,8 @@ class fluGpu final : public fluid {
 
     // private methods
     void add_source(GLuint x, GLuint s, float dt) const;
-    void swap(GLuint x, GLuint y) const;
+
+    static void swap(GLuint &x, GLuint &y) noexcept;
     void diffuse(GLuint x, GLuint x0, float diff, float dt) const;
     void advect(GLuint z, GLuint z0, GLuint u_vel, GLuint v_vel, float dt) const;
     void project(GLuint p, GLuint div) const;
