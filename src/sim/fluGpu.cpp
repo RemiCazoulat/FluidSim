@@ -412,12 +412,12 @@ void fluGpu::input_step(const float r, const float intensity, const float dt) {
             if(left_mouse_pressed || middle_mouse_pressed) {
 
                 if(middle_mouse_pressed) {
-                    add(i, j, r, intensity, u_permanent_tex, dt);
+                    add(i, j, r, 0, u_permanent_tex, dt);
                     add(i, j, r, intensity, v_permanent_tex, dt);
                 }
                 if (left_mouse_pressed){
-                    add(i, j, r,  (mouse_x - force_x), u_prev_tex, dt);
-                    add(i, j, r, -(mouse_y - force_y), v_prev_tex, dt);
+                    add(i, j, r,  (mouse_x - force_x), u_tex, dt);
+                    add(i, j, r, -(mouse_y - force_y), v_tex, dt);
                 }
                 if(right_mouse_pressed) {
                 }

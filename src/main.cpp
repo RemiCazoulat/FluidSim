@@ -27,38 +27,38 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
         glfwTerminate();
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);
 
     // Load OpenGL functions using glfwGetProcAddress
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize OpenGL context" << std::endl;
     }
+    glfwSwapInterval(0);
+
 }
 
 int main() {
 // /////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 4.f;
+/**/constexpr float res = 8.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
-/**/constexpr float viscosity_rate = 0.0000000001f;
-/**/constexpr int sub_step = 25;
+/**/constexpr float viscosity_rate = 0.000000000001f;
+/**/constexpr int sub_step = 50;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
 /**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 7 * res;
-/**/constexpr float add_intensity = 0.5f;
+/**/constexpr float add_intensity = 5.f;
 // /////////// End of control Panel ////////
 
     // /////// Init Window ///////
     const int window_width = cell_size * width;
     const int window_height = cell_size * height;
     initWindow(window_width, window_height);
-
     // /////// Render program ///////
     const renderer* render = new renderer("../shaders/vert.glsl", "../shaders/frag.glsl");
 

@@ -39,7 +39,7 @@ void main(){
     float y =  imageLoad(v, ij).x;
     vec3 rgb = vec3(1.0);
     if(draw_mode == 0) {
-        rgb = xy2hsv2rgb(x, y, 1.0);
+        rgb = xy2hsv2rgb(x, y, 0.5);
 
     }
     /*
