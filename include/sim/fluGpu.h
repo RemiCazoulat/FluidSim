@@ -42,6 +42,7 @@ class fluGpu final : public fluid {
     float* v_permanent;
 
     // compute programs
+    GLuint inputProgram;
     GLuint addProgram;
     GLuint advectProgram;
     GLuint diffuseProgram;
@@ -70,7 +71,7 @@ class fluGpu final : public fluid {
     void diffuse(GLuint x, GLuint x0, float diff, float dt);
     void advect( GLuint z, GLuint z0, float dt);
     void project();
-    void add(int x, int y, float* t, float intensity) const;
+    void add(int i, int j, float r, float intensity, GLuint tex, float dt);
     void set_vel_bound();
 
 public:
@@ -78,7 +79,7 @@ public:
     // public and override methods
     fluGpu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~fluGpu() override;
-    void input_step(int r, float intensity, float dt) override;
+    void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

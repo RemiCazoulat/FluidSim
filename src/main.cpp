@@ -72,41 +72,54 @@ int main() {
     int frame_number = 0;
     double total_time = 0.0;
     double total_sim_time = 0.0;
-    double previousTime = glfwGetTime();
+    double total_rendering_time = 0.0;
+    double total_glfw_time = 0.0;
+    double previous_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
-        // Calculating dt
-        const auto currentTime = glfwGetTime();
-        const auto dt = static_cast<float>((currentTime - previousTime) * time_accel);
-        previousTime = currentTime;
+        const auto current_time = glfwGetTime();
         // /////// Simulation ///////
+        const auto dt = static_cast<float>((current_time - previous_time) * time_accel);
+        previous_time = current_time;
         fluid->input_step(add_radius, add_intensity, dt);
         fluid->velocity_step(dt);
         fluid->density_step(dt);
-        const auto time_sim = glfwGetTime();
-        total_sim_time += time_sim - currentTime;
-        if constexpr (draw_mode == PRESSURE) {
-            fluid->pressure_step(dt);
-        }
-        // drawing & rendering
         GLuint colorTex = fluid->draw_step(draw_mode);
+
+        const auto time_sim = glfwGetTime();
+        total_sim_time += time_sim - current_time;
+        // /////// Rendering ///////
+        const auto rendering_time = glfwGetTime();
+
         render->rendering(colorTex);
+
+        total_rendering_time += glfwGetTime() - rendering_time;
+        // /////// Swap Buffers and Poll Events //////
+        const auto glfw_time = glfwGetTime();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        total_time += dt;
+
+        total_glfw_time += glfwGetTime() - glfw_time;
+
+        total_time += glfwGetTime() - current_time;
+
         frame_number++;
 
     }
     // /////// Debug //////
     fluid->debug();
     printf("\n");
+    printf("=========[ Main Debug ]=========\n");
     printf("total time: %f s\n", total_time);
     printf("total sim time: %f s (%.2f %%)\n", total_sim_time, total_sim_time / total_time * 100.0);
-    printf("drawing time: %f s (%.2f %%)\n", total_time - total_sim_time, (total_time - total_sim_time) / total_time * 100.0);
+    printf("total rendering time: %f s (%.2f %%)\n", total_rendering_time, total_rendering_time / total_time * 100.0);
+    printf("total glfw time: %f s (%.2f %%)\n", total_glfw_time, total_glfw_time / total_time * 100.0);
     printf("\n");
-    printf("total time per frame: %f ms\n", total_time / frame_number * 1000.0);
+    printf("total time per frame: %f ms (%.2f FPS)\n", total_time / frame_number * 1000.0, 1.f / (total_time / frame_number));
     printf("total sim time per frame: %f ms\n", total_sim_time / frame_number * 1000.0);
-    printf("drawing time per frame: %f ms\n", (total_time - total_sim_time) / frame_number * 1000.0);
+    printf("total rendering time per frame: %f ms\n", total_rendering_time / frame_number * 1000.0);
+    printf("total glfw time per frame: %f ms\n", total_glfw_time / frame_number * 1000.0);
+
     // /////// Clean up ///////
     delete fluid;
     delete render;

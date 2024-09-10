@@ -272,7 +272,7 @@ void obstacleFlu::add(const int x, const int y, float* t, const float intensity)
     t[x + y * width] += intensity;
 }
 
-void obstacleFlu::input_step(const int r, const float intensity, const float dt) {
+void obstacleFlu::input_step(const float r, const float intensity, const float dt) {
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;

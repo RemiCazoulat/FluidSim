@@ -89,6 +89,7 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     color_tex          = createTextureVec4(emptyVec4, width, height);
 
     // ---------- { Compute programs }----------
+    inputProgram     = createComputeProgram("../shaders/computes/add_input.glsl");
     addProgram     = createComputeProgram("../shaders/computes/add_source.glsl");
     diffuseProgram = createComputeProgram("../shaders/computes/diffuse.glsl");
     advectProgram  = createComputeProgram("../shaders/computes/advect.glsl");
@@ -375,76 +376,60 @@ GLuint fluGpu::draw_step(const DRAW_MODE mode) {
     return color_tex;
 }
 
-void fluGpu::add(const int x,const int y, float *t,const float intensity) const {
-    if(grid[x + y * width] == 0.f) return;
-    t[x + y * width] += intensity;
+void fluGpu::add(const int i,const int j, const float r,const float intensity, const GLuint tex, const float dt) {
+    glUseProgram(inputProgram);
+    auto previous_time = glfwGetTime();
+    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+    glUniform1i(glGetUniformLocation(inputProgram, "i"), i);
+    glUniform1i(glGetUniformLocation(inputProgram, "j"), j);
+    glUniform1f(glGetUniformLocation(inputProgram, "r"), r);
+    glUniform1f(glGetUniformLocation(inputProgram, "intensity"), intensity);
+    glUniform1f(glGetUniformLocation(inputProgram, "dt"), dt);
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
+    glDispatchCompute(width / 64,height / 1,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
 }
 
-void fluGpu::input_step(const int r, const float intensity, const float dt) {
+void fluGpu::input_step(const float r, const float intensity, const float dt) {
     const auto step_time = glfwGetTime();
 
-    bool new_permanent = false;
-    bool new_temp = false;
-    auto* u_temp = new float[width * height]();
-    auto* v_temp = new float[width * height]();
-    auto* dens_temp = new float[width * height]();
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
         const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
 
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
             if(left_mouse_pressed || middle_mouse_pressed) {
-                for(int x = -r; x <= r; x++) {
-                    for(int y = -r; y <= r; y++) {
-                        if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
-                            if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
-                                if(middle_mouse_pressed) {
-                                    add(i + x, j + y, u_permanent, 0);
-                                    add(i + x, j + y, v_permanent, intensity);
-                                    new_permanent = true;
-                                }
-                                if (left_mouse_pressed){
-                                    //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
-                                    add(i + x, j + y, u_temp, (mouse_x - force_x));
-                                    add(i + x, j + y, v_temp, -(mouse_y - force_y));
-                                    new_temp = true;
-                                }
-                                if(right_mouse_pressed) {
-                                    add(i + x, j + y, dens_temp, intensity);
-                                    new_temp = true;
-                                }
-                            }
-                        }
-                    }
+
+                if(middle_mouse_pressed) {
+                    add(i, j, r, intensity, u_permanent_tex, dt);
+                    add(i, j, r, intensity, v_permanent_tex, dt);
                 }
-                force_x = mouse_x;
-                force_y = mouse_y;
+                if (left_mouse_pressed){
+                    add(i, j, r,  (mouse_x - force_x), u_prev_tex, dt);
+                    add(i, j, r, -(mouse_y - force_y), v_prev_tex, dt);
+                }
+                if(right_mouse_pressed) {
+                }
             }
         }
+        force_x = mouse_x;
+        force_y = mouse_y;
     }
-    if(new_permanent) {
-        dens_permanent_tex = createTextureVec1(dens_permanent, width, height);
-        u_permanent_tex    = createTextureVec1(u_permanent, width, height);
-        v_permanent_tex    = createTextureVec1(v_permanent, width, height);
-    }
+
     add_source(dens_tex, dens_permanent_tex, dt);
     add_source(u_tex, u_permanent_tex, dt);
     add_source(v_tex, v_permanent_tex, dt);
-
-    if(new_temp) {
-        const GLuint densTex_tmp = createTextureVec1(dens_temp, width, height);
-        const GLuint uTex_tmp = createTextureVec1(u_temp, width, height);
-        const GLuint vTex_tmp = createTextureVec1(v_temp, width, height);
-        add_source(dens_prev_tex, densTex_tmp, 1);
-        add_source(u_prev_tex, uTex_tmp, 1);
-        add_source(v_prev_tex, vTex_tmp, 1);
-        glDeleteTextures(1, &densTex_tmp);
-        glDeleteTextures(1, &uTex_tmp);
-        glDeleteTextures(1, &vTex_tmp);
-    }
-    delete[] u_temp;
-    delete[] v_temp;
-    delete[] dens_temp;
 
     const auto end_step_time = glfwGetTime();
     INPUT_STEP_TIME += end_step_time - step_time;
@@ -462,6 +447,8 @@ void fluGpu::debug() {
     const auto percent_velocity_time = VELOCITY_STEP_TIME / total * 100;
     const auto percent_pressure_time = PRESSURE_STEP_TIME / total * 100;
     const auto percent_draw_time = DRAW_STEP_TIME / total * 100;
+    printf("\n");
+    printf("=========[ fluGpu Debug ]=========\n");
     printf("Input time: %f ms (%.2f %%)\n", INPUT_STEP_TIME * 1000, percent_input_time);
     printf("Density time: %f ms (%.2f %%)\n", DENSITY_STEP_TIME * 1000, percent_density_time);
     printf("Velocity time: %f ms (%.2f %%)\n", VELOCITY_STEP_TIME * 1000, percent_velocity_time);

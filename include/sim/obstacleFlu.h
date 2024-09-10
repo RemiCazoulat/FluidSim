@@ -46,7 +46,7 @@ public:
 
     obstacleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~obstacleFlu() override;
-    void input_step(int r, float intensity, float dt) override;
+    void input_step(const float r, const float intensity, const float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;
