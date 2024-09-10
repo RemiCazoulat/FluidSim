@@ -17,7 +17,7 @@ Current state of the simulation using the VELOCITY display mode :
 - add a third dimension
 - passing everything on GPU using Vulkan and compare the performance with the openGL simulation to see if Vulkan really worths a try
 - make a vorticity confinement step to improve performance and accuracy
-- make a Qt interface to have better interactions with the simulation (optional)
+- make an interface (with Qt or ImGui) to have better interactions with the simulation (optional)
 - make a sound input (optional)
 
 ## future of the project
