@@ -27,6 +27,8 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
         glfwTerminate();
     }
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(0);
+
     // Load OpenGL functions using glfwGetProcAddress
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize OpenGL context" << std::endl;
@@ -76,10 +78,8 @@ int main() {
     double total_glfw_time = 0.0;
     double previous_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-
         const auto current_time = glfwGetTime();
-
+        glfwPollEvents();
         // /////// Simulation ///////
         const auto dt = static_cast<float>((current_time - previous_time) * time_accel);
         previous_time = current_time;
@@ -100,6 +100,7 @@ int main() {
         const auto glfw_time = glfwGetTime();
 
         glfwSwapBuffers(window);
+        //glFlush();
 
         total_glfw_time += glfwGetTime() - glfw_time;
 
