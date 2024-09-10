@@ -7,7 +7,7 @@
 static float force_x = 0.0f, force_y = 0.0f, mouse_x = 0.0f, mouse_y = 0.0f;
 static int left_mouse_pressed = 0, right_mouse_pressed = 0, middle_mouse_pressed = 0;
 
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+static void mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         left_mouse_pressed = 1;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -25,7 +25,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     }
 }
 
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+static void cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
     mouse_x = static_cast<float>(xpos);
     mouse_y = static_cast<float>(ypos);
 }
@@ -46,10 +46,10 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     u_permanent = new float[gridSize]();
     v_permanent = new float[gridSize]();
 
-    auto* empty = new float[gridSize]();
-    auto* emptyVec4 = new float[gridSize * 4]();
+    const auto* empty = new float[gridSize]();
+    const auto* emptyVec4 = new float[gridSize * 4]();
     // setting initial bounds and obstacles
-    const float r = 10.f;
+    constexpr float r = 10.f;
     const int circle_x = width / 2;
     const int circle_y = height / 2;
     for (int j = 0; j < height; j ++) {
@@ -65,18 +65,18 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     }
 
     // ---------- { Init Textures }----------
-    gridTex           = createTextureVec1(grid, width, height);
-    densTex           = createTextureVec1(empty, width, height);
-    dens_prevTex      = createTextureVec1(empty, width, height);
-    dens_permanentTex = createTextureVec1(empty, width, height);
-    pressureTex       = createTextureVec1(empty, width, height);
-    uTex              = createTextureVec1(empty, width, height);
-    vTex              = createTextureVec1(empty, width, height);
-    u_permanentTex    = createTextureVec1(empty, width, height);
-    v_permanentTex    = createTextureVec1(empty, width, height);
-    u_prevTex         = createTextureVec1(empty, width, height);
-    v_prevTex         = createTextureVec1(empty, width, height);
-    colorTex          = createTextureVec4(emptyVec4, width, height);
+    grid_tex           = createTextureVec1(grid, width, height);
+    dens_tex           = createTextureVec1(empty, width, height);
+    dens_prev_tex      = createTextureVec1(empty, width, height);
+    dens_permanent_tex = createTextureVec1(empty, width, height);
+    pressure_tex       = createTextureVec1(empty, width, height);
+    u_tex              = createTextureVec1(empty, width, height);
+    v_tex              = createTextureVec1(empty, width, height);
+    u_permanent_tex    = createTextureVec1(empty, width, height);
+    v_permanent_tex    = createTextureVec1(empty, width, height);
+    u_prev_tex         = createTextureVec1(empty, width, height);
+    v_prev_tex         = createTextureVec1(empty, width, height);
+    color_tex          = createTextureVec4(emptyVec4, width, height);
 
     // ---------- { Compute programs }----------
     addProgram     = createComputeProgram("../shaders/computes/add_source.glsl");
@@ -144,8 +144,8 @@ void fluGpu::diffuse(const GLuint x, const GLuint x0,const float diff,const floa
     glUseProgram(diffuseProgram);
     glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, x0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glUniform1f(glGetUniformLocation(addProgram, "a"), a);
+    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(diffuseProgram, "a"), a);
     for(int k = 0; k < sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -164,14 +164,13 @@ void fluGpu::advect(const GLuint z, const GLuint z0, const GLuint u_vel, const G
     glBindImageTexture(1, z0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, u_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(3, v_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glUniform1f(glGetUniformLocation(addProgram, "dtw"), dtw);
-    glUniform1f(glGetUniformLocation(addProgram, "dth"), dth);
-    glUniform1i(glGetUniformLocation(addProgram, "width"), width);
-    glUniform1i(glGetUniformLocation(addProgram, "height"), height);
+    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(advectProgram, "dtw"), dtw);
+    glUniform1f(glGetUniformLocation(advectProgram, "dth"), dth);
+    glUniform1i(glGetUniformLocation(advectProgram, "width"), width);
+    glUniform1i(glGetUniformLocation(advectProgram, "height"), height);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -181,13 +180,13 @@ void fluGpu::advect(const GLuint z, const GLuint z0, const GLuint u_vel, const G
 
 void fluGpu::project(const GLuint p, const GLuint div) const {
     glUseProgram(projectProgram);
-    glBindImageTexture(0, uTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, vTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, p, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(3, div, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glUniform1f(glGetUniformLocation(addProgram, "h"), grid_spacing);
-    const GLint step_loc = glGetUniformLocation(addProgram, "step");
+    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
+    const GLint step_loc = glGetUniformLocation(projectProgram, "step");
 
     // step 1
     glUniform1i(step_loc, 1);
@@ -216,9 +215,9 @@ void fluGpu::project(const GLuint p, const GLuint div) const {
 
 void fluGpu::set_vel_bound() const {
     glUseProgram(boundProgram);
-    glBindImageTexture(0, uTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, vTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -232,18 +231,18 @@ void fluGpu::density_step(float dt) {
 }
 
 void fluGpu::velocity_step(const float dt) {
-    add_source (uTex, u_prevTex, dt);
-    add_source (vTex, v_prevTex, dt);
-    swap(u_prevTex, uTex); diffuse (uTex, u_prevTex, viscosity, dt);
-    swap(v_prevTex, vTex); diffuse (vTex, v_prevTex, viscosity, dt);
-    project (u_prevTex, v_prevTex);
+    add_source (u_tex, u_prev_tex, dt);
+    add_source (v_tex, v_prev_tex, dt);
+    swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
+    swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
+    project (u_prev_tex, v_prev_tex);
     set_vel_bound();
-    swap(u_prevTex, uTex);
-    swap(v_prevTex, vTex);
-    advect (uTex, u_prevTex, u_prevTex, v_prevTex, dt);
-    advect (vTex, v_prevTex, u_prevTex, v_prevTex, dt);
+    swap(u_prev_tex, u_tex);
+    swap(v_prev_tex, v_tex);
+    advect (u_tex, u_prev_tex, u_prev_tex, v_prev_tex, dt);
+    advect (v_tex, v_prev_tex, u_prev_tex, v_prev_tex, dt);
     set_vel_bound();
-    project (u_prevTex, v_prevTex);
+    project (u_prev_tex, v_prev_tex);
     set_vel_bound();
 }
 
@@ -251,12 +250,12 @@ void fluGpu::calculate_pressure(float dt) const {
 
 }
 
-GLuint fluGpu::draw(DRAW_MODE mode) const {
+GLuint fluGpu::draw(const DRAW_MODE mode) const {
     glUseProgram(drawProgram);
-    glBindImageTexture(0, uTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, vTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, colorTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    glUniform1i(glGetUniformLocation(addProgram, "draw_mode"), 0);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    glUniform1i(glGetUniformLocation(drawProgram, "draw_mode"), mode);
 
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -264,7 +263,7 @@ GLuint fluGpu::draw(DRAW_MODE mode) const {
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    return colorTex;
+    return color_tex;
 }
 
 
@@ -293,14 +292,12 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
                                     add(i + x, j + y, u_permanent, 0);
                                     add(i + x, j + y, v_permanent, intensity);
                                     new_permanent = true;
-                                    printf("add permanent\n");
                                 }
                                 if (left_mouse_pressed){
                                     //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
                                     add(i + x,j + y, u_temp, (mouse_x - force_x));
                                     add(i + x,j + y, v_temp, -(mouse_y - force_y));
                                     new_temp = true;
-                                    printf("add temp\n");
                                 }
                                 if(right_mouse_pressed) {
                                     add(i + x, j + y, dens_temp, intensity);
@@ -316,20 +313,21 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
         }
     }
     if(new_permanent) {
-        dens_permanentTex = createTextureVec1(dens_permanent, width, height);
-        u_permanentTex    = createTextureVec1(u_permanent, width, height);
-        v_permanentTex    = createTextureVec1(v_permanent, width, height);
+        dens_permanent_tex = createTextureVec1(dens_permanent, width, height);
+        u_permanent_tex    = createTextureVec1(u_permanent, width, height);
+        v_permanent_tex    = createTextureVec1(v_permanent, width, height);
     }
-    add_source(densTex, dens_permanentTex, dt);
-    add_source(uTex, u_permanentTex, dt);
-    add_source(vTex, v_permanentTex, dt);
+    add_source(dens_tex, dens_permanent_tex, dt);
+    add_source(u_tex, u_permanent_tex, dt);
+    add_source(v_tex, v_permanent_tex, dt);
+
     if(new_temp) {
         const GLuint densTex_tmp = createTextureVec1(dens_temp, width, height);
         const GLuint uTex_tmp = createTextureVec1(u_temp, width, height);
         const GLuint vTex_tmp = createTextureVec1(v_temp, width, height);
-        add_source(dens_prevTex, densTex_tmp, 1);
-        add_source(u_prevTex, uTex_tmp, 1);
-        add_source(v_prevTex, vTex_tmp, 1);
+        add_source(dens_tex, densTex_tmp, 1);
+        add_source(u_tex, uTex_tmp, 1);
+        add_source(v_tex, vTex_tmp, 1);
     }
     delete[] u_temp;
     delete[] v_temp;

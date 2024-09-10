@@ -40,18 +40,18 @@ class fluGpu final : public fluid {
 
 
     // textures
-    GLuint gridTex;
-    GLuint densTex;
-    GLuint dens_prevTex;
-    GLuint dens_permanentTex;
-    GLuint pressureTex;
-    GLuint uTex;
-    GLuint vTex;
-    GLuint u_permanentTex;
-    GLuint v_permanentTex;
-    GLuint u_prevTex;
-    GLuint v_prevTex;
-    GLuint colorTex;
+    GLuint grid_tex;
+    GLuint dens_tex;
+    GLuint dens_prev_tex;
+    GLuint dens_permanent_tex;
+    GLuint pressure_tex;
+    GLuint u_tex;
+    GLuint v_tex;
+    GLuint u_permanent_tex;
+    GLuint v_permanent_tex;
+    GLuint u_prev_tex;
+    GLuint v_prev_tex;
+    GLuint color_tex;
 
     // private methods
     void add_source(GLuint x, GLuint s, float dt) const;

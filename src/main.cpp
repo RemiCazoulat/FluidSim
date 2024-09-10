@@ -48,7 +48,7 @@ int main() {
 /**/constexpr int sub_step = 25;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
-/**/constexpr float time_accel = 1.f;
+/**/constexpr float time_accel = 0.1f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 5 * res;
 /**/constexpr float add_intensity = 0.5f;

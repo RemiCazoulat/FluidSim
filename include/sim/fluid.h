@@ -6,9 +6,9 @@
 #define FLUID_H
 
 enum DRAW_MODE {
-    DENSITY,
-    VELOCITY,
-    PRESSURE
+    VELOCITY = 0,
+    DENSITY = 1,
+    PRESSURE = 2
 };
 class fluid {
 public:

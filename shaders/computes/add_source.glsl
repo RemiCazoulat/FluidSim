@@ -9,8 +9,8 @@ uniform float dt;
 
 void main(){
     ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
-    float new_val =  imageLoad(x, coord).x;
-    float old_val = imageLoad(s, coord).x;
-    new_val += old_val * dt;
-    imageStore(x, coord, vec4(new_val, 0.0, 0.0, 0.0));
+    float x_val =  imageLoad(x, coord).x;
+    float s_val = imageLoad(s, coord).x;
+    x_val += s_val * dt;
+    imageStore(x, coord, vec4(x_val, 0.0, 0.0, 0.0));
 }
