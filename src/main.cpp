@@ -43,7 +43,7 @@ int main() {
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
 /**/constexpr float viscosity_rate = 0.0000000001f;
-/**/constexpr int sub_step = 50;
+/**/constexpr int sub_step = 25;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
 /**/constexpr float time_accel = 1.f;
@@ -76,7 +76,10 @@ int main() {
     double total_glfw_time = 0.0;
     double previous_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
         const auto current_time = glfwGetTime();
+
         // /////// Simulation ///////
         const auto dt = static_cast<float>((current_time - previous_time) * time_accel);
         previous_time = current_time;
@@ -97,7 +100,6 @@ int main() {
         const auto glfw_time = glfwGetTime();
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
 
         total_glfw_time += glfwGetTime() - glfw_time;
 
