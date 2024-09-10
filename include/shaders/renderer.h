@@ -12,20 +12,18 @@ enum R_MODE {
     DENS,
 };
 
-class Render {
+class renderer {
     std::vector<float> vertices;
     std::vector<int> indices;
-
     GLuint VAO, VBO, EBO;
-
+    GLuint renderProgram;
     void createGeometry();
 public:
-    Render();
-    void makeRender(const GLuint &renderProgram, const GLuint &colorTex) const;
-    void cleanRender(const GLuint & renderProgram) const;
+    renderer(const char* vertexPath, const char* fragmentPath);
+    ~renderer();
+    void rendering(const GLuint &colorTex) const;
 };
 
-GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath);
 
 
 #endif //RENDER_H

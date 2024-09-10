@@ -12,8 +12,8 @@ add_executable(FluidSim
         src/shaders/shader.cpp
         src/sim/fluGpu.cpp
         include/sim/fluGpu.h
-        src/shaders/render.cpp
-        include/shaders/render.h
+        src/shaders/renderer.cpp
+        include/shaders/renderer.h
         src/sim/firstFlu.cpp
         include/sim/firstFlu.h
         include/sim/fluid.h

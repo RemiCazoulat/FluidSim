@@ -1,4 +1,4 @@
-#include "../../include/shaders/render.h"
+#include "../../include/shaders/renderer.h"
 #include "../include/sim/obstacleFlu.h"
 #include "../../include/sim/fluGpu.h"
 
@@ -44,11 +44,11 @@ int main() {
 /**/cell_size = static_cast<int>(16.f / res);
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
-/**/constexpr float viscosity_rate = 0.00000001f;
+/**/constexpr float viscosity_rate = 0.0001f;
 /**/constexpr int sub_step = 25;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
-/**/constexpr float time_accel = 0.1f;
+/**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 5 * res;
 /**/constexpr float add_intensity = 0.5f;
@@ -61,9 +61,7 @@ int main() {
     initWindow(window_width, window_height);
 
     // /////// Render program ///////
-    const Render render;
-    const GLuint renderProgram = createRenderProgram("../shaders/vert.glsl","../shaders/frag.glsl");
-    bindingUniformTex(renderProgram, "colorTex", 0);
+    const renderer* render = new renderer("../shaders/vertex.glsl", "../shaders/fragment.glsl");
 
     // ////// Main loop ///////
     fluid* fluid;
@@ -87,13 +85,13 @@ int main() {
             fluid->calculate_pressure(dt);
         }
         GLuint colorTex = fluid->draw(draw_mode);
-        render.makeRender(renderProgram, colorTex);
+        render->rendering(colorTex);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     // /////// Clean up ///////
     delete fluid;
-    render.cleanRender(renderProgram);
+    delete render;
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

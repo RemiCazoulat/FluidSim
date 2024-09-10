@@ -2,11 +2,9 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../../include/shaders/render.h"
+#include "../../include/shaders/renderer.h"
 
-
-
-void Render::createGeometry() {
+void renderer::createGeometry() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -36,7 +34,7 @@ void Render::createGeometry() {
     glBindVertexArray(0);
 }
 
-Render::Render() {
+renderer::renderer(const char* vertexPath, const char* fragmentPath) {
     vertices = {
         -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -51,33 +49,37 @@ Render::Render() {
     VBO = 0;
     EBO = 0;
     createGeometry();
-    printf("TEST");
-}
 
-GLuint createRenderProgram(const char* vertexPath, const char* fragmentPath) {
     const std::string vertexCode = readShaderCode(vertexPath);
     const std::string fragmentCode = readShaderCode(fragmentPath);
     const GLuint vertexShader = compileShader(vertexCode.c_str(), GL_VERTEX_SHADER);
     const GLuint fragmentShader = compileShader(fragmentCode.c_str(), GL_FRAGMENT_SHADER);
-    const GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    const GLuint renderProgram = glCreateProgram();
+    glAttachShader(renderProgram, vertexShader);
+    glAttachShader(renderProgram, fragmentShader);
+    glLinkProgram(renderProgram);
     GLint success;
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(renderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+        glGetProgramInfoLog(renderProgram, 512, nullptr, infoLog);
         std::cerr << "Shader program linking failed\n" << infoLog << std::endl;
         exit(EXIT_FAILURE);
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    return shaderProgram;
+    this->renderProgram = renderProgram;
+    bindingUniformTex(renderProgram, "colorTex", 0);
 }
 
+renderer::~renderer() {
+    glDeleteProgram(renderProgram);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
 
-void Render::makeRender(const GLuint &renderProgram, const GLuint &colorTex) const {
+void renderer::rendering(const GLuint &colorTex) const {
     glUseProgram(renderProgram);
     // Activer et lier les textures
     glActiveTexture(GL_TEXTURE0);
@@ -89,14 +91,4 @@ void Render::makeRender(const GLuint &renderProgram, const GLuint &colorTex) con
     glBindVertexArray(0);
 
 }
-
-
-
-void Render::cleanRender(const GLuint & renderProgram) const {
-    glDeleteProgram(renderProgram);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-}
-
 

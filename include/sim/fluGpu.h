@@ -35,9 +35,7 @@ class fluGpu final : public fluid {
     GLuint diffuseProgram;
     GLuint projectProgram;
     GLuint boundProgram;
-    GLuint swapProgram;
     GLuint drawProgram;
-
 
     // textures
     GLuint grid_tex;

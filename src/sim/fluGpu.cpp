@@ -84,7 +84,6 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     diffuseProgram = createComputeProgram("../shaders/computes/diffuse.glsl");
     projectProgram = createComputeProgram("../shaders/computes/project.glsl");
     boundProgram   = createComputeProgram("../shaders/computes/set_vel_bound.glsl");
-    swapProgram    = createComputeProgram("../shaders/computes/swap.glsl");
     drawProgram    = createComputeProgram("../shaders/computes/draw.glsl");
     /*
     glUseProgram(projectProgram);
@@ -109,6 +108,26 @@ fluGpu::~fluGpu() {
     delete[] dens_permanent;
     delete[] u_permanent;
     delete[] v_permanent;
+
+    glDeleteTextures(1, &grid_tex);
+    glDeleteTextures(1, &dens_tex);
+    glDeleteTextures(1, &dens_prev_tex);
+    glDeleteTextures(1, &dens_permanent_tex);
+    glDeleteTextures(1, &pressure_tex);
+    glDeleteTextures(1, &u_tex);
+    glDeleteTextures(1, &v_tex);
+    glDeleteTextures(1, &u_permanent_tex);
+    glDeleteTextures(1, &v_permanent_tex);
+    glDeleteTextures(1, &u_prev_tex);
+    glDeleteTextures(1, &v_prev_tex);
+    glDeleteTextures(1, &color_tex);
+
+    glDeleteProgram(addProgram);
+    glDeleteProgram(advectProgram);
+    glDeleteProgram(diffuseProgram);
+    glDeleteProgram(projectProgram);
+    glDeleteProgram(boundProgram);
+    glDeleteProgram(drawProgram);
 }
 // ////////////////////////
 //  maths methods
@@ -125,15 +144,6 @@ void fluGpu::add_source(const GLuint x, const GLuint s,const float dt) const {
 }
 
 void fluGpu::swap( GLuint &x,  GLuint &y) noexcept {
-    /*
-    glUseProgram(swapProgram);
-    glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, y, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    */
     const GLuint tmp = x;
     x = y;
     y = tmp;
@@ -236,14 +246,14 @@ void fluGpu::velocity_step(const float dt) {
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
     swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
     project (u_prev_tex, v_prev_tex);
-    set_vel_bound();
-    swap(u_prev_tex, u_tex);
-    swap(v_prev_tex, v_tex);
-    advect (u_tex, u_prev_tex, u_prev_tex, v_prev_tex, dt);
-    advect (v_tex, v_prev_tex, u_prev_tex, v_prev_tex, dt);
-    set_vel_bound();
-    project (u_prev_tex, v_prev_tex);
-    set_vel_bound();
+    //set_vel_bound();
+    //swap(u_prev_tex, u_tex);
+    //swap(v_prev_tex, v_tex);
+    //advect (u_tex, u_prev_tex, u_prev_tex, v_prev_tex, dt);
+    //advect (v_tex, v_prev_tex, u_prev_tex, v_prev_tex, dt);
+    //set_vel_bound();
+    //project (u_prev_tex, v_prev_tex);
+    //set_vel_bound();
 }
 
 void fluGpu::calculate_pressure(float dt) const {
@@ -328,6 +338,9 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
         add_source(dens_tex, densTex_tmp, 1);
         add_source(u_tex, uTex_tmp, 1);
         add_source(v_tex, vTex_tmp, 1);
+        glDeleteTextures(1, &densTex_tmp);
+        glDeleteTextures(1, &uTex_tmp);
+        glDeleteTextures(1, &vTex_tmp);
     }
     delete[] u_temp;
     delete[] v_temp;
