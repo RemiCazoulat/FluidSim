@@ -207,7 +207,7 @@ void obstacleFlu::project(float * p, float * div) const {
     }
 }
 
-void obstacleFlu::calculate_pressure(const float dt) const {
+void obstacleFlu::pressure_step(const float dt) {
     for(int j = 1; j < height - 1; j++) {
         const int jw = j * width;
         const int j0w = (j - 1) * width;
@@ -291,8 +291,8 @@ void obstacleFlu::input_step(const int r, const float intensity, const float dt)
                                 }
                                 if (left_mouse_pressed){
                                     //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
-                                    add(i + x,j + y, u_prev, (mouse_x - force_x));
-                                    add(i + x,j + y, v_prev, -(mouse_y - force_y));
+                                    add(i + x, j + y, u_prev, (mouse_x - force_x));
+                                    add(i + x, j + y, v_prev, -(mouse_y - force_y));
 
                                 }
                                 if(right_mouse_pressed) {
@@ -354,7 +354,7 @@ static void getSciColor(float val, const float min, const float max, float &r, f
     }
 }
 
-GLuint obstacleFlu::draw(const DRAW_MODE mode) const {
+GLuint obstacleFlu::draw_step(const DRAW_MODE mode) {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -393,7 +393,10 @@ GLuint obstacleFlu::draw(const DRAW_MODE mode) const {
     return colorTex;
 }
 
-float obstacleFlu::find_max(const float* x) const {
+ void obstacleFlu::debug() {
+ }
+
+ float obstacleFlu::find_max(const float* x) const {
     float max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;

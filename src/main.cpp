@@ -1,8 +1,6 @@
 #include "../../include/shaders/renderer.h"
 #include "../include/sim/obstacleFlu.h"
 #include "../../include/sim/fluGpu.h"
-
-
 enum SIM_MODE {
     CPU,
     GPU
@@ -38,22 +36,21 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 int main() {
 // /////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 2.f;
+/**/constexpr float res = 4.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
-/**/constexpr float viscosity_rate = 0.0001f;
-/**/constexpr int sub_step = 25;
+/**/constexpr float viscosity_rate = 0.0000000001f;
+/**/constexpr int sub_step = 50;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
 /**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
-/**/const int add_radius = 5 * res;
+/**/const int add_radius = 7 * res;
 /**/constexpr float add_intensity = 0.5f;
 // /////////// End of control Panel ////////
-
 
     // /////// Init Window ///////
     const int window_width = cell_size * width;
@@ -61,9 +58,9 @@ int main() {
     initWindow(window_width, window_height);
 
     // /////// Render program ///////
-    const renderer* render = new renderer("../shaders/vertex.glsl", "../shaders/fragment.glsl");
+    const renderer* render = new renderer("../shaders/vert.glsl", "../shaders/frag.glsl");
 
-    // ////// Main loop ///////
+    // ////// Choosing simulation ///////
     fluid* fluid;
     if constexpr (sim_mode == CPU) {
         fluid = new obstacleFlu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
@@ -71,24 +68,45 @@ int main() {
     else {
         fluid = new fluGpu(window, width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
-    auto previousTime = static_cast<float>(glfwGetTime());
+    // ////// Main loop ///////
+    int frame_number = 0;
+    double total_time = 0.0;
+    double total_sim_time = 0.0;
+    double previousTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
-        const auto currentTime = static_cast<float>(glfwGetTime());
-        const auto dt = (currentTime - previousTime) * time_accel;
+        // Calculating dt
+        const auto currentTime = glfwGetTime();
+        const auto dt = static_cast<float>((currentTime - previousTime) * time_accel);
         previousTime = currentTime;
-
+        // /////// Simulation ///////
         fluid->input_step(add_radius, add_intensity, dt);
         fluid->velocity_step(dt);
         fluid->density_step(dt);
-
+        const auto time_sim = glfwGetTime();
+        total_sim_time += time_sim - currentTime;
         if constexpr (draw_mode == PRESSURE) {
-            fluid->calculate_pressure(dt);
+            fluid->pressure_step(dt);
         }
-        GLuint colorTex = fluid->draw(draw_mode);
+        // drawing & rendering
+        GLuint colorTex = fluid->draw_step(draw_mode);
         render->rendering(colorTex);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
+        total_time += dt;
+        frame_number++;
+
     }
+    // /////// Debug //////
+    fluid->debug();
+    printf("\n");
+    printf("total time: %f s\n", total_time);
+    printf("total sim time: %f s (%.2f %%)\n", total_sim_time, total_sim_time / total_time * 100.0);
+    printf("drawing time: %f s (%.2f %%)\n", total_time - total_sim_time, (total_time - total_sim_time) / total_time * 100.0);
+    printf("\n");
+    printf("total time per frame: %f ms\n", total_time / frame_number * 1000.0);
+    printf("total sim time per frame: %f ms\n", total_sim_time / frame_number * 1000.0);
+    printf("drawing time per frame: %f ms\n", (total_time - total_sim_time) / frame_number * 1000.0);
     // /////// Clean up ///////
     delete fluid;
     delete render;

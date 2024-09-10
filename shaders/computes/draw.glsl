@@ -39,7 +39,7 @@ void main(){
     float y =  imageLoad(v, ij).x;
     vec3 rgb = vec3(1.0);
     if(draw_mode == 0) {
-        rgb = xy2hsv2rgb(x, y, 0.1);
+        rgb = xy2hsv2rgb(x, y, 1.0);
 
     }
     /*
@@ -64,43 +64,3 @@ void main(){
     imageStore(color, ij, vec4(rgb, 1.0));
 
 }
-
-/*
-GLuint obstacleFlu::draw(const DRAW_MODE mode) const {
-    const float max_u = find_max(u);
-    const float max_v = find_max(v);
-    const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
-    const float max_d = find_max(dens);
-    const float min_d = find_min(dens);
-    const float delta_d = max_d - min_d;
-
-    float r, g, b;
-
-    for (int j = 0 ; j < height ; j++ ) {
-        const int jw = j * width;
-        for (int i = 0 ; i < width ; i++ ) {
-            const int ij = i + jw;
-            if(mode == VELOCITY) {
-                const float x = u[ij];
-                const float y = v[ij];
-                xy2hsv2rgb(x, y, r, g, b, r_max);
-            }
-            if(mode == DENSITY) {
-                float x = dens[ij];
-                x = (x + delta_d - max_d) / delta_d;
-                r = x; g = x; b = x;
-            }
-            if (mode == PRESSURE) {
-                const float max_p = find_max(pressure);
-                const float min_p = find_min(pressure);
-                getSciColor(pressure[ij], min_p, max_p, r, g, b);
-            }
-            color[ij * 3 + 0] = r;
-            color[ij * 3 + 1] = g;
-            color[ij * 3 + 2] = b;
-        }
-    }
-    GLuint colorTex = createTextureVec3(color, width, height);
-    return colorTex;
-}
-*/

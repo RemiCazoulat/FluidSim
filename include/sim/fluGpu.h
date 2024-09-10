@@ -13,6 +13,7 @@
 
 class fluGpu final : public fluid {
 
+
     // variables
     GLFWwindow* window;
     int width;
@@ -23,6 +24,17 @@ class fluGpu final : public fluid {
     float diffusion;
     float viscosity;
 
+    // debug variables
+    double BINDING_TIME;
+    double UNBINDING_TIME;
+    double DISPATCH_TIME;
+
+    double INPUT_STEP_TIME;
+    double DENSITY_STEP_TIME;
+    double VELOCITY_STEP_TIME;
+    double PRESSURE_STEP_TIME;
+    double DRAW_STEP_TIME;
+    int TOTAL_STEPS;
     // arrays
     float* grid;
     float* dens_permanent;
@@ -52,14 +64,14 @@ class fluGpu final : public fluid {
     GLuint color_tex;
 
     // private methods
-    void add_source(GLuint x, GLuint s, float dt) const;
+    void add_source(GLuint x, GLuint s, float dt);
 
     static void swap(GLuint &x, GLuint &y) noexcept;
-    void diffuse(GLuint x, GLuint x0, float diff, float dt) const;
-    void advect(GLuint z, GLuint z0, GLuint u_vel, GLuint v_vel, float dt) const;
-    void project(GLuint p, GLuint div) const;
+    void diffuse(GLuint x, GLuint x0, float diff, float dt);
+    void advect( GLuint z, GLuint z0, float dt);
+    void project();
     void add(int x, int y, float* t, float intensity) const;
-    void set_vel_bound() const;
+    void set_vel_bound();
 
 public:
 
@@ -69,8 +81,10 @@ public:
     void input_step(int r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
-    void calculate_pressure(float dt) const override;
-    [[nodiscard]] GLuint draw(DRAW_MODE mode) const override;
+    void pressure_step(float dt) override;
+    [[nodiscard]] GLuint draw_step(DRAW_MODE mode) override;
+
+    void debug() override;
 };
 
 #endif //FLUID2D_H

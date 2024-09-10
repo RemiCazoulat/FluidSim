@@ -29,7 +29,7 @@ void main(){
     const float x1y = imageLoad(x, ij1).x;
     const float divergence = x0x * s0x + x1x * s1x + x0y * s0y + x1y * s1y;
 
-    float x0_val =  imageLoad(x0, ij).x;
+    float x0_val = imageLoad(x0, ij).x;
 
     float new_x = (x0_val + a * divergence) / (1 + s * a);
 

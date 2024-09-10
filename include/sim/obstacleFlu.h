@@ -49,9 +49,9 @@ public:
     void input_step(int r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
-    void calculate_pressure(float dt) const override;
-    [[nodiscard]] GLuint draw(DRAW_MODE mode) const override;
-
+    void pressure_step(float dt) override;
+    [[nodiscard]] GLuint draw_step(DRAW_MODE mode) override;
+    void debug() override;
 };
 
 

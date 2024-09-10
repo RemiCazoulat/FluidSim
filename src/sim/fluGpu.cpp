@@ -31,6 +31,7 @@ static void cursor_position_callback(GLFWwindow* window, const double xpos, cons
 }
 
 fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+    // init variables
     this->window = window;
     this->width = width;
     this->height = height;
@@ -39,13 +40,22 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     this->viscosity = visc;
     this->sub_step = sub_step;
     this->grid_spacing = 1.f / static_cast<float>(height);
+    // init debug variables
+    this->BINDING_TIME = 0;
+    this->DISPATCH_TIME = 0;
+    this->UNBINDING_TIME = 0;
+    this->INPUT_STEP_TIME = 0;
+    this->DENSITY_STEP_TIME = 0;
+    this->VELOCITY_STEP_TIME = 0;
+    this->PRESSURE_STEP_TIME = 0;
+    this->DRAW_STEP_TIME = 0;
+    this->TOTAL_STEPS = 0;
+    // init arrays
     const int gridSize = width * height;
     grid = new float[gridSize]();
-
     dens_permanent = new float[gridSize]();
     u_permanent = new float[gridSize]();
     v_permanent = new float[gridSize]();
-
     const auto* empty = new float[gridSize]();
     const auto* emptyVec4 = new float[gridSize * 4]();
     // setting initial bounds and obstacles
@@ -80,22 +90,41 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
 
     // ---------- { Compute programs }----------
     addProgram     = createComputeProgram("../shaders/computes/add_source.glsl");
-    advectProgram  = createComputeProgram("../shaders/computes/advect.glsl");
     diffuseProgram = createComputeProgram("../shaders/computes/diffuse.glsl");
+    advectProgram  = createComputeProgram("../shaders/computes/advect.glsl");
     projectProgram = createComputeProgram("../shaders/computes/project.glsl");
     boundProgram   = createComputeProgram("../shaders/computes/set_vel_bound.glsl");
     drawProgram    = createComputeProgram("../shaders/computes/draw.glsl");
-    /*
-    glUseProgram(projectProgram);
-    glBindImageTexture (0, velocityTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-    glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-    glUseProgram(swapProgram);
-    glBindImageTexture (0, velocityTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-    glBindImageTexture (1, gridTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture (2, resultsTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    */
+    glUseProgram(diffuseProgram);
+    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+    glUseProgram(advectProgram);
+    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1i(glGetUniformLocation(advectProgram, "width"), width);
+    glUniform1i(glGetUniformLocation(advectProgram, "height"), height);
+
+    glUseProgram(projectProgram);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
+
+    glUseProgram(boundProgram);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+    glUseProgram(drawProgram);
+    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+    // input settings
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
@@ -132,15 +161,22 @@ fluGpu::~fluGpu() {
 // ////////////////////////
 //  maths methods
 // ////////////////////////
-void fluGpu::add_source(const GLuint x, const GLuint s,const float dt) const {
+void fluGpu::add_source(const GLuint x, const GLuint s,const float dt) {
     glUseProgram(addProgram);
+    auto previousTime = glfwGetTime();
     glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, s, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(addProgram, "dt"), dt);
-    glDispatchCompute(width / 64,height / 1,1);
+    auto currentTime = glfwGetTime();
+    BINDING_TIME += currentTime - previousTime;
+    previousTime = glfwGetTime();    glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    currentTime = glfwGetTime();
+    DISPATCH_TIME += currentTime - previousTime;
+    previousTime = glfwGetTime();    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    currentTime = glfwGetTime();
+    UNBINDING_TIME += currentTime - previousTime;
 }
 
 void fluGpu::swap( GLuint &x,  GLuint &y) noexcept {
@@ -149,56 +185,78 @@ void fluGpu::swap( GLuint &x,  GLuint &y) noexcept {
     y = tmp;
 }
 
-void fluGpu::diffuse(const GLuint x, const GLuint x0,const float diff,const float dt) const {
+void fluGpu::diffuse(const GLuint x, const GLuint x0,const float diff,const float dt) {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     glUseProgram(diffuseProgram);
+    auto previous_time = glfwGetTime();
     glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, x0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(diffuseProgram, "a"), a);
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     for(int k = 0; k < sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
 
 }
 
-void fluGpu::advect(const GLuint z, const GLuint z0, const GLuint u_vel, const GLuint v_vel, const float dt) const {
+void fluGpu::advect(const GLuint z, const GLuint z0, const float dt) {
     const float dtw = dt * static_cast<float>(width);
     const float dth = dt * static_cast<float>(height);
     glUseProgram(advectProgram);
+    auto previous_time = glfwGetTime();
     glBindImageTexture(0, z, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, z0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, u_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, v_vel, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(advectProgram, "dtw"), dtw);
     glUniform1f(glGetUniformLocation(advectProgram, "dth"), dth);
     glUniform1i(glGetUniformLocation(advectProgram, "width"), width);
     glUniform1i(glGetUniformLocation(advectProgram, "height"), height);
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
 }
 
-void fluGpu::project(const GLuint p, const GLuint div) const {
+void fluGpu::project() {
     glUseProgram(projectProgram);
+    auto previous_time = glfwGetTime();
     glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, p, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, div, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
     const GLint step_loc = glGetUniformLocation(projectProgram, "step");
-
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
     // step 1
+
+    previous_time = glfwGetTime();
     glUniform1i(step_loc, 1);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -214,68 +272,108 @@ void fluGpu::project(const GLuint p, const GLuint div) const {
     glUniform1i(step_loc, 3);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
     // unbind
+    previous_time = glfwGetTime();
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
 }
 
-void fluGpu::set_vel_bound() const {
+void fluGpu::set_vel_bound() {
     glUseProgram(boundProgram);
+    auto previous_time = glfwGetTime();
     glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
 }
 
 void fluGpu::density_step(float dt) {
+    const auto step_time = glfwGetTime();
 
+    //TODO: add density step
+
+    const auto end_step_time = glfwGetTime();
+    DENSITY_STEP_TIME += end_step_time - step_time;
 }
 
 void fluGpu::velocity_step(const float dt) {
+    const auto step_time = glfwGetTime();
+
+    TOTAL_STEPS += 1;
     add_source (u_tex, u_prev_tex, dt);
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
     swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
-    project (u_prev_tex, v_prev_tex);
-    //set_vel_bound();
-    //swap(u_prev_tex, u_tex);
-    //swap(v_prev_tex, v_tex);
-    //advect (u_tex, u_prev_tex, u_prev_tex, v_prev_tex, dt);
-    //advect (v_tex, v_prev_tex, u_prev_tex, v_prev_tex, dt);
-    //set_vel_bound();
+    project ();
+    set_vel_bound();
+    swap(u_prev_tex, u_tex);
+    swap(v_prev_tex, v_tex);
+    advect (u_tex, u_prev_tex, dt);
+    advect (v_tex, v_prev_tex, dt);
+    set_vel_bound();
+    project ();
     //project (u_prev_tex, v_prev_tex);
-    //set_vel_bound();
+    set_vel_bound();
+
+    const auto end_step_time = glfwGetTime();
+    VELOCITY_STEP_TIME += end_step_time - step_time;
 }
 
-void fluGpu::calculate_pressure(float dt) const {
+void fluGpu::pressure_step(float dt) {
+    const auto step_time = glfwGetTime();
 
+    //TODO : add pressure step
+
+    const auto end_step_time = glfwGetTime();
+    PRESSURE_STEP_TIME += end_step_time - step_time;
 }
 
-GLuint fluGpu::draw(const DRAW_MODE mode) const {
+GLuint fluGpu::draw_step(const DRAW_MODE mode) {
+    const auto step_time = glfwGetTime();
+
     glUseProgram(drawProgram);
+    auto previous_time = glfwGetTime();
     glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     glUniform1i(glGetUniformLocation(drawProgram, "draw_mode"), mode);
-
+    auto current_time = glfwGetTime();
+    BINDING_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+    current_time = glfwGetTime();
+    DISPATCH_TIME += current_time - previous_time;
+    previous_time = glfwGetTime();
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    current_time = glfwGetTime();
+    UNBINDING_TIME += current_time - previous_time;
+
+    const auto end_step_time = glfwGetTime();
+    DRAW_STEP_TIME += end_step_time - step_time;
     return color_tex;
 }
-
 
 void fluGpu::add(const int x,const int y, float *t,const float intensity) const {
     if(grid[x + y * width] == 0.f) return;
@@ -283,6 +381,8 @@ void fluGpu::add(const int x,const int y, float *t,const float intensity) const 
 }
 
 void fluGpu::input_step(const int r, const float intensity, const float dt) {
+    const auto step_time = glfwGetTime();
+
     bool new_permanent = false;
     bool new_temp = false;
     auto* u_temp = new float[width * height]();
@@ -305,8 +405,8 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
                                 }
                                 if (left_mouse_pressed){
                                     //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
-                                    add(i + x,j + y, u_temp, (mouse_x - force_x));
-                                    add(i + x,j + y, v_temp, -(mouse_y - force_y));
+                                    add(i + x, j + y, u_temp, (mouse_x - force_x));
+                                    add(i + x, j + y, v_temp, -(mouse_y - force_y));
                                     new_temp = true;
                                 }
                                 if(right_mouse_pressed) {
@@ -335,9 +435,9 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
         const GLuint densTex_tmp = createTextureVec1(dens_temp, width, height);
         const GLuint uTex_tmp = createTextureVec1(u_temp, width, height);
         const GLuint vTex_tmp = createTextureVec1(v_temp, width, height);
-        add_source(dens_tex, densTex_tmp, 1);
-        add_source(u_tex, uTex_tmp, 1);
-        add_source(v_tex, vTex_tmp, 1);
+        add_source(dens_prev_tex, densTex_tmp, 1);
+        add_source(u_prev_tex, uTex_tmp, 1);
+        add_source(v_prev_tex, vTex_tmp, 1);
         glDeleteTextures(1, &densTex_tmp);
         glDeleteTextures(1, &uTex_tmp);
         glDeleteTextures(1, &vTex_tmp);
@@ -345,6 +445,39 @@ void fluGpu::input_step(const int r, const float intensity, const float dt) {
     delete[] u_temp;
     delete[] v_temp;
     delete[] dens_temp;
+
+    const auto end_step_time = glfwGetTime();
+    INPUT_STEP_TIME += end_step_time - step_time;
+}
+
+void fluGpu::debug() {
+    INPUT_STEP_TIME /= TOTAL_STEPS;
+    DENSITY_STEP_TIME /= TOTAL_STEPS;
+    VELOCITY_STEP_TIME /= TOTAL_STEPS;
+    PRESSURE_STEP_TIME /= TOTAL_STEPS;
+    DRAW_STEP_TIME /= TOTAL_STEPS;
+    auto total = INPUT_STEP_TIME + DENSITY_STEP_TIME + VELOCITY_STEP_TIME + PRESSURE_STEP_TIME + DRAW_STEP_TIME;
+    const auto percent_input_time = INPUT_STEP_TIME / total * 100;
+    const auto percent_density_time = DENSITY_STEP_TIME / total * 100;
+    const auto percent_velocity_time = VELOCITY_STEP_TIME / total * 100;
+    const auto percent_pressure_time = PRESSURE_STEP_TIME / total * 100;
+    const auto percent_draw_time = DRAW_STEP_TIME / total * 100;
+    printf("Input time: %f ms (%.2f %%)\n", INPUT_STEP_TIME * 1000, percent_input_time);
+    printf("Density time: %f ms (%.2f %%)\n", DENSITY_STEP_TIME * 1000, percent_density_time);
+    printf("Velocity time: %f ms (%.2f %%)\n", VELOCITY_STEP_TIME * 1000, percent_velocity_time);
+    printf("Pressure time: %f ms (%.2f %%)\n", PRESSURE_STEP_TIME * 1000, percent_pressure_time);
+    printf("Draw time: %f ms (%.2f %%)\n", DRAW_STEP_TIME * 1000, percent_draw_time);
+    printf("\n");
+    BINDING_TIME /= TOTAL_STEPS;
+    DISPATCH_TIME /= TOTAL_STEPS;
+    UNBINDING_TIME /= TOTAL_STEPS;
+    total = BINDING_TIME + DISPATCH_TIME + UNBINDING_TIME;
+    const auto percent_binding_time = BINDING_TIME / total * 100;
+    const auto percent_dispatch_time = DISPATCH_TIME / total * 100;
+    const auto percent_unbinding_time = UNBINDING_TIME / total * 100;
+    printf("Binding time: %f ms (%.2f %%)\n", BINDING_TIME * 1000, percent_binding_time);
+    printf("Dispatch time: %f ms (%.2f %%)\n", DISPATCH_TIME * 1000, percent_dispatch_time);
+    printf("Unbinding time: %f ms (%.2f %%)\n", UNBINDING_TIME * 1000, percent_unbinding_time);
 }
 
 

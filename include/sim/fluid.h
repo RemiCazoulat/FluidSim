@@ -17,8 +17,9 @@ public:
     virtual void input_step(int r, float intensity, float dt) = 0;
     virtual void density_step(float dt) = 0;
     virtual void velocity_step(float dt) = 0;
-    virtual void calculate_pressure(float dt) const = 0;
-    [[nodiscard]]virtual GLuint draw(DRAW_MODE mode) const = 0;
+    virtual void pressure_step(float dt) = 0;
+    [[nodiscard]]virtual GLuint draw_step(DRAW_MODE mode) = 0;
+    virtual void debug() = 0;
 
 
 };

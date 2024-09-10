@@ -14,8 +14,6 @@ add_executable(FluidSim
         include/sim/fluGpu.h
         src/shaders/renderer.cpp
         include/shaders/renderer.h
-        src/sim/firstFlu.cpp
-        include/sim/firstFlu.h
         include/sim/fluid.h
         src/sim/obstacleFlu.cpp
         include/sim/obstacleFlu.h
