@@ -11,9 +11,10 @@ Current state of the simulation using the VELOCITY display mode :
 - displaying simulation with 2 modes : VELOCITY MODE and DENSITY MODE
 - Modifying bounds management to simplify it and to easily add objects and obstacles (with a mask array)
 - Simplify project function on CPU and see if it works well (it doesn't work well)
+- passing everything on GPU using openGL to have better performance -it's still have to be optimized)
+
 
 ## To do
-- passing everything on GPU using openGL to have better performance
 - add a third dimension
 - passing everything on GPU using Vulkan and compare the performance with the openGL simulation to see if Vulkan really worths a try
 - make a vorticity confinement step to improve performance and accuracy
