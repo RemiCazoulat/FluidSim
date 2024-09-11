@@ -6,34 +6,9 @@
 #include "../../include/shaders/shader.h"
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
-static float force_x = 0.0f, force_y = 0.0f, mouse_x = 0.0f, mouse_y = 0.0f;
-static int left_mouse_pressed = 0, right_mouse_pressed = 0, middle_mouse_pressed = 0;
-
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        left_mouse_pressed = 1;
-    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        left_mouse_pressed = 0;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        right_mouse_pressed = 1;
-    } else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        right_mouse_pressed = 0;
-    }
-    if(button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
-        middle_mouse_pressed = 1;
-    } else if(button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
-        middle_mouse_pressed = 0;
-    }
-}
-
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-    mouse_x = static_cast<float>(xpos);
-    mouse_y = static_cast<float>(ypos);
-}
 
 
-obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step):fluid(window) {
     this->window = window;
     this->width = width;
     this->height = height;
@@ -273,15 +248,15 @@ void obstacleFlu::add(const int x, const int y, float* t, const float intensity)
 }
 
 void obstacleFlu::input_step(const float r, const float intensity, const float dt) {
-
+    const int r_int = static_cast<int>(r);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
         const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
 
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
             if(left_mouse_pressed || middle_mouse_pressed) {
-                for(int x = -r; x <= r; x++) {
-                    for(int y = -r; y <= r; y++) {
+                for(int x = -r_int; x <= r_int; x++) {
+                    for(int y = -r_int; y <= r_int; y++) {
                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
                             if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
                                 if(middle_mouse_pressed) {

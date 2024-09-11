@@ -39,20 +39,20 @@ void initWindow(const int & windowWidth, const int & windowHeight) {
 int main() {
 // /////////// Control Panel ////////
 /**/// grid infos
-/**/constexpr float res = 8.f;
+/**/constexpr float res = 4.f;
 /**/width = static_cast<int>(128.f * res);
 /**/height = static_cast<int>(72.f * res);
 /**/cell_size = static_cast<int>(16.f / res);
 /**/// fluid infos
 /**/constexpr float diffusion_rate = 0.0001f;
-/**/constexpr float viscosity_rate = 0.0000000000001f;
-/**/constexpr int sub_step = 200;
+/**/constexpr float viscosity_rate = 0.00000000001f;
+/**/constexpr int sub_step = 25;
 /**/// simulation infos
 /**/constexpr SIM_MODE sim_mode = GPU;
 /**/constexpr float time_accel = 1.f;
 /**/constexpr DRAW_MODE draw_mode = VELOCITY;
 /**/const int add_radius = 3 * res;
-/**/constexpr float add_intensity = 5.f;
+/**/constexpr float add_intensity = 10.f;
 // /////////// End of control Panel ////////
 
     // /////// Init Window ///////

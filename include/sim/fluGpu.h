@@ -5,11 +5,7 @@
 #ifndef FLUID2D_H
 #define FLUID2D_H
 
-#include "../../include/libraries.h"
-#include "../../include/shaders/compute.h"
-#include "../../include/shaders/shader.h"
 #include "fluid.h"
-
 
 class fluGpu final : public fluid {
 

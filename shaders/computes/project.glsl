@@ -78,6 +78,9 @@ void step_3(ivec2 ij) {
     float old_v = imageLoad(v, ij).x;
     float new_u = old_u - (p1x - p0x) / (h * 2);
     float new_v = old_v - (p1y - p0y) / (h * 2);
+    //float new_u = old_u - (p1x - p0x) / (h * (s1x + s0x));
+    //float new_v = old_v - (p1y - p0y) / (h * (s1y + s0y));
+
     imageStore(u, ij, vec4(new_u, 0.0, 0.0, 0.0));
     imageStore(v, ij, vec4(new_v, 0.0, 0.0, 0.0));
 }

@@ -17,6 +17,7 @@ add_executable(FluidSim
         include/sim/fluid.h
         src/sim/obstacleFlu.cpp
         include/sim/obstacleFlu.h
+        src/sim/fluid.cpp
 )
 
 add_subdirectory(thirdparty/glfw)

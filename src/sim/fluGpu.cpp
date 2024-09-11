@@ -3,34 +3,9 @@
 //
 
 #include "../../include/sim/fluGpu.h"
+#include "../../include/shaders/compute.h"
 
-static float force_x = 0.0f, force_y = 0.0f, mouse_x = 0.0f, mouse_y = 0.0f;
-static int left_mouse_pressed = 0, right_mouse_pressed = 0, middle_mouse_pressed = 0;
-
-static void mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        left_mouse_pressed = 1;
-    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        left_mouse_pressed = 0;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        right_mouse_pressed = 1;
-    } else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        right_mouse_pressed = 0;
-    }
-    if(button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
-        middle_mouse_pressed = 1;
-    } else if(button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
-        middle_mouse_pressed = 0;
-    }
-}
-
-static void cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
-    mouse_x = static_cast<float>(xpos);
-    mouse_y = static_cast<float>(ypos);
-}
-
-fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) {
+fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) : fluid(window) {
     // init variables
     this->window = window;
     this->width = width;
@@ -126,8 +101,6 @@ fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int 
     glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
     // input settings
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
 
     delete[] empty;
     delete[] emptyVec4;
