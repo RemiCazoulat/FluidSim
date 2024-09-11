@@ -28,7 +28,14 @@ void step_1(ivec2 ij) {
     float u1x = imageLoad(u, i1j).x;
     float v0y = imageLoad(v, ij0).x;
     float v1y = imageLoad(v, ij1).x;
-    float divergence = -0.5 * h * (u1x - u0x + v1y - v0y);
+    float s0x = imageLoad(grid, i0j).x;
+    float s1x = imageLoad(grid, i1j).x;
+    float s0y = imageLoad(grid, ij0).x;
+    float s1y = imageLoad(grid, ij1).x;
+    s = s0x + s1x + s0y + s1y;
+    //float divergence = -0.5 * h * (u1x - u0x + v1y - v0y);
+    float divergence = -1/s * h * (u1x - u0x + v1y - v0y);
+
     imageStore(div, ij, vec4(divergence, 0.0, 0.0, 0.0));
 }
 
@@ -43,6 +50,7 @@ void step_2(ivec2 ij) {
     float s0y = imageLoad(grid, ij0).x;
     float s1y = imageLoad(grid, ij1).x;
     float s = s0x + s1x + s0y + s1y;
+    //if (s < 3.5) return;
     float p0x = imageLoad(p, i0j).x;
     float p1x = imageLoad(p, i1j).x;
     float p0y = imageLoad(p, ij0).x;

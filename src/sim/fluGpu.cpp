@@ -324,13 +324,14 @@ void fluGpu::velocity_step(const float dt) {
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
     swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
+    //set_vel_bound();
     project ();
     set_vel_bound();
     swap(u_prev_tex, u_tex);
     swap(v_prev_tex, v_tex);
     advect (u_tex, u_prev_tex, dt);
     advect (v_tex, v_prev_tex, dt);
-    set_vel_bound();
+    //set_vel_bound();
     project ();
     //project (u_prev_tex, v_prev_tex);
     set_vel_bound();
@@ -412,14 +413,19 @@ void fluGpu::input_step(const float r, const float intensity, const float dt) {
             if(left_mouse_pressed || middle_mouse_pressed) {
 
                 if(middle_mouse_pressed) {
-                    add(i, j, r, 0, u_permanent_tex, dt);
-                    add(i, j, r, intensity, v_permanent_tex, dt);
+                    add(i, j, r, intensity, u_permanent_tex, dt);
+                    add(i, j, r, 0, v_permanent_tex, dt);
                 }
                 if (left_mouse_pressed){
                     add(i, j, r,  (mouse_x - force_x), u_tex, dt);
                     add(i, j, r, -(mouse_y - force_y), v_tex, dt);
+                    //add(i, j, r, -intensity, u_permanent_tex, dt);
+                    //add(i, j, r, 0, v_permanent_tex, dt);
                 }
                 if(right_mouse_pressed) {
+                    printf("right mouse pressed\n");
+                    add(i, j, r, -intensity, u_permanent_tex, dt);
+                    add(i, j, r, 0, v_permanent_tex, dt);
                 }
             }
         }

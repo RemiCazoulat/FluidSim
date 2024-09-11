@@ -22,6 +22,7 @@ void main(){
     float s1x = imageLoad(grid, i1j).x;
     float s0y = imageLoad(grid, ij0).x;
     float s1y = imageLoad(grid, ij1).x;
+    s = s0x + s1x + s0y + s1y;
     if(x > 0.f && s1x == 0.f || x < 0.f && s0x == 0.f) x = -x;
     if(y > 0.f && s1y == 0.f || y < 0.f && s0y == 0.f) y = -y;
     imageStore(u, ij, vec4(x, 0.0, 0.0, 0.0));

@@ -31,7 +31,7 @@ void main(){
 
     float x0_val = imageLoad(x0, ij).x;
 
-    float new_x = (x0_val + a * divergence) / (1 + s * a);
+    float new_x = (x0_val + a * divergence) / (1.0 + s * a);
 
     imageStore(x, ij, vec4(new_x, 0.0, 0.0, 0.0));
 }
