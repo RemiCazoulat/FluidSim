@@ -8,7 +8,7 @@
 
 
 
-obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step):fluid(window) {
+obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step):fluid_2d(window) {
     this->window = window;
     this->width = width;
     this->height = height;

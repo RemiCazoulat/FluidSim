@@ -5,9 +5,9 @@
 #ifndef FLUID2D_H
 #define FLUID2D_H
 
-#include "fluid.h"
+#include "fluid_2d.h"
 
-class fluGpu final : public fluid {
+class fluGpu final : public fluid_2d {
 
 
     // variables

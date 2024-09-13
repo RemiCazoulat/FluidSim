@@ -2,18 +2,18 @@
 // Created by remi.cazoulat on 11/09/2024.
 //
 
-#include "../../include/sim/fluid.h"
+#include "../../include/sim/fluid_2d.h"
 
-float fluid::force_x = 0.0f;
-float fluid::force_y = 0.0f;
-float fluid::mouse_x = 0.0f;
-float fluid::mouse_y = 0.0f;
-int fluid::left_mouse_pressed = 0;
-int fluid::right_mouse_pressed = 0;
-int fluid::middle_mouse_pressed = 0;
+float fluid_2d::force_x = 0.0f;
+float fluid_2d::force_y = 0.0f;
+float fluid_2d::mouse_x = 0.0f;
+float fluid_2d::mouse_y = 0.0f;
+int fluid_2d::left_mouse_pressed = 0;
+int fluid_2d::right_mouse_pressed = 0;
+int fluid_2d::middle_mouse_pressed = 0;
 
 
-void fluid::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
+void fluid_2d::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         left_mouse_pressed = 1;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -31,13 +31,14 @@ void fluid::mouse_button_callback(GLFWwindow* window, const int button, const in
     }
 }
 
-void fluid::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
+void fluid_2d::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
     mouse_x = static_cast<float>(xpos);
     mouse_y = static_cast<float>(ypos);
 }
 
-fluid::fluid(GLFWwindow* window) {
+fluid_2d::fluid_2d(GLFWwindow* window) {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
 }
+

@@ -7,9 +7,9 @@
 
 
 
-#include "fluid.h"
+#include "fluid_2d.h"
 
-class obstacleFlu final : public fluid {
+class obstacleFlu final : public fluid_2d {
     GLFWwindow* window;
     int width;
     int height;
