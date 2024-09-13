@@ -5,7 +5,17 @@
 #include "../../include/sim/fluGpu.h"
 #include "../../include/shaders/compute.h"
 
-fluGpu::fluGpu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step) : fluid_2d(window) {
+fluGpu::fluGpu(
+    const int width,
+    const int height,
+    const int cell_size,
+    const float diff,
+    const float visc,
+    const int sub_step,
+    const float add_r,
+    const float add_i
+    )
+: fluid_2d(width * cell_size, height * cell_size, add_r, add_i) {
     // init variables
     this->window = window;
     this->width = width;

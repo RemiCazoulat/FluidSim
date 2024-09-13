@@ -73,7 +73,7 @@ class fluGpu final : public fluid_2d {
 public:
 
     // public and override methods
-    fluGpu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    fluGpu(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
     ~fluGpu() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;

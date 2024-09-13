@@ -36,9 +36,100 @@ void fluid_2d::cursor_position_callback(GLFWwindow* window, const double xpos, c
     mouse_y = static_cast<float>(ypos);
 }
 
-fluid_2d::fluid_2d(GLFWwindow* window) {
+
+GLFWwindow* initWindow(const int & windowWidth, const int & windowHeight) {
+    // Initialize GLFW
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        exit(-1);
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // Create a GLFW window
+    GLFWwindow *window = glfwCreateWindow(windowWidth, windowHeight, "OpenGL 2D Fluid", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+    }
+    glfwMakeContextCurrent(window);
+
+    // Load OpenGL functions using glfwGetProcAddress
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+        std::cerr << "Failed to initialize OpenGL context" << std::endl;
+    }
+    glfwSwapInterval(0);
+    return window;
+}
+
+fluid_2d::fluid_2d(const int window_width,const int window_height, const float add_r, const float add_i) {
+    this->add_radius = add_r;
+    this->add_intensity = add_i;
+    this->render = new renderer("../shaders/vert.glsl", "../shaders/frag.glsl");
+    this->window = initWindow(window_width, window_height);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
+}
+
+fluid_2d::~fluid_2d() {
+    delete render;
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
+void fluid_2d::run_loop(const DRAW_MODE mode, const float t_accel) {
+
+    int frame_number = 0;
+    double total_time = 0.0;
+    double total_sim_time = 0.0;
+    double total_rendering_time = 0.0;
+    double total_glfw_time = 0.0;
+    double previous_time = glfwGetTime();
+    while (!glfwWindowShouldClose(window)) {
+        const auto current_time = glfwGetTime();
+        glfwPollEvents();
+        // /////// Simulation ///////
+        const auto dt = static_cast<float>((current_time - previous_time) * t_accel);
+        previous_time = current_time;
+        input_step(add_radius, add_intensity, dt);
+        velocity_step(dt);
+        density_step(dt);
+        GLuint colorTex = draw_step(mode);
+
+        const auto time_sim = glfwGetTime();
+        total_sim_time += time_sim - current_time;
+        // /////// Rendering ///////
+        const auto rendering_time = glfwGetTime();
+
+        render->rendering(colorTex);
+
+        total_rendering_time += glfwGetTime() - rendering_time;
+        // /////// Swap Buffers and Poll Events //////
+        const auto glfw_time = glfwGetTime();
+
+        glfwSwapBuffers(window);
+        //glFlush();
+
+        total_glfw_time += glfwGetTime() - glfw_time;
+
+        total_time += glfwGetTime() - current_time;
+
+        frame_number++;
+
+    }
+    // /////// Debug //////
+    debug();
+    printf("\n");
+    printf("=========[ Main Debug ]=========\n");
+    printf("total time: %f s\n", total_time);
+    printf("total sim time: %f s (%.2f %%)\n", total_sim_time, total_sim_time / total_time * 100.0);
+    printf("total rendering time: %f s (%.2f %%)\n", total_rendering_time, total_rendering_time / total_time * 100.0);
+    printf("total glfw time: %f s (%.2f %%)\n", total_glfw_time, total_glfw_time / total_time * 100.0);
+    printf("\n");
+    printf("total time per frame: %f ms (%.2f FPS)\n", total_time / frame_number * 1000.0, 1.f / (total_time / frame_number));
+    printf("total sim time per frame: %f ms\n", total_sim_time / frame_number * 1000.0);
+    printf("total rendering time per frame: %f ms\n", total_rendering_time / frame_number * 1000.0);
+    printf("total glfw time per frame: %f ms\n", total_glfw_time / frame_number * 1000.0);
 }
 
