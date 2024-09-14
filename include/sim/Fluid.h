@@ -14,7 +14,7 @@ enum DRAW_MODE {
     PRESSURE = 2
 };
 
-class fluid {
+class Fluid {
 protected:
     virtual void input_step(float r, float intensity, float dt) = 0;
     virtual void density_step(float dt) = 0;
@@ -22,7 +22,7 @@ protected:
     virtual void pressure_step(float dt) = 0;
     [[nodiscard]]virtual GLuint draw_step(DRAW_MODE mode) = 0;
 public:
-    virtual ~fluid() = default;
+    virtual ~Fluid() = default;
     virtual void run_loop(DRAW_MODE mode, float t_accel) = 0;
 
     virtual void debug() = 0;

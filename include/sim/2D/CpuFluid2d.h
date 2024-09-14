@@ -7,10 +7,9 @@
 
 
 
-#include "fluid_2d.h"
+#include "Fluid2d.h"
 
-class obstacleFlu final : public fluid_2d {
-    GLFWwindow* window;
+class CpuFluid2d final : public Fluid2d {
     int width;
     int height;
     int cell_size;
@@ -43,8 +42,8 @@ class obstacleFlu final : public fluid_2d {
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    obstacleFlu(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
-    ~obstacleFlu() override;
+    CpuFluid2d(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    ~CpuFluid2d() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;

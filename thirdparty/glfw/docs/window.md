@@ -613,7 +613,7 @@ pattern is to use the close flag as a main loop condition.
 ```c
 while (!glfwWindowShouldClose(window))
 {
-    render(window);
+    renderer(window);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -1492,7 +1492,7 @@ the [GLFW_DOUBLEBUFFER](@ref GLFW_DOUBLEBUFFER_hint) window hint.
 
 GLFW windows are by default double buffered.  That means that you have two
 rendering buffers; a front buffer and a back buffer.  The front buffer is
-the one being displayed and the back buffer the one you render to.
+the one being displayed and the back buffer the one you renderer to.
 
 When the entire frame has been rendered, it is time to swap the back and the
 front buffers in order to display what has been rendered and begin rendering

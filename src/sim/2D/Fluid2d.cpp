@@ -2,18 +2,18 @@
 // Created by remi.cazoulat on 11/09/2024.
 //
 
-#include "../../include/sim/fluid_2d.h"
+#include "../../../include/sim/2D/Fluid2d.h"
 
-float fluid_2d::force_x = 0.0f;
-float fluid_2d::force_y = 0.0f;
-float fluid_2d::mouse_x = 0.0f;
-float fluid_2d::mouse_y = 0.0f;
-int fluid_2d::left_mouse_pressed = 0;
-int fluid_2d::right_mouse_pressed = 0;
-int fluid_2d::middle_mouse_pressed = 0;
+float Fluid2d::force_x = 0.0f;
+float Fluid2d::force_y = 0.0f;
+float Fluid2d::mouse_x = 0.0f;
+float Fluid2d::mouse_y = 0.0f;
+int Fluid2d::left_mouse_pressed = 0;
+int Fluid2d::right_mouse_pressed = 0;
+int Fluid2d::middle_mouse_pressed = 0;
 
 
-void fluid_2d::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
+void Fluid2d::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         left_mouse_pressed = 1;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -31,7 +31,7 @@ void fluid_2d::mouse_button_callback(GLFWwindow* window, const int button, const
     }
 }
 
-void fluid_2d::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
+void Fluid2d::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
     mouse_x = static_cast<float>(xpos);
     mouse_y = static_cast<float>(ypos);
 }
@@ -62,23 +62,23 @@ GLFWwindow* initWindow(const int & windowWidth, const int & windowHeight) {
     return window;
 }
 
-fluid_2d::fluid_2d(const int window_width,const int window_height, const float add_r, const float add_i) {
+Fluid2d::Fluid2d(const int window_width, const int window_height, const float add_r, const float add_i) {
     this->add_radius = add_r;
     this->add_intensity = add_i;
-    this->render = new renderer("../shaders/vert.glsl", "../shaders/frag.glsl");
+    this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
     this->window = initWindow(window_width, window_height);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
 }
 
-fluid_2d::~fluid_2d() {
-    delete render;
+Fluid2d::~Fluid2d() {
+    delete renderer;
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
-void fluid_2d::run_loop(const DRAW_MODE mode, const float t_accel) {
+void Fluid2d::run_loop(const DRAW_MODE mode, const float t_accel) {
 
     int frame_number = 0;
     double total_time = 0.0;
@@ -89,32 +89,30 @@ void fluid_2d::run_loop(const DRAW_MODE mode, const float t_accel) {
     while (!glfwWindowShouldClose(window)) {
         const auto current_time = glfwGetTime();
         glfwPollEvents();
-        // /////// Simulation ///////
+        // ----{ Simulation }----
         const auto dt = static_cast<float>((current_time - previous_time) * t_accel);
         previous_time = current_time;
+        // start steps
         input_step(add_radius, add_intensity, dt);
         velocity_step(dt);
         density_step(dt);
         GLuint colorTex = draw_step(mode);
-
+        // end steps
         const auto time_sim = glfwGetTime();
         total_sim_time += time_sim - current_time;
-        // /////// Rendering ///////
+        // ----{ Rendering }----
         const auto rendering_time = glfwGetTime();
-
-        render->rendering(colorTex);
-
+        // start rendering
+        renderer->rendering(colorTex);
+        // stop rendering
         total_rendering_time += glfwGetTime() - rendering_time;
-        // /////// Swap Buffers and Poll Events //////
+        // ----{ Swap Buffers }----
         const auto glfw_time = glfwGetTime();
-
+        // start swap buffers
         glfwSwapBuffers(window);
-        //glFlush();
-
+        // end swap buffers
         total_glfw_time += glfwGetTime() - glfw_time;
-
         total_time += glfwGetTime() - current_time;
-
         frame_number++;
 
     }

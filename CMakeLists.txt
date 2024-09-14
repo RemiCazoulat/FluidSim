@@ -10,15 +10,15 @@ add_executable(FluidSim
         src/shaders/compute.cpp
         include/libraries.h
         src/shaders/shader.cpp
-        src/sim/fluGpu.cpp
-        include/sim/fluGpu.h
+        src/sim/2D/GlFluid2d.cpp
+        include/sim/2D/GlFluid2d.h
         src/shaders/renderer.cpp
-        include/shaders/renderer.h
-        include/sim/fluid_2d.h
-        src/sim/obstacleFlu.cpp
-        include/sim/obstacleFlu.h
-        src/sim/fluid_2d.cpp
-        include/sim/fluid.h
+        include/shaders/Renderer.h
+        include/sim/2D/Fluid2d.h
+        src/sim/2D/CpuFluid2d.cpp
+        include/sim/2D/CpuFluid2d.h
+        src/sim/2D/Fluid2d.cpp
+        include/sim/Fluid.h
 )
 
 add_subdirectory(thirdparty/glfw)

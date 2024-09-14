@@ -2401,7 +2401,7 @@ LibreOffice includes several applications that make it the most powerful Free an
 * [VKTS](https://github.com/McNopper/Vulkan) Vulkan examples using VulKan ToolS (VKTS)
 * [*The OpenGL Samples Pack*](http://www.g-truc.net/project-0026.html#menu), samples that show how to set up all the different new features
 * [*Learning Modern 3D Graphics programming*](http://www.arcsynthesis.org/gltut/), a great OpenGL tutorial using GLM by Jason L. McKesson
-* [*Morten Nobel-Jørgensen’s*](http://blog.nobel-joergensen.com/2011/04/02/glm-brilliant-math-library-for-opengl/) review and use an [*OpenGL renderer*](https://github.com/mortennobel/RenderE)
+* [*Morten Nobel-Jørgensen’s*](http://blog.nobel-joergensen.com/2011/04/02/glm-brilliant-math-library-for-opengl/) review and use an [*OpenGL Renderer*](https://github.com/mortennobel/RenderE)
 * [*Swiftless’ OpenGL tutorial*](http://www.swiftless.com/opengltuts.html) using GLM by Donald Urquhart
 * [*Rastergrid*](http://rastergrid.com/blog/), many technical articles with companion programs using GLM by Daniel Rákos\
 * [*OpenGL Tutorial*](http://www.opengl-tutorial.org), tutorials for OpenGL 3.1 and later

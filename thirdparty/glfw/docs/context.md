@@ -27,7 +27,7 @@ To test the creation of various kinds of contexts and see their properties, run
 the `glfwinfo` test program.
 
 @note Vulkan does not have a context and the Vulkan instance is created via the
-Vulkan API itself.  If you will be using Vulkan to render to a window, disable
+Vulkan API itself.  If you will be using Vulkan to renderer to a window, disable
 context creation by setting the [GLFW_CLIENT_API](@ref GLFW_CLIENT_API_hint)
 hint to `GLFW_NO_API`.  For more information, see the @ref vulkan_guide.
 

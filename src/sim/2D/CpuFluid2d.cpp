@@ -2,14 +2,22 @@
 // Created by remi.cazoulat on 30/08/2024.
 //
 
-#include "../../include/sim/obstacleFlu.h"
-#include "../../include/shaders/shader.h"
+#include "../../../include/sim/2D/CpuFluid2d.h"
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
 
 
-obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step):fluid_2d(window) {
-    this->window = window;
+CpuFluid2d::CpuFluid2d(
+                       const int width,
+                       const int height,
+                       const int cell_size,
+                       const float diff,
+                       const float visc,
+                       const int sub_step,
+                       const float add_r,
+                       const float add_i
+                       )
+                       : Fluid2d(width * cell_size, height * cell_size, add_r, add_i) {
     this->width = width;
     this->height = height;
     this->cell_size = cell_size;
@@ -49,7 +57,7 @@ obstacleFlu::obstacleFlu(GLFWwindow* window, const int width, const int height, 
     glfwSetCursorPosCallback(window, cursor_position_callback);
 }
 
-obstacleFlu::~obstacleFlu() {
+CpuFluid2d::~CpuFluid2d() {
     delete[] grid;
     delete[] u;
     delete[] v;
@@ -64,11 +72,11 @@ obstacleFlu::~obstacleFlu() {
     delete[] color;
 }
 
-void obstacleFlu::add_source(float* x, const float* s, const float dt) const {
+void CpuFluid2d::add_source(float* x, const float* s, const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void obstacleFlu::diffuse(float* x, const float* x0, const float diff, const float dt) const {
+void CpuFluid2d::diffuse(float* x, const float* x0, const float diff, const float dt) const {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
@@ -91,7 +99,7 @@ void obstacleFlu::diffuse(float* x, const float* x0, const float diff, const flo
     }
 }
 
-void obstacleFlu::advect(float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
+void CpuFluid2d::advect(float * z, const float * z0, const float * u_vel, const float * v_vel, const float dt) const {
     const float dt0w = dt * static_cast<float>(width);
     const float dt0h = dt * static_cast<float>(height);
     for (int j = 1; j < height - 1; j++ ) {
@@ -126,7 +134,7 @@ void obstacleFlu::advect(float * z, const float * z0, const float * u_vel, const
     }
 }
 
-void obstacleFlu::project(float * p, float * div) const {
+void CpuFluid2d::project(float * p, float * div) const {
     const float h = grid_spacing;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -182,7 +190,7 @@ void obstacleFlu::project(float * p, float * div) const {
     }
 }
 
-void obstacleFlu::pressure_step(const float dt) {
+void CpuFluid2d::pressure_step(const float dt) {
     for(int j = 1; j < height - 1; j++) {
         const int jw = j * width;
         const int j0w = (j - 1) * width;
@@ -196,21 +204,21 @@ void obstacleFlu::pressure_step(const float dt) {
     }
 }
 
-void obstacleFlu::density_step(const float dt) {
+void CpuFluid2d::density_step(const float dt) {
     add_source(dens, dens_prev, dt);
-    SWAP(dens_prev, dens); diffuse(dens, dens_prev, diff, dt);
-    SWAP(dens_prev, dens); advect(dens, dens_prev, u, v, dt);
+    SWAP(dens_prev, dens) diffuse(dens, dens_prev, diff, dt);
+    SWAP(dens_prev, dens) advect(dens, dens_prev, u, v, dt);
 }
 
-void obstacleFlu::velocity_step(const float dt) {
+void CpuFluid2d::velocity_step(const float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
-    SWAP(u_prev, u); diffuse (u, u_prev, visc, dt);
-    SWAP(v_prev, v); diffuse (v, v_prev, visc, dt);
+    SWAP(u_prev, u) diffuse (u, u_prev, visc, dt);
+    SWAP(v_prev, v) diffuse (v, v_prev, visc, dt);
     project (u_prev, v_prev);
     set_vel_bound();
-    SWAP( u_prev, u);
-    SWAP( v_prev, v);
+    SWAP( u_prev, u)
+    SWAP( v_prev, v)
     advect (u, u_prev, u_prev, v_prev, dt);
     advect (v, v_prev, u_prev, v_prev, dt);
     set_vel_bound();
@@ -218,7 +226,7 @@ void obstacleFlu::velocity_step(const float dt) {
     set_vel_bound();
 }
 
-void obstacleFlu::set_vel_bound() const {
+void CpuFluid2d::set_vel_bound() const {
     for(int j = 1; j < height - 1; j ++) {
         const int jw = j * width;
         const int j0w = (j - 1) * width;
@@ -242,12 +250,12 @@ void obstacleFlu::set_vel_bound() const {
     }
 }
 
-void obstacleFlu::add(const int x, const int y, float* t, const float intensity) const {
+void CpuFluid2d::add(const int x, const int y, float* t, const float intensity) const {
     if(grid[x + y * width] == 0.f) return;
     t[x + y * width] += intensity;
 }
 
-void obstacleFlu::input_step(const float r, const float intensity, const float dt) {
+void CpuFluid2d::input_step(const float r, const float intensity, const float dt) {
     const int r_int = static_cast<int>(r);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
@@ -329,7 +337,7 @@ static void getSciColor(float val, const float min, const float max, float &r, f
     }
 }
 
-GLuint obstacleFlu::draw_step(const DRAW_MODE mode) {
+GLuint CpuFluid2d::draw_step(const DRAW_MODE mode) {
     const float max_u = find_max(u);
     const float max_v = find_max(v);
     const float r_max = std::sqrt(max_u * max_u + max_v * max_v);
@@ -368,10 +376,10 @@ GLuint obstacleFlu::draw_step(const DRAW_MODE mode) {
     return colorTex;
 }
 
- void obstacleFlu::debug() {
+ void CpuFluid2d::debug() {
  }
 
- float obstacleFlu::find_max(const float* x) const {
+ float CpuFluid2d::find_max(const float* x) const {
     float max = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
@@ -382,7 +390,7 @@ GLuint obstacleFlu::draw_step(const DRAW_MODE mode) {
     return max;
 }
 
-float obstacleFlu::find_min(const float* x) const {
+float CpuFluid2d::find_min(const float* x) const {
     float min = x[0];
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;

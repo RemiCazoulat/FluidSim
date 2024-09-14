@@ -2,9 +2,9 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../../include/shaders/renderer.h"
+#include "../../include/shaders/Renderer.h"
 
-void renderer::createGeometry() {
+void Renderer::createGeometry() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -34,7 +34,7 @@ void renderer::createGeometry() {
     glBindVertexArray(0);
 }
 
-renderer::renderer(const char* vertexPath, const char* fragmentPath) {
+Renderer::Renderer(const char* vertexPath, const char* fragmentPath) {
     vertices = {
         -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -72,14 +72,14 @@ renderer::renderer(const char* vertexPath, const char* fragmentPath) {
     bindingUniformTex(renderProgram, "colorTex", 0);
 }
 
-renderer::~renderer() {
+Renderer::~Renderer() {
     glDeleteProgram(renderProgram);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
 
-void renderer::rendering(const GLuint &colorTex) const {
+void Renderer::rendering(const GLuint &colorTex) const {
     glUseProgram(renderProgram);
     // Activer et lier les textures
     glActiveTexture(GL_TEXTURE0);

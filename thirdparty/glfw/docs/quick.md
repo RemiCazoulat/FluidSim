@@ -3,7 +3,7 @@
 [TOC]
 
 This guide takes you through writing a small application using GLFW 3.  The
-application will create a window and OpenGL context, render a rotating triangle
+application will create a window and OpenGL context, renderer a rotating triangle
 and exit when the user closes the window or presses _Escape_.  This guide will
 introduce a few of the most commonly used functions, but there are many more.
 
@@ -244,7 +244,7 @@ glViewport(0, 0, width, height);
 You can also set a framebuffer size callback using @ref
 glfwSetFramebufferSizeCallback and be notified when the size changes.
 
-The details of how to render with OpenGL is outside the scope of this tutorial,
+The details of how to renderer with OpenGL is outside the scope of this tutorial,
 but there are many excellent resources for learning modern OpenGL.  Here are
 a few of them:
 
@@ -272,7 +272,7 @@ double time = glfwGetTime();
 
 GLFW windows by default use double buffering.  That means that each window has
 two rendering buffers; a front buffer and a back buffer.  The front buffer is
-the one being displayed and the back buffer the one you render to.
+the one being displayed and the back buffer the one you renderer to.
 
 When the entire frame has been rendered, the buffers need to be swapped with one
 another, so the back buffer becomes the front buffer and vice versa.

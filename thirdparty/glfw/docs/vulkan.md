@@ -148,7 +148,7 @@ about `vkGetDeviceProcAddr`, see the Vulkan documentation.
 ## Querying required Vulkan extensions {#vulkan_ext}
 
 To do anything useful with Vulkan you need to create an instance.  If you want
-to use Vulkan to render to a window, you must enable the instance extensions
+to use Vulkan to renderer to a window, you must enable the instance extensions
 GLFW requires to create Vulkan surfaces.
 
 To query the instance extensions required, call @ref

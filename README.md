@@ -1,12 +1,12 @@
 # FluidSim
-The goal of this project is to achieve a non-compressible Eulerian fluid simulation using the finite element method. 
+The goal of this project is to achieve a non-compressible Eulerian Fluid simulation using the finite element method. 
 
 Current state of the simulation using the VELOCITY display mode : 
 ![](resources/images/fluid_16_1.png)
 
 
 ## What is done 
-- implementing simulation of fluid for games on CPU
+- implementing simulation of Fluid for games on CPU
 - making controls to interact with the simulation
 - displaying simulation with 2 modes : VELOCITY MODE and DENSITY MODE
 - Modifying bounds management to simplify it and to easily add objects and obstacles (with a mask array)
@@ -21,7 +21,24 @@ Current state of the simulation using the VELOCITY display mode :
 - make an interface (with Qt or ImGui) to have better interactions with the simulation (optional)
 - make a sound input (optional)
 
-## future of the project
-- learn how to transform the fluid into plasma, and add magnets
+## Future of the project
+- learn how to transform the Fluid into plasma, and add magnets
 - make a simulation of a rocket engine
 - make a simulation of a nuclear fusion reactor
+
+## Architecture
+
+```plain text 
+Fluid
+│
+├── 2D/Fluid2d
+│   ├── CpuFluid2d
+│   ├── GlFluid2d
+│   └── VkFluid2d
+│
+└── 3D/Fluid3d
+    ├── CpuFluid3d
+    ├── GlFluid3d
+    └── VkFluid3dx
+```
+

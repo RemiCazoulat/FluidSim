@@ -5,13 +5,12 @@
 #ifndef FLUID2D_H
 #define FLUID2D_H
 
-#include "fluid_2d.h"
+#include "Fluid2d.h"
 
-class fluGpu final : public fluid_2d {
+class GlFluid2d final : public Fluid2d {
 
 
     // variables
-    GLFWwindow* window;
     int width;
     int height;
     int cell_size;
@@ -73,8 +72,8 @@ class fluGpu final : public fluid_2d {
 public:
 
     // public and override methods
-    fluGpu(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
-    ~fluGpu() override;
+    GlFluid2d(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    ~GlFluid2d() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
