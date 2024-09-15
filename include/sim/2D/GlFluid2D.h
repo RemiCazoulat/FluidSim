@@ -61,13 +61,12 @@ class GlFluid2D final : public Fluid2D {
 
     // private methods
     void add_source(GLuint x, GLuint s, float dt);
-
     static void swap(GLuint &x, GLuint &y) noexcept;
     void diffuse(GLuint x, GLuint x0, float diff, float dt);
     void advect( GLuint z, GLuint z0, float dt);
     void project();
-    void add(int i, int j, float r, float intensity, GLuint tex, float dt);
     void set_vel_bound();
+    void add(int i, int j, float r, float intensity, GLuint tex, float dt);
 
 public:
 
