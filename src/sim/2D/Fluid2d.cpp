@@ -63,13 +63,24 @@ GLFWwindow* initWindow(const int & windowWidth, const int & windowHeight) {
 }
 
 Fluid2d::Fluid2d(const int window_width, const int window_height, const float add_r, const float add_i) {
+    printf("starting Fluid2d constructor. \n");
     this->add_radius = add_r;
-    this->add_intensity = add_i;
-    this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
-    this->window = initWindow(window_width, window_height);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
+    printf("1.\n");
 
+    this->add_intensity = add_i;
+    printf("1.\n");
+
+    this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
+    printf("1.\n");
+
+    this->window = initWindow(window_width, window_height);
+    printf("1.\n");
+
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    printf("1.\n");
+
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    printf("Finishing Fluid2d constructor. \n");
 }
 
 Fluid2d::~Fluid2d() {
@@ -79,7 +90,6 @@ Fluid2d::~Fluid2d() {
 }
 
 void Fluid2d::run_loop(const DRAW_MODE mode, const float t_accel) {
-
     int frame_number = 0;
     double total_time = 0.0;
     double total_sim_time = 0.0;
@@ -116,7 +126,7 @@ void Fluid2d::run_loop(const DRAW_MODE mode, const float t_accel) {
         frame_number++;
 
     }
-    // /////// Debug //////
+    // ----{ Debug }----
     debug();
     printf("\n");
     printf("=========[ Main Debug ]=========\n");

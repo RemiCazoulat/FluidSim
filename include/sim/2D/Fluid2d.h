@@ -2,8 +2,8 @@
 // Created by remi.cazoulat on 29/08/2024.
 //
 
-#ifndef FLUID_2D_H
-#define FLUID_2D_H
+#ifndef FLUID2D_H
+#define FLUID2D_H
 
 #include "../Fluid.h"
 #include "../../shaders/Renderer.h"
@@ -25,4 +25,4 @@ public:
     void run_loop(DRAW_MODE mode, float t_accel) override;
 };
 
-#endif //FLUID_2D_H
+#endif //FLUID2D_H

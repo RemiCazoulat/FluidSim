@@ -6,6 +6,7 @@
 
 #ifndef FLUID_H
 #define FLUID_H
+
 #include "../../include/libraries.h"
 
 enum DRAW_MODE {

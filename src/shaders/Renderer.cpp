@@ -5,14 +5,26 @@
 #include "../../include/shaders/Renderer.h"
 
 void Renderer::createGeometry() {
+    printf("Creating geometry. \n");
+
     glGenVertexArrays(1, &VAO);
+    printf("1. \n");
+
     glGenBuffers(1, &VBO);
+    printf("1. \n");
+
     glGenBuffers(1, &EBO);
+    printf("1. \n");
+
     glBindVertexArray(VAO);
+    printf("1. \n");
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(float)), vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(indices.size() * sizeof(int)), indices.data(), GL_STATIC_DRAW);
+    printf("1. \n");
+
     glVertexAttribPointer(
         0,
         3,
@@ -29,12 +41,16 @@ void Renderer::createGeometry() {
         5 * sizeof(float),
         reinterpret_cast<void *>(3 * sizeof(float))
         );
+    printf("1. \n");
+
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    printf("Geometry created. \n");
 }
 
 Renderer::Renderer(const char* vertexPath, const char* fragmentPath) {
+    printf("Starting Renderer constructor. \n");
     vertices = {
         -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -48,28 +64,38 @@ Renderer::Renderer(const char* vertexPath, const char* fragmentPath) {
     VAO = 0;
     VBO = 0;
     EBO = 0;
+    printf("1. \n");
     createGeometry();
+    printf("1. \n");
 
     const std::string vertexCode = readShaderCode(vertexPath);
     const std::string fragmentCode = readShaderCode(fragmentPath);
+    printf("1. \n");
+
     const GLuint vertexShader = compileShader(vertexCode.c_str(), GL_VERTEX_SHADER);
     const GLuint fragmentShader = compileShader(fragmentCode.c_str(), GL_FRAGMENT_SHADER);
-    const GLuint renderProgram = glCreateProgram();
-    glAttachShader(renderProgram, vertexShader);
-    glAttachShader(renderProgram, fragmentShader);
-    glLinkProgram(renderProgram);
+    printf("1. \n");
+
+    const GLuint program = glCreateProgram();
+    printf("1. \n");
+
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
     GLint success;
-    glGetProgramiv(renderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(renderProgram, 512, nullptr, infoLog);
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
         std::cerr << "Shader program linking failed\n" << infoLog << std::endl;
         exit(EXIT_FAILURE);
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    this->renderProgram = renderProgram;
-    bindingUniformTex(renderProgram, "colorTex", 0);
+    bindingUniformTex(program, "colorTex", 0);
+    this->renderProgram = program;
+    printf("Finishing Renderer constructor. \n");
+
 }
 
 Renderer::~Renderer() {

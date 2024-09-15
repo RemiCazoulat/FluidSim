@@ -2,8 +2,8 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#ifndef FLUID2D_H
-#define FLUID2D_H
+#ifndef GLFLUID2D_H
+#define GLFLUID2D_H
 
 #include "Fluid2d.h"
 
@@ -83,4 +83,4 @@ public:
     void debug() override;
 };
 
-#endif //FLUID2D_H
+#endif //GLFLUID2D_H

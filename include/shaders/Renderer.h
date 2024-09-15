@@ -2,8 +2,8 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef RENDERER_H
+#define RENDERER_H
 
 #include "shader.h"
 
@@ -26,4 +26,4 @@ public:
 
 
 
-#endif //RENDER_H
+#endif //RENDERER_H

@@ -35,7 +35,8 @@ int main() {
                 height,
                 cell_size,
                 diffusion_rate,
-                viscosity_rate, sub_step,
+                viscosity_rate,
+                sub_step,
                 add_radius,
                 add_intensity);
     }

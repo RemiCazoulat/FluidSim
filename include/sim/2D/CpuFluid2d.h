@@ -2,9 +2,8 @@
 // Created by remi.cazoulat on 30/08/2024.
 //
 
-#ifndef FLUSIM2DCPU2_H
-#define FLUSIM2DCPU2_H
-
+#ifndef CPUFLUID2D_H
+#define CPUFLUID2D_H
 
 
 #include "Fluid2d.h"
@@ -42,7 +41,16 @@ class CpuFluid2d final : public Fluid2d {
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    CpuFluid2d(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    CpuFluid2d(
+            int width,
+            int height,
+            int cell_size,
+            float diff,
+            float visc,
+            int sub_step,
+            float add_r,
+            float add_i
+    );
     ~CpuFluid2d() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
@@ -53,4 +61,4 @@ public:
 };
 
 
-#endif //FLUSIM2DCPU2_H
+#endif //CPUFLUID2D_H

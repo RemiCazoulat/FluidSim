@@ -6,18 +6,18 @@
 #define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
 
 
-
 CpuFluid2d::CpuFluid2d(
-                       const int width,
-                       const int height,
-                       const int cell_size,
-                       const float diff,
-                       const float visc,
-                       const int sub_step,
-                       const float add_r,
-                       const float add_i
-                       )
-                       : Fluid2d(width * cell_size, height * cell_size, add_r, add_i) {
+        const int width,
+        const int height,
+        const int cell_size,
+        const float diff,
+        const float visc,
+        const int sub_step,
+        const float add_r,
+        const float add_i)
+        : Fluid2d(width * cell_size, height * cell_size, add_r, add_i)
+        {
+    printf("Starting CpuFluid2d constructor. \n");
     this->width = width;
     this->height = height;
     this->cell_size = cell_size;
@@ -55,7 +55,8 @@ CpuFluid2d::CpuFluid2d(
     }
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-}
+    printf("Finishing CpuFluid2d constructor. \n");
+        }
 
 CpuFluid2d::~CpuFluid2d() {
     delete[] grid;
