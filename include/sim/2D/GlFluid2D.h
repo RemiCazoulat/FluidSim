@@ -5,9 +5,9 @@
 #ifndef GLFLUID2D_H
 #define GLFLUID2D_H
 
-#include "Fluid2d.h"
+#include "Fluid2D.h"
 
-class GlFluid2d final : public Fluid2d {
+class GlFluid2D final : public Fluid2D {
 
 
     // variables
@@ -72,8 +72,8 @@ class GlFluid2d final : public Fluid2d {
 public:
 
     // public and override methods
-    GlFluid2d(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
-    ~GlFluid2d() override;
+    GlFluid2D(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    ~GlFluid2D() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;

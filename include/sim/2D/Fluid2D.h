@@ -9,7 +9,7 @@
 #include "../../shaders/Renderer.h"
 
 
-class Fluid2d : public Fluid {
+class Fluid2D : public Fluid {
     float add_radius;
     float add_intensity;
     Renderer *renderer;
@@ -20,8 +20,8 @@ protected:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 public:
-    explicit Fluid2d(int window_width, int window_height, float add_r, float add_i);
-    ~Fluid2d() override;
+    explicit Fluid2D(int window_width, int window_height, float add_r, float add_i);
+    ~Fluid2D() override;
     void run_loop(DRAW_MODE mode, float t_accel) override;
 };
 

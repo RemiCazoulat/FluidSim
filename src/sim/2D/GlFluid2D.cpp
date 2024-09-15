@@ -2,10 +2,10 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../../../include/sim/2D/GlFluid2d.h"
+#include "../../../include/sim/2D/GlFluid2D.h"
 #include "../../../include/shaders/compute.h"
 
-GlFluid2d::GlFluid2d(
+GlFluid2D::GlFluid2D(
     const int width,
     const int height,
     const int cell_size,
@@ -15,7 +15,7 @@ GlFluid2d::GlFluid2d(
     const float add_r,
     const float add_i
     )
-: Fluid2d(width * cell_size, height * cell_size, add_r, add_i) {
+: Fluid2D(width * cell_size, height * cell_size, add_r, add_i) {
     // init variables
     this->width = width;
     this->height = height;
@@ -115,7 +115,7 @@ GlFluid2d::GlFluid2d(
     delete[] emptyVec4;
 }
 
-GlFluid2d::~GlFluid2d() {
+GlFluid2D::~GlFluid2D() {
     delete[] grid;
     delete[] dens_permanent;
     delete[] u_permanent;
@@ -144,7 +144,7 @@ GlFluid2d::~GlFluid2d() {
 // ////////////////////////
 //  maths methods
 // ////////////////////////
-void GlFluid2d::add_source(const GLuint x, const GLuint s, const float dt) {
+void GlFluid2D::add_source(const GLuint x, const GLuint s, const float dt) {
     glUseProgram(addProgram);
     auto previousTime = glfwGetTime();
     glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -162,13 +162,13 @@ void GlFluid2d::add_source(const GLuint x, const GLuint s, const float dt) {
     UNBINDING_TIME += currentTime - previousTime;
 }
 
-void GlFluid2d::swap(GLuint &x, GLuint &y) noexcept {
+void GlFluid2D::swap(GLuint &x, GLuint &y) noexcept {
     const GLuint tmp = x;
     x = y;
     y = tmp;
 }
 
-void GlFluid2d::diffuse(const GLuint x, const GLuint x0, const float diff, const float dt) {
+void GlFluid2D::diffuse(const GLuint x, const GLuint x0, const float diff, const float dt) {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     glUseProgram(diffuseProgram);
     auto previous_time = glfwGetTime();
@@ -194,7 +194,7 @@ void GlFluid2d::diffuse(const GLuint x, const GLuint x0, const float diff, const
 
 }
 
-void GlFluid2d::advect(const GLuint z, const GLuint z0, const float dt) {
+void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
     const float dtw = dt * static_cast<float>(width);
     const float dth = dt * static_cast<float>(height);
     glUseProgram(advectProgram);
@@ -225,7 +225,7 @@ void GlFluid2d::advect(const GLuint z, const GLuint z0, const float dt) {
     UNBINDING_TIME += current_time - previous_time;
 }
 
-void GlFluid2d::project() {
+void GlFluid2D::project() {
     glUseProgram(projectProgram);
     auto previous_time = glfwGetTime();
     glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -268,7 +268,7 @@ void GlFluid2d::project() {
     UNBINDING_TIME += current_time - previous_time;
 }
 
-void GlFluid2d::set_vel_bound() {
+void GlFluid2D::set_vel_bound() {
     glUseProgram(boundProgram);
     auto previous_time = glfwGetTime();
     glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -289,7 +289,7 @@ void GlFluid2d::set_vel_bound() {
     UNBINDING_TIME += current_time - previous_time;
 }
 
-void GlFluid2d::density_step(float dt) {
+void GlFluid2D::density_step(float dt) {
     const auto step_time = glfwGetTime();
 
     //TODO: add density step
@@ -298,7 +298,7 @@ void GlFluid2d::density_step(float dt) {
     DENSITY_STEP_TIME += end_step_time - step_time;
 }
 
-void GlFluid2d::velocity_step(const float dt) {
+void GlFluid2D::velocity_step(const float dt) {
     const auto step_time = glfwGetTime();
 
     TOTAL_STEPS += 1;
@@ -322,7 +322,7 @@ void GlFluid2d::velocity_step(const float dt) {
     VELOCITY_STEP_TIME += end_step_time - step_time;
 }
 
-void GlFluid2d::pressure_step(float dt) {
+void GlFluid2D::pressure_step(float dt) {
     const auto step_time = glfwGetTime();
 
     //TODO : add pressure step
@@ -331,7 +331,7 @@ void GlFluid2d::pressure_step(float dt) {
     PRESSURE_STEP_TIME += end_step_time - step_time;
 }
 
-GLuint GlFluid2d::draw_step(const DRAW_MODE mode) {
+GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     const auto step_time = glfwGetTime();
 
     glUseProgram(drawProgram);
@@ -359,7 +359,7 @@ GLuint GlFluid2d::draw_step(const DRAW_MODE mode) {
     return color_tex;
 }
 
-void GlFluid2d::add(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
+void GlFluid2D::add(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
     glUseProgram(inputProgram);
     auto previous_time = glfwGetTime();
     glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -384,7 +384,7 @@ void GlFluid2d::add(const int i, const int j, const float r, const float intensi
     UNBINDING_TIME += current_time - previous_time;
 }
 
-void GlFluid2d::input_step(const float r, const float intensity, const float dt) {
+void GlFluid2D::input_step(const float r, const float intensity, const float dt) {
     const auto step_time = glfwGetTime();
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
@@ -423,7 +423,7 @@ void GlFluid2d::input_step(const float r, const float intensity, const float dt)
     INPUT_STEP_TIME += end_step_time - step_time;
 }
 
-void GlFluid2d::debug() {
+void GlFluid2D::debug() {
     INPUT_STEP_TIME /= TOTAL_STEPS;
     DENSITY_STEP_TIME /= TOTAL_STEPS;
     VELOCITY_STEP_TIME /= TOTAL_STEPS;
@@ -436,7 +436,7 @@ void GlFluid2d::debug() {
     const auto percent_pressure_time = PRESSURE_STEP_TIME / total * 100;
     const auto percent_draw_time = DRAW_STEP_TIME / total * 100;
     printf("\n");
-    printf("=========[ GlFluid2d Debug ]=========\n");
+    printf("=========[ GlFluid2D Debug ]=========\n");
     printf("Input time: %f ms (%.2f %%)\n", INPUT_STEP_TIME * 1000, percent_input_time);
     printf("Density time: %f ms (%.2f %%)\n", DENSITY_STEP_TIME * 1000, percent_density_time);
     printf("Velocity time: %f ms (%.2f %%)\n", VELOCITY_STEP_TIME * 1000, percent_velocity_time);

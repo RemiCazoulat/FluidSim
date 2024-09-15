@@ -1,6 +1,6 @@
 #include "../../include/shaders/Renderer.h"
-#include "../include/sim/2D/CpuFluid2d.h"
-#include "../include/sim/2D/GlFluid2d.h"
+#include "../include/sim/2D/CpuFluid2D.h"
+#include "../include/sim/2D/GlFluid2D.h"
 enum SIM_MODE {
     CPU,
     GPU
@@ -9,7 +9,7 @@ enum SIM_MODE {
 int main() {
 
     // grid infos
-    constexpr float res = 2.f;
+    constexpr float res = 8.f;
     const int width = static_cast<int>(128.f * res);
     const int height = static_cast<int>(72.f * res);
     const int cell_size = static_cast<int>(16.f / res);
@@ -18,7 +18,7 @@ int main() {
     constexpr float viscosity_rate = 0.00000000001f;
     constexpr int sub_step = 25;
     // simulation infos
-    constexpr SIM_MODE sim_mode = CPU;
+    constexpr SIM_MODE sim_mode = GPU;
     constexpr float time_accel = 1.f;
     constexpr DRAW_MODE draw_mode = VELOCITY;
     const int add_radius = 3 * res;
@@ -30,18 +30,10 @@ int main() {
     // ----{ Choosing simulation }----
     Fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new CpuFluid2d(
-                width,
-                height,
-                cell_size,
-                diffusion_rate,
-                viscosity_rate,
-                sub_step,
-                add_radius,
-                add_intensity);
+        fluid = new CpuFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step, add_radius, add_intensity);
     }
     else {
-        fluid = new GlFluid2d(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step, add_radius, add_intensity);
+        fluid = new GlFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step, add_radius, add_intensity);
     }
     printf("simulation chosed. \n");
     // ----{ Main Loop }----

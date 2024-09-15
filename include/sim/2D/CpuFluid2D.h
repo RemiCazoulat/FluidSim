@@ -6,9 +6,9 @@
 #define CPUFLUID2D_H
 
 
-#include "Fluid2d.h"
+#include "Fluid2D.h"
 
-class CpuFluid2d final : public Fluid2d {
+class CpuFluid2D final : public Fluid2D {
     int width;
     int height;
     int cell_size;
@@ -41,7 +41,7 @@ class CpuFluid2d final : public Fluid2d {
     [[nodiscard]] float find_min(const float* x) const;
 public:
 
-    CpuFluid2d(
+    CpuFluid2D(
             int width,
             int height,
             int cell_size,
@@ -51,7 +51,7 @@ public:
             float add_r,
             float add_i
     );
-    ~CpuFluid2d() override;
+    ~CpuFluid2D() override;
     void input_step(float r, float intensity, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
