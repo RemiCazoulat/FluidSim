@@ -306,16 +306,13 @@ void GlFluid2D::velocity_step(const float dt) {
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
     swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
-    //set_vel_bound();
     project ();
     set_vel_bound();
     swap(u_prev_tex, u_tex);
     swap(v_prev_tex, v_tex);
     advect (u_tex, u_prev_tex, dt);
     advect (v_tex, v_prev_tex, dt);
-    //set_vel_bound();
     project ();
-    //project (u_prev_tex, v_prev_tex);
     set_vel_bound();
 
     const auto end_step_time = glfwGetTime();

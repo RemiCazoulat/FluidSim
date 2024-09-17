@@ -20,28 +20,3 @@ void main(){
         imageStore(tex, coord, vec4(tex_val + intensity * dt, 0.0, 0.0, 0.0));
     }
 }
-/*
-for(int x = -r; x <= r; x++) {
-    for(int y = -r; y <= r; y++) {
-        if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
-            if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
-                if(middle_mouse_pressed) {
-                    add(i + x, j + y, u_permanent, 0);
-                    add(i + x, j + y, v_permanent, intensity);
-                    new_permanent = true;
-                }
-                if (left_mouse_pressed){
-                    //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
-                    add(i + x, j + y, u_temp, (mouse_x - force_x));
-                    add(i + x, j + y, v_temp, -(mouse_y - force_y));
-                    new_temp = true;
-                }
-                if(right_mouse_pressed) {
-                    add(i + x, j + y, dens_temp, intensity);
-                    new_temp = true;
-                }
-            }
-        }
-    }
-}
-*/

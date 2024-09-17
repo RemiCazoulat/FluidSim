@@ -17,7 +17,7 @@ enum DRAW_MODE {
 
 class Fluid {
 protected:
-    virtual void input_step(float r, float intensity, float dt) = 0;
+    virtual void input_step(float r, float *intensities, float dt) = 0;
     virtual void density_step(float dt) = 0;
     virtual void velocity_step(float dt) = 0;
     virtual void pressure_step(float dt) = 0;

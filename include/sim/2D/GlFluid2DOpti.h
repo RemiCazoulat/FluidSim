@@ -8,25 +8,7 @@
 
 #include "Fluid2D.h"
 
-enum COMPUTE_MODE {
-    INPUT,
-    SOURCE,
-    SWAP,
-    DIFFUSE,
-    ADVECT,
-    PROJECT,
-    BOUND
-};
 
-enum TEXTURES {
-    GRID_T,
-    DENS_T,
-    DENS_PREV_T,
-    DENS_PERM_T,
-    VEL_T,
-    VEL_PREV_T,
-    VEL_PERM_T
-};
 
 class GlFluid2DOpti : public Fluid2D {
     // variables
@@ -48,24 +30,27 @@ class GlFluid2DOpti : public Fluid2D {
     GLuint grid_tex;
     GLuint dens_tex;
     GLuint dens_prev_tex;
-    GLuint dens_permanent_tex;
+    GLuint dens_perm_tex;
     GLuint pressure_tex;
-    GLuint vel_tex;
-    GLuint vel_prev_tex;
-    GLuint vel_permanent_tex;
+    GLuint u_tex;
+    GLuint v_tex;
+    GLuint u_prev_tex;
+    GLuint v_prev_tex;
+    GLuint u_perm_tex;
+    GLuint v_perm_tex;
     GLuint color_tex;
 
-    void add_source(TEXTURES x, TEXTURES s, float dt);
-    void add(int i, int j, float r, float u_intensity, float v_intensity, TEXTURES tex, float dt);
-    void swap(TEXTURES x, TEXTURES y) noexcept;
-    void diffuse_vel(float dt);
-    void advect_vel(float dt);
-    void project_vel();
+    void add_source(int x, int s, float dt);
+    void add(int i, int j, float r, float intensity, int tex, float dt);
+    void swap(int x_tex, int y_tex);
+    void diffuse(int x_tex, int x0_tex, float diffusion_rate, float dt);
+    void advect(int x_tex, int x0_tex, float dt);
+    void project();
     void set_bounds_vel();
 public:
     GlFluid2DOpti(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
     ~GlFluid2DOpti() override;
-    void input_step(float r, float intensity, float dt) override;
+    void input_step(float r, float* v_intensities, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;
