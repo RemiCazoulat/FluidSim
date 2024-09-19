@@ -4,7 +4,7 @@
 #define DENS_T      1
 #define DENS_PREV_T 2
 #define DENS_PERM_T 3
-#define PRESSURE    11
+#define PRESSURE_T  11
 #define U_T         4
 #define V_T         5
 #define U_PREV_T    6
@@ -39,13 +39,14 @@ layout (r32f, binding = 8) uniform image2D v_prev;
 layout (r32f, binding = 9) uniform image2D u_perm;
 layout (r32f, binding = 10) uniform image2D v_perm;
 layout (rgba32f, binding = 11) uniform image2D color;
+// To know which function call
+uniform int mode;
 // time
 uniform float dt;
 // To know which textures use
 uniform int x_tex;
 uniform int y_tex;
-// To know which function call
-uniform int mode;
+
 // For add function
 uniform int i;
 uniform int j;
@@ -71,6 +72,7 @@ vec4 read_tex(int tex, ivec2 coord) {
     if(tex == DENS_T)      vec = imageLoad(dens, coord);
     if(tex == DENS_PREV_T) vec = imageLoad(dens_prev, coord);
     if(tex == DENS_PERM_T) vec = imageLoad(dens_perm, coord);
+    if(tex == PRESSURE_T)  vec = imageLoad(pressure, coord);
     if(tex == U_T)         vec = imageLoad(u, coord);
     if(tex == V_T)         vec = imageLoad(v, coord);
     if(tex == U_PREV_T)    vec = imageLoad(u_prev, coord);
@@ -86,11 +88,12 @@ void write_tex(int tex, ivec2 coord, vec4 val) {
     if(tex == DENS_T)      imageStore(dens, coord, val);
     if(tex == DENS_PREV_T) imageStore(dens_prev, coord, val);
     if(tex == DENS_PERM_T) imageStore(dens_perm, coord, val);
+    if(tex == PRESSURE_T)  imageStore(pressure, coord, val);
     if(tex == U_T)         imageStore(u, coord, val);
-    if(tex == U_PREV_T)    imageStore(u_prev, coord, val);
-    if(tex == U_PERM_T)    imageStore(u_perm, coord, val);
     if(tex == V_T)         imageStore(v, coord, val);
+    if(tex == U_PREV_T)    imageStore(u_prev, coord, val);
     if(tex == V_PREV_T)    imageStore(v_prev, coord, val);
+    if(tex == U_PERM_T)    imageStore(u_perm, coord, val);
     if(tex == V_PERM_T)    imageStore(v_perm, coord, val);
     if(tex == COLOR_T)     imageStore(color, coord, val);
 }
@@ -312,6 +315,7 @@ void draw(ivec2 coord) {
     if(draw_mode == 0) {
         rgb = xy2hsv2rgb(x, y, 0.5);
     }
+    imageStore(color, coord, vec4(rgb, 1.0));
 }
 
 void main() {

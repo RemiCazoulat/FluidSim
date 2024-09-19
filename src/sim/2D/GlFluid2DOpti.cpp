@@ -39,9 +39,6 @@ GlFluid2DOpti::GlFluid2DOpti(const int width, const int height, const int cell_s
     this->grid_spacing = 1.f / static_cast<float>(height);
     const int grid_size = width * height;
     grid = new float[grid_size]();
-    dens_permanent = new float[grid_size]();
-    u_permanent = new float[grid_size]();
-    v_permanent = new float[grid_size]();
     const auto* empty = new float[grid_size]();
     const auto* emptyVec4 = new float[grid_size * 4]();
     constexpr float r = 10.f;
@@ -109,9 +106,6 @@ GlFluid2DOpti::GlFluid2DOpti(const int width, const int height, const int cell_s
 
 GlFluid2DOpti::~GlFluid2DOpti() {
     delete[] grid;
-    delete[] dens_permanent;
-    delete[] u_permanent;
-    delete[] v_permanent;
     glDeleteTextures(1, &grid_tex);
     glDeleteTextures(1, &dens_tex);
     glDeleteTextures(1, &dens_prev_tex);
@@ -127,24 +121,43 @@ GlFluid2DOpti::~GlFluid2DOpti() {
     glDeleteProgram(stepsProgram);
 }
 
-void GlFluid2DOpti::density_step(float dt) {
-
-}
-
-void GlFluid2DOpti::pressure_step(float dt) {
-
-}
-
-GLuint GlFluid2DOpti::draw_step(DRAW_MODE mode) {
-    glUniform1i(mode_loc, DRAW);
-    glUniform1i(draw_mode_loc, mode);
+void GlFluid2DOpti::add(const int i,const int j ,const float r ,const float intensity, const int tex, const float dt) const {
+    glUniform1i(mode_loc, INPUT);
+    glUniform1i(i_loc, i);
+    glUniform1i(j_loc, j);
+    glUniform1f(r_loc, r);
+    glUniform1f(intensity_loc, intensity);
+    glUniform1i(x_tex_loc, tex);
+    glUniform1f(dt_loc, dt);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    return color_tex;
+    printf("add finished. \n");
 }
 
-void GlFluid2DOpti::debug() {
+void GlFluid2DOpti::input_step(const float r, const float* intensities, const float dt) {
+    if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
+        const int i = static_cast<int>(mouse_x) / cell_size;
+        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
 
+        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
+            if(left_mouse_pressed || middle_mouse_pressed) {
+                if (left_mouse_pressed){
+                    add(i, j, r, (mouse_x - force_x), U_T, dt);
+                    add(i, j, r, -(mouse_y - force_y),V_T, dt);
+
+                }
+                if(middle_mouse_pressed) {
+                    add(i, j, r, intensities[0], U_PERM_T, dt);
+                    add(i, j, r, intensities[1], V_PERM_T, dt);
+                }
+            }
+        }
+        force_x = mouse_x;
+        force_y = mouse_y;
+    }
+    add_source(DENS_T, DENS_PERM_T, dt);
+    add_source(U_T, U_PERM_T, dt);
+    add_source(V_T, V_PERM_T, dt);
 }
 
 void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
@@ -211,6 +224,14 @@ void GlFluid2DOpti::set_bounds_vel() const {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
+void GlFluid2DOpti::density_step(float dt) {
+
+}
+
+void GlFluid2DOpti::pressure_step(float dt) {
+
+}
+
 void GlFluid2DOpti::velocity_step(float dt) {
     add_source (U_T, U_PREV_T, dt);
     add_source (V_T, V_PREV_T, dt);
@@ -226,41 +247,14 @@ void GlFluid2DOpti::velocity_step(float dt) {
     set_bounds_vel();
 }
 
-void GlFluid2DOpti::add(const int i,const int j ,const float r ,const float intensity, const int tex, const float dt) const {
-    glUniform1i(i_loc, i);
-    glUniform1i(j_loc, j);
-    glUniform1f(r_loc, r);
-    glUniform1f(intensity_loc, intensity);
-    glUniform1i(x_tex_loc, tex);
-    glUniform1f(dt_loc, dt);
-    glUniform1i(mode_loc, INPUT);
+GLuint GlFluid2DOpti::draw_step(DRAW_MODE mode) {
+    glUniform1i(mode_loc, DRAW);
+    glUniform1i(draw_mode_loc, mode);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    return color_tex;
 }
 
-void GlFluid2DOpti::input_step(const float r, const float* intensities, const float dt) {
-    if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / cell_size;
-        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+void GlFluid2DOpti::debug() {
 
-        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(left_mouse_pressed || middle_mouse_pressed) {
-                if (left_mouse_pressed){
-                    add(i, j, r, (mouse_x - force_x), U_T, dt);
-                    add(i, j, r, -(mouse_y - force_y),V_T, dt);
-
-                }
-                if(middle_mouse_pressed) {
-                    add(i, j, r, intensities[0], U_PERM_T, dt);
-                    add(i, j, r, intensities[1], V_PERM_T, dt);
-                }
-            }
-        }
-        force_x = mouse_x;
-        force_y = mouse_y;
-    }
-    add_source(DENS_T, DENS_PERM_T, dt);
-    add_source(U_T, U_PERM_T, dt);
-    add_source(V_T, V_PERM_T, dt);
 }
-

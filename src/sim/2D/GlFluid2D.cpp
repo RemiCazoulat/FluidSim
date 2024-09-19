@@ -16,7 +16,7 @@ GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, con
     // init debug variables
     this->BINDING_TIME = 0;
     this->DISPATCH_TIME = 0;
-    this->UNBINDING_TIME = 0;
+
     this->INPUT_STEP_TIME = 0;
     this->DENSITY_STEP_TIME = 0;
     this->VELOCITY_STEP_TIME = 0;
@@ -26,9 +26,6 @@ GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, con
     // init arrays
     const int grid_size = width * height;
     grid = new float[grid_size]();
-    dens_permanent = new float[grid_size]();
-    u_permanent = new float[grid_size]();
-    v_permanent = new float[grid_size]();
     const auto* empty = new float[grid_size]();
     const auto* emptyVec4 = new float[grid_size * 4]();
     // setting initial bounds and obstacles
@@ -46,7 +43,6 @@ GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, con
             if(std::sqrt(dist_x * dist_x + dist_y * dist_y) < r) grid[index] = 0.0;
         }
     }
-
     // ---------- { Init Textures }----------
     grid_tex           = createTextureVec1(grid, width, height);
     dens_tex           = createTextureVec1(empty, width, height);
@@ -60,9 +56,8 @@ GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, con
     u_prev_tex         = createTextureVec1(empty, width, height);
     v_prev_tex         = createTextureVec1(empty, width, height);
     color_tex          = createTextureVec4(emptyVec4, width, height);
-
     // ---------- { Compute programs }----------
-    inputProgram     = createComputeProgram("../shaders/computes/add_input.glsl");
+    inputProgram   = createComputeProgram("../shaders/computes/add_input.glsl");
     addProgram     = createComputeProgram("../shaders/computes/add_source.glsl");
     diffuseProgram = createComputeProgram("../shaders/computes/diffuse.glsl");
     advectProgram  = createComputeProgram("../shaders/computes/advect.glsl");
@@ -70,46 +65,12 @@ GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, con
     boundProgram   = createComputeProgram("../shaders/computes/set_vel_bound.glsl");
     drawProgram    = createComputeProgram("../shaders/computes/draw.glsl");
 
-    glUseProgram(diffuseProgram);
-    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
-    glUseProgram(advectProgram);
-    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glUniform1i(glGetUniformLocation(advectProgram, "width"), width);
-    glUniform1i(glGetUniformLocation(advectProgram, "height"), height);
-
-    glUseProgram(projectProgram);
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
-
-    glUseProgram(boundProgram);
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
-    glUseProgram(drawProgram);
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
-    // input settings
-
     delete[] empty;
     delete[] emptyVec4;
 }
 
 GlFluid2D::~GlFluid2D() {
     delete[] grid;
-    delete[] dens_permanent;
-    delete[] u_permanent;
-    delete[] v_permanent;
-
     glDeleteTextures(1, &grid_tex);
     glDeleteTextures(1, &dens_tex);
     glDeleteTextures(1, &dens_prev_tex);
@@ -122,7 +83,6 @@ GlFluid2D::~GlFluid2D() {
     glDeleteTextures(1, &u_prev_tex);
     glDeleteTextures(1, &v_prev_tex);
     glDeleteTextures(1, &color_tex);
-
     glDeleteProgram(addProgram);
     glDeleteProgram(advectProgram);
     glDeleteProgram(diffuseProgram);
@@ -135,20 +95,8 @@ GlFluid2D::~GlFluid2D() {
 // ////////////////////////
 void GlFluid2D::add_source(const GLuint x, const GLuint s, const float dt) {
     glUseProgram(addProgram);
-    auto previousTime = glfwGetTime();
-    glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, s, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(addProgram, "dt"), dt);
-    auto currentTime = glfwGetTime();
-    BINDING_TIME += currentTime - previousTime;
-    previousTime = glfwGetTime();    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    currentTime = glfwGetTime();
-    DISPATCH_TIME += currentTime - previousTime;
-    previousTime = glfwGetTime();    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    currentTime = glfwGetTime();
-    UNBINDING_TIME += currentTime - previousTime;
+    bind_and_run({x, s}, 1);
 }
 
 void GlFluid2D::swap(GLuint &x, GLuint &y) noexcept {
@@ -160,122 +108,53 @@ void GlFluid2D::swap(GLuint &x, GLuint &y) noexcept {
 void GlFluid2D::diffuse(const GLuint x, const GLuint x0, const float diff, const float dt) {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     glUseProgram(diffuseProgram);
-    auto previous_time = glfwGetTime();
-    glBindImageTexture(0, x, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, x0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(diffuseProgram, "a"), a);
-    auto current_time = glfwGetTime();
-    BINDING_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    for(int k = 0; k < sub_step; k ++) {
-        glDispatchCompute(width / 64,height / 1,1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    }
-    current_time = glfwGetTime();
-    DISPATCH_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
-
+    bind_and_run({x, x0, grid_tex}, sub_step);
 }
 
 void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
     const float dtw = dt * static_cast<float>(width);
     const float dth = dt * static_cast<float>(height);
     glUseProgram(advectProgram);
-    auto previous_time = glfwGetTime();
-    glBindImageTexture(0, z, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, z0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     glUniform1f(glGetUniformLocation(advectProgram, "dtw"), dtw);
     glUniform1f(glGetUniformLocation(advectProgram, "dth"), dth);
     glUniform1i(glGetUniformLocation(advectProgram, "width"), width);
     glUniform1i(glGetUniformLocation(advectProgram, "height"), height);
-    auto current_time = glfwGetTime();
-    BINDING_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    current_time = glfwGetTime();
-    DISPATCH_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
+    bind_and_run({z, z0, u_prev_tex, v_prev_tex, grid_tex}, 1);
 }
 
 void GlFluid2D::project() {
-    glUseProgram(projectProgram);
     auto previous_time = glfwGetTime();
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, u_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, v_prev_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glUseProgram(projectProgram);
     glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
     const GLint step_loc = glGetUniformLocation(projectProgram, "step");
+    bind({u_tex, v_tex, u_prev_tex, v_prev_tex, grid_tex});
+
     auto current_time = glfwGetTime();
     BINDING_TIME += current_time - previous_time;
     // step 1
-
     previous_time = glfwGetTime();
     glUniform1i(step_loc, 1);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
     // step 2
     glUniform1i(step_loc, 2);
     for(int k = 0; k < sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
-
     // step 3
     glUniform1i(step_loc, 3);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    // end
     current_time = glfwGetTime();
     DISPATCH_TIME += current_time - previous_time;
-    // unbind
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
 }
 
 void GlFluid2D::set_vel_bound() {
     glUseProgram(boundProgram);
-    auto previous_time = glfwGetTime();
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    auto current_time = glfwGetTime();
-    BINDING_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    current_time = glfwGetTime();
-    DISPATCH_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
+    bind_and_run({u_tex, v_tex, grid_tex}, 1);
 }
 
 void GlFluid2D::density_step(float dt) {
@@ -289,8 +168,8 @@ void GlFluid2D::density_step(float dt) {
 
 void GlFluid2D::velocity_step(const float dt) {
     const auto step_time = glfwGetTime();
-
     TOTAL_STEPS += 1;
+
     add_source (u_tex, u_prev_tex, dt);
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
@@ -321,25 +200,9 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     const auto step_time = glfwGetTime();
 
     glUseProgram(drawProgram);
-    auto previous_time = glfwGetTime();
-    glBindImageTexture(0, u_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, v_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     glUniform1i(glGetUniformLocation(drawProgram, "draw_mode"), mode);
-    auto current_time = glfwGetTime();
-    BINDING_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    current_time = glfwGetTime();
-    DISPATCH_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
-
+    glBindImageTexture(2, color_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    bind_and_run({u_tex, v_tex}, 1);
     const auto end_step_time = glfwGetTime();
     DRAW_STEP_TIME += end_step_time - step_time;
 
@@ -348,27 +211,12 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
 
 void GlFluid2D::add(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
     glUseProgram(inputProgram);
-    auto previous_time = glfwGetTime();
-    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, grid_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-
     glUniform1i(glGetUniformLocation(inputProgram, "i"), i);
     glUniform1i(glGetUniformLocation(inputProgram, "j"), j);
     glUniform1f(glGetUniformLocation(inputProgram, "r"), r);
     glUniform1f(glGetUniformLocation(inputProgram, "intensity"), intensity);
     glUniform1f(glGetUniformLocation(inputProgram, "dt"), dt);
-    auto current_time = glfwGetTime();
-    BINDING_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glDispatchCompute(width / 64,height / 1,1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    current_time = glfwGetTime();
-    DISPATCH_TIME += current_time - previous_time;
-    previous_time = glfwGetTime();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-    current_time = glfwGetTime();
-    UNBINDING_TIME += current_time - previous_time;
+    bind_and_run({tex, grid_tex}, 1);
 }
 
 void GlFluid2D::input_step(const float r, const float* intensities, const float dt) {
@@ -394,13 +242,32 @@ void GlFluid2D::input_step(const float r, const float* intensities, const float 
         force_x = mouse_x;
         force_y = mouse_y;
     }
-
     add_source(dens_tex, dens_permanent_tex, dt);
     add_source(u_tex, u_permanent_tex, dt);
     add_source(v_tex, v_permanent_tex, dt);
-
     const auto end_step_time = glfwGetTime();
     INPUT_STEP_TIME += end_step_time - step_time;
+}
+
+void GlFluid2D::bind_and_run(const std::vector<GLuint> &textures, const int how_many_time) {
+    auto start_time = glfwGetTime();
+    for (size_t i = 0; i < textures.size(); i++) {
+        glBindImageTexture(i, textures[i], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    }
+    auto bind_time = glfwGetTime();
+    BINDING_TIME += bind_time - start_time;
+    for(int i = 0; i < how_many_time; i ++) {
+        glDispatchCompute(width / 64,height / 1,1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
+    auto dispatch_time = glfwGetTime();
+    DISPATCH_TIME += dispatch_time - bind_time;
+}
+
+void GlFluid2D::bind(const std::vector<GLuint> &textures) {
+    for (size_t i = 0; i < textures.size(); i++) {
+        glBindImageTexture(i, textures[i], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    }
 }
 
 void GlFluid2D::debug() {
@@ -425,12 +292,11 @@ void GlFluid2D::debug() {
     printf("\n");
     BINDING_TIME /= TOTAL_STEPS;
     DISPATCH_TIME /= TOTAL_STEPS;
-    UNBINDING_TIME /= TOTAL_STEPS;
-    total = BINDING_TIME + DISPATCH_TIME + UNBINDING_TIME;
+
+    total = BINDING_TIME + DISPATCH_TIME;
     const auto percent_binding_time = BINDING_TIME / total * 100;
     const auto percent_dispatch_time = DISPATCH_TIME / total * 100;
-    const auto percent_unbinding_time = UNBINDING_TIME / total * 100;
     printf("Binding time: %f ms (%.2f %%)\n", BINDING_TIME * 1000, percent_binding_time);
     printf("Dispatch time: %f ms (%.2f %%)\n", DISPATCH_TIME * 1000, percent_dispatch_time);
-    printf("Unbinding time: %f ms (%.2f %%)\n", UNBINDING_TIME * 1000, percent_unbinding_time);
 }
+

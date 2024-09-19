@@ -93,12 +93,12 @@ void Fluid2D::run_loop(const DRAW_MODE mode, const float t_accel, const float r,
         // ----{ Simulation }----
         const auto dt = static_cast<float>((current_time - previous_time) * t_accel);
         previous_time = current_time;
-        // start steps
+        // start sim
         input_step(r, intensities, dt);
         velocity_step(dt);
         density_step(dt);
         GLuint colorTex = draw_step(mode);
-        // end steps
+        // end sim
         const auto time_sim = glfwGetTime();
         total_sim_time += time_sim - current_time;
         // ----{ Rendering }----

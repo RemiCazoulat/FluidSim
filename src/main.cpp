@@ -37,7 +37,7 @@ int main() {
         fluid = new CpuFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
-        fluid = new GlFluid2DOpti(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
+        fluid = new GlFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     // ----{ Main Loop }----
     fluid->run_loop(draw_mode, time_accel, add_radius, intensities);

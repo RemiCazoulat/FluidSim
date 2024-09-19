@@ -18,9 +18,6 @@ class GlFluid2DOpti : public Fluid2D {
     float viscosity;
     // arrays
     float* grid;
-    float* dens_permanent;
-    float* u_permanent;
-    float* v_permanent;
     // compute programs
     GLuint stepsProgram;
     // textures

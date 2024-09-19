@@ -18,7 +18,6 @@ class GlFluid2D final : public Fluid2D {
 
     // debug variables
     double BINDING_TIME;
-    double UNBINDING_TIME;
     double DISPATCH_TIME;
 
     double INPUT_STEP_TIME;
@@ -29,10 +28,6 @@ class GlFluid2D final : public Fluid2D {
     int TOTAL_STEPS;
     // arrays
     float* grid;
-    float* dens_permanent;
-    float* u_permanent;
-    float* v_permanent;
-
     // compute programs
     GLuint inputProgram;
     GLuint addProgram;
@@ -64,6 +59,9 @@ class GlFluid2D final : public Fluid2D {
     void project();
     void set_vel_bound();
     void add(int i, int j, float r, float intensity, GLuint tex, float dt);
+    // utils
+    void bind_and_run(const std::vector<GLuint> &textures, int how_many_times);
+    void bind(const std::vector<GLuint> & textures);
 
 public:
 
