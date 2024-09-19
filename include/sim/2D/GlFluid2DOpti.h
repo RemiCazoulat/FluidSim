@@ -2,8 +2,8 @@
 // Created by Rémi on 15/09/2024.
 //
 
-#ifndef FLUIDSIM_GLFLUID2DOPTI_H
-#define FLUIDSIM_GLFLUID2DOPTI_H
+#ifndef GLFLUID2DOPTI_H
+#define GLFLUID2DOPTI_H
 
 
 #include "Fluid2D.h"
@@ -12,9 +12,6 @@
 
 class GlFluid2DOpti : public Fluid2D {
     // variables
-    int width;
-    int height;
-    int cell_size;
     int sub_step;
     float grid_spacing;
     float diffusion;
@@ -40,17 +37,34 @@ class GlFluid2DOpti : public Fluid2D {
     GLuint v_perm_tex;
     GLuint color_tex;
 
-    void add_source(int x, int s, float dt);
-    void add(int i, int j, float r, float intensity, int tex, float dt);
-    void swap(int x_tex, int y_tex);
-    void diffuse(int x_tex, int x0_tex, float diffusion_rate, float dt);
-    void advect(int x_tex, int x0_tex, float dt);
-    void project();
-    void set_bounds_vel();
+    GLint dt_loc;
+    GLint x_tex_loc;
+    GLint y_tex_loc;
+    GLint mode_loc;
+    GLint i_loc;
+    GLint j_loc;
+    GLint r_loc;
+    GLint intensity_loc;
+    GLint a_loc;
+    GLint dtw_loc;
+    GLint dth_loc;
+    GLint width_loc;
+    GLint height_loc;
+    GLint grid_spacing_loc;
+    GLint stage_loc;
+    GLint draw_mode_loc;
+
+    void add_source(int x, int s, float dt) const;
+    void add(int i, int j, float r, float intensity, int tex, float dt) const;
+    void swap(int x_tex, int y_tex) const;
+    void diffuse(int x_tex, int x0_tex, float diffusion_rate, float dt) const;
+    void advect(int x_tex, int x0_tex, float dt) const;
+    void project() const;
+    void set_bounds_vel() const;
 public:
-    GlFluid2DOpti(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    GlFluid2DOpti(int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~GlFluid2DOpti() override;
-    void input_step(float r, float* v_intensities, float dt) override;
+    void input_step(float r, const float* intensities, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;
@@ -62,4 +76,4 @@ public:
 };
 
 
-#endif //FLUIDSIM_GLFLUID2DOPTI_H
+#endif //GLFLUID2DOPTI_H

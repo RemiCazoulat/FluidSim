@@ -9,9 +9,6 @@
 #include "Fluid2D.h"
 
 class CpuFluid2D final : public Fluid2D {
-    int width;
-    int height;
-    int cell_size;
     int sub_step;
     float grid_spacing;
     float diff;
@@ -31,7 +28,7 @@ class CpuFluid2D final : public Fluid2D {
     float* color;
 
     void add_source(float *x, const float *s, float dt) const;
-    void diffuse(float *x, const float *x0, float diff, float dt) const;
+    void diffuse(float *x, const float *x0, float diffusion_rate, float dt) const;
     void advect(float *z, const float *z0, const float *u_vel, const float *v_vel, float dt) const;
     void project(float *p, float *div) const;
     void add(int x, int y, float* t, float intensity) const;
@@ -40,19 +37,9 @@ class CpuFluid2D final : public Fluid2D {
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
 public:
-
-    CpuFluid2D(
-            int width,
-            int height,
-            int cell_size,
-            float diff,
-            float visc,
-            int sub_step,
-            float add_r,
-            float add_i
-    );
+    CpuFluid2D(int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~CpuFluid2D() override;
-    void input_step(float r, float intensity, float dt) override;
+    void input_step(float r, const float* intensities, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

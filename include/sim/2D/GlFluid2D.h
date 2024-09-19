@@ -11,9 +11,6 @@ class GlFluid2D final : public Fluid2D {
 
 
     // variables
-    int width;
-    int height;
-    int cell_size;
     int sub_step;
     float grid_spacing;
     float diffusion;
@@ -71,9 +68,9 @@ class GlFluid2D final : public Fluid2D {
 public:
 
     // public and override methods
-    GlFluid2D(int width, int height, int cell_size, float diff, float visc, int sub_step, float add_r, float add_i);
+    GlFluid2D(int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~GlFluid2D() override;
-    void input_step(float r, float intensity, float dt) override;
+    void input_step(float r, const float* intensities, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

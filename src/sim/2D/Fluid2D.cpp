@@ -62,27 +62,16 @@ GLFWwindow* initWindow(const int & windowWidth, const int & windowHeight) {
     return window;
 }
 
-Fluid2D::Fluid2D(const int window_width, const int window_height, const float add_r, const float add_i) {
-    printf("starting Fluid2D constructor. \n");
-    this->add_radius = add_r;
-    printf("1.\n");
-
-    this->add_intensity = add_i;
-    printf("1.\n");
-
+Fluid2D::Fluid2D(const int width, const int height, const int cell_size) {
+    this->width = width;
+    this->height = height;
+    this->cell_size = cell_size;
+    const int window_width = width * cell_size;
+    const int window_height = height * cell_size;
     this->window = initWindow(window_width, window_height);
-    printf("1.\n");
-
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-    printf("1.\n");
-
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    printf("Finishing Fluid2D constructor. \n");
-
     this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
-    printf("1.\n");
-
-
 }
 
 Fluid2D::~Fluid2D() {
@@ -91,7 +80,7 @@ Fluid2D::~Fluid2D() {
     glfwTerminate();
 }
 
-void Fluid2D::run_loop(const DRAW_MODE mode, const float t_accel) {
+void Fluid2D::run_loop(const DRAW_MODE mode, const float t_accel, const float r, const float* intensities) {
     int frame_number = 0;
     double total_time = 0.0;
     double total_sim_time = 0.0;
@@ -105,7 +94,7 @@ void Fluid2D::run_loop(const DRAW_MODE mode, const float t_accel) {
         const auto dt = static_cast<float>((current_time - previous_time) * t_accel);
         previous_time = current_time;
         // start steps
-        input_step(add_radius, add_intensity, dt);
+        input_step(r, intensities, dt);
         velocity_step(dt);
         density_step(dt);
         GLuint colorTex = draw_step(mode);

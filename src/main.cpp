@@ -1,6 +1,8 @@
 #include "../../include/shaders/Renderer.h"
 #include "../include/sim/2D/CpuFluid2D.h"
 #include "../include/sim/2D/GlFluid2D.h"
+#include "../include/sim/2D/GlFluid2DOpti.h"
+
 enum SIM_MODE {
     CPU,
     GPU
@@ -22,7 +24,9 @@ int main() {
     constexpr float time_accel = 1.f;
     constexpr DRAW_MODE draw_mode = VELOCITY;
     const int add_radius = 3 * res;
-    constexpr float add_intensity = 10.f;
+    constexpr float add_intensity_x = 10.f;
+    constexpr float add_intensity_y = 0.f;
+    const float intensities[]{add_intensity_x, add_intensity_y};
 
 
     printf("Parameters set. \n");
@@ -30,15 +34,13 @@ int main() {
     // ----{ Choosing simulation }----
     Fluid* fluid;
     if constexpr (sim_mode == CPU) {
-        fluid = new CpuFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step, add_radius, add_intensity);
+        fluid = new CpuFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
     else {
-        fluid = new GlFluid2D(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step, add_radius, add_intensity);
+        fluid = new GlFluid2DOpti(width, height, cell_size, diffusion_rate, viscosity_rate, sub_step);
     }
-    printf("simulation chosed. \n");
     // ----{ Main Loop }----
-    fluid->run_loop(draw_mode, time_accel);
-    printf("Main loop over. \n");
+    fluid->run_loop(draw_mode, time_accel, add_radius, intensities);
     // ----{ Clean Up }----
     delete fluid;
     return 0;

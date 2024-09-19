@@ -3,24 +3,12 @@
 //
 
 #include "../../../include/sim/2D/CpuFluid2D.h"
-#define SWAP(x0, x) {float* tmp = x0; x0 = x; x = tmp;}
+#define SWAP(x0, x) {float* tmp = x0; (x0) = x; x = tmp;}
 
 
-CpuFluid2D::CpuFluid2D(
-        const int width,
-        const int height,
-        const int cell_size,
-        const float diff,
-        const float visc,
-        const int sub_step,
-        const float add_r,
-        const float add_i)
-        : Fluid2D(width * cell_size, height * cell_size, add_r, add_i)
-        {
-    printf("Starting CpuFluid2D constructor. \n");
-    this->width = width;
-    this->height = height;
-    this->cell_size = cell_size;
+CpuFluid2D::CpuFluid2D(const int width, const int height ,const int cell_size, const float diff, const float visc, const int sub_step)
+: Fluid2D(width, height, cell_size)
+{
     this->grid_spacing = 1.f / static_cast<float>(height);
     this->diff = diff;
     this->visc = visc;
@@ -77,8 +65,8 @@ void CpuFluid2D::add_source(float* x, const float* s, const float dt) const {
     for (int i = 0; i < width * height; i++ ) x[i] += dt * s[i];
 }
 
-void CpuFluid2D::diffuse(float* x, const float* x0, const float diff, const float dt) const {
-    const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
+void CpuFluid2D::diffuse(float* x, const float* x0, const float diffusion_rate, const float dt) const {
+    const float a = dt * diffusion_rate * static_cast<float>(width) * static_cast<float>(height);
     for (int k = 0 ; k < sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
             const int jw = j * width;
@@ -256,7 +244,7 @@ void CpuFluid2D::add(const int x, const int y, float* t, const float intensity) 
     t[x + y * width] += intensity;
 }
 
-void CpuFluid2D::input_step(const float r, const float intensity, const float dt) {
+void CpuFluid2D::input_step(const float r, const float* intensities, const float dt) {
     const int r_int = static_cast<int>(r);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
@@ -269,8 +257,8 @@ void CpuFluid2D::input_step(const float r, const float intensity, const float dt
                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
                             if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
                                 if(middle_mouse_pressed) {
-                                    add(i + x, j + y, u_permanent, 0);
-                                    add(i + x, j + y, v_permanent, intensity);
+                                    add(i + x, j + y, u_permanent, intensities[0]);
+                                    add(i + x, j + y, v_permanent, intensities[1]);
 
                                 }
                                 if (left_mouse_pressed){
@@ -278,9 +266,6 @@ void CpuFluid2D::input_step(const float r, const float intensity, const float dt
                                     add(i + x, j + y, u_prev, (mouse_x - force_x));
                                     add(i + x, j + y, v_prev, -(mouse_y - force_y));
 
-                                }
-                                if(right_mouse_pressed) {
-                                    add(i + x, j + y, dens_prev, intensity);
                                 }
                             }
                         }

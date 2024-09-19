@@ -5,21 +5,10 @@
 #include "../../../include/sim/2D/GlFluid2D.h"
 #include "../../../include/shaders/compute.h"
 
-GlFluid2D::GlFluid2D(
-    const int width,
-    const int height,
-    const int cell_size,
-    const float diff,
-    const float visc,
-    const int sub_step,
-    const float add_r,
-    const float add_i
-    )
-: Fluid2D(width * cell_size, height * cell_size, add_r, add_i) {
+GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
+        : Fluid2D(width, height, cell_size)
+{
     // init variables
-    this->width = width;
-    this->height = height;
-    this->cell_size = cell_size;
     this->diffusion = diff;
     this->viscosity = visc;
     this->sub_step = sub_step;
@@ -35,13 +24,13 @@ GlFluid2D::GlFluid2D(
     this->DRAW_STEP_TIME = 0;
     this->TOTAL_STEPS = 0;
     // init arrays
-    const int gridSize = width * height;
-    grid = new float[gridSize]();
-    dens_permanent = new float[gridSize]();
-    u_permanent = new float[gridSize]();
-    v_permanent = new float[gridSize]();
-    const auto* empty = new float[gridSize]();
-    const auto* emptyVec4 = new float[gridSize * 4]();
+    const int grid_size = width * height;
+    grid = new float[grid_size]();
+    dens_permanent = new float[grid_size]();
+    u_permanent = new float[grid_size]();
+    v_permanent = new float[grid_size]();
+    const auto* empty = new float[grid_size]();
+    const auto* emptyVec4 = new float[grid_size * 4]();
     // setting initial bounds and obstacles
     constexpr float r = 10.f;
     const int circle_x = width / 2;
@@ -353,6 +342,7 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
 
     const auto end_step_time = glfwGetTime();
     DRAW_STEP_TIME += end_step_time - step_time;
+
     return color_tex;
 }
 
@@ -381,7 +371,7 @@ void GlFluid2D::add(const int i, const int j, const float r, const float intensi
     UNBINDING_TIME += current_time - previous_time;
 }
 
-void GlFluid2D::input_step(const float r, const float intensity, const float dt) {
+void GlFluid2D::input_step(const float r, const float* intensities, const float dt) {
     const auto step_time = glfwGetTime();
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
@@ -392,16 +382,12 @@ void GlFluid2D::input_step(const float r, const float intensity, const float dt)
             if(left_mouse_pressed || middle_mouse_pressed) {
 
                 if(middle_mouse_pressed) {
-                    add(i, j, r, intensity, u_permanent_tex, dt);
-                    add(i, j, r, 0, v_permanent_tex, dt);
+                    add(i, j, r, intensities[0], u_permanent_tex, dt);
+                    add(i, j, r, intensities[1], v_permanent_tex, dt);
                 }
                 if (left_mouse_pressed){
                     add(i, j, r,  (mouse_x - force_x), u_tex, dt);
                     add(i, j, r, -(mouse_y - force_y), v_tex, dt);
-                }
-                if(right_mouse_pressed) {
-                    add(i, j, r, -intensity, u_permanent_tex, dt);
-                    add(i, j, r, 0, v_permanent_tex, dt);
                 }
             }
         }
@@ -448,14 +434,3 @@ void GlFluid2D::debug() {
     printf("Dispatch time: %f ms (%.2f %%)\n", DISPATCH_TIME * 1000, percent_dispatch_time);
     printf("Unbinding time: %f ms (%.2f %%)\n", UNBINDING_TIME * 1000, percent_unbinding_time);
 }
-
-
-
-
-
-
-
-
-
-
-
