@@ -457,7 +457,7 @@ GLM_FUNC_QUALIFIER glm_vec4 glm_mat4_determinant_lowp(glm_vec4 const m[4])
 
 GLM_FUNC_QUALIFIER glm_vec4 glm_mat4_determinant(glm_vec4 const m[4])
 {
-	// _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(add)
+	// _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(add_input)
 
 	//T SubFactor00 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
 	//T SubFactor01 = m[2][1] * m[3][3] - m[3][1] * m[2][3];

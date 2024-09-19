@@ -52,7 +52,7 @@ class GlFluid2DOpti : public Fluid2D {
     GLint draw_mode_loc;
 
     void add_source(int x, int s, float dt) const;
-    void add(int i, int j, float r, float intensity, int tex, float dt) const;
+    void add_input(int i, int j, float r, float intensity, int tex, float dt) const;
     void swap(int x_tex, int y_tex) const;
     void diffuse(int x_tex, int x0_tex, float diffusion_rate, float dt) const;
     void advect(int x_tex, int x0_tex, float dt) const;
@@ -66,10 +66,7 @@ public:
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;
     [[nodiscard]] GLuint draw_step(DRAW_MODE mode) override;
-
     void debug() override;
-
-
 };
 
 

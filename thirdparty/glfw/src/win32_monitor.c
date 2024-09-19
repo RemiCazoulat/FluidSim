@@ -207,7 +207,7 @@ void _glfwPollMonitorsWin32(void)
         }
 
         // HACK: If an active adapter does not have any display devices
-        //       (as sometimes happens), add it directly as a monitor
+        //       (as sometimes happens), add_input it directly as a monitor
         if (displayIndex == 0)
         {
             for (i = 0;  i < disconnectedCount;  i++)

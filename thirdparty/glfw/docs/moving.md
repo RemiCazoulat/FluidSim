@@ -72,7 +72,7 @@ The image and texture loading functions have been removed.  They only supported
 the Targa image format, making them mostly useful for beginner level examples.
 To become of sufficiently high quality to warrant keeping them in GLFW 3, they
 would need not only to support other formats, but also modern extensions to
-OpenGL texturing.  This would either add a number of external
+OpenGL texturing.  This would either add_input a number of external
 dependencies (libjpeg, libpng, etc.), or force GLFW to ship with inline versions
 of these libraries.
 

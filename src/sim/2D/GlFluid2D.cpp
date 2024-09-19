@@ -160,7 +160,7 @@ void GlFluid2D::set_vel_bound() {
 void GlFluid2D::density_step(float dt) {
     const auto step_time = glfwGetTime();
 
-    //TODO: add density step
+    //TODO: add_input density step
 
     const auto end_step_time = glfwGetTime();
     DENSITY_STEP_TIME += end_step_time - step_time;
@@ -190,7 +190,7 @@ void GlFluid2D::velocity_step(const float dt) {
 void GlFluid2D::pressure_step(float dt) {
     const auto step_time = glfwGetTime();
 
-    //TODO : add pressure step
+    //TODO : add_input pressure step
 
     const auto end_step_time = glfwGetTime();
     PRESSURE_STEP_TIME += end_step_time - step_time;
@@ -225,18 +225,14 @@ void GlFluid2D::input_step(const float r, const float* intensities, const float 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / cell_size;
         const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
-
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(left_mouse_pressed || middle_mouse_pressed) {
-
-                if(middle_mouse_pressed) {
-                    add(i, j, r, intensities[0], u_permanent_tex, dt);
-                    add(i, j, r, intensities[1], v_permanent_tex, dt);
-                }
-                if (left_mouse_pressed){
-                    add(i, j, r,  (mouse_x - force_x), u_tex, dt);
-                    add(i, j, r, -(mouse_y - force_y), v_tex, dt);
-                }
+            if(middle_mouse_pressed) {
+                add(i, j, r, intensities[0], u_permanent_tex, dt);
+                add(i, j, r, intensities[1], v_permanent_tex, dt);
+            }
+            if (left_mouse_pressed){
+                add(i, j, r,  (mouse_x - force_x), u_tex, dt);
+                add(i, j, r, -(mouse_y - force_y), v_tex, dt);
             }
         }
         force_x = mouse_x;

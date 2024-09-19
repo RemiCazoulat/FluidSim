@@ -11,7 +11,7 @@ namespace detail
 	{
 		static qua<float, Q> call(qua<float, Q> const& q1, qua<float, Q> const& q2)
 		{
-			// SSE2 STATS: 11 shuffle, 8 mul, 8 add
+			// SSE2 STATS: 11 shuffle, 8 mul, 8 add_input
 			// SSE4 STATS: 3 shuffle, 4 mul, 4 dpps
 
 			__m128 const mul0 = _mm_mul_ps(q1.data, _mm_shuffle_ps(q2.data, q2.data, _MM_SHUFFLE(0, 1, 2, 3)));

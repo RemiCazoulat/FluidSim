@@ -35,7 +35,7 @@ install_manifest.txt
 *.cmake
 !glmConfig.cmake
 !glmConfig-version.cmake
-# ^ May need to add future .cmake files as exceptions
+# ^ May need to add_input future .cmake files as exceptions
 
 # Test logs
 Testing/*

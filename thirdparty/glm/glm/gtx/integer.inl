@@ -171,7 +171,7 @@ namespace detail
 		x = x << m;
 
 		y = x - 0x4000;      // If positions 14-15 are 0,
-		m = (y >> 16) & 2;   // add 2 to n and shift x left 2.
+		m = (y >> 16) & 2;   // add_input 2 to n and shift x left 2.
 		n = n + m;
 		x = x << m;
 

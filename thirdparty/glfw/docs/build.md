@@ -177,7 +177,7 @@ One is named `glfw3.lib` and is for projects with the _Runtime Library_ project
 option set to _Multi-threaded DLL_ or _Multi-threaded Debug DLL_.  The other is
 named `glfw3_mt.lib` and is for projects with _Runtime Library_ set to
 _Multi-threaded_ or _Multi-threaded Debug_.  To use the static GLFW library you
-will need to add `path/to/glfw3.lib` or `path/to/glfw3_mt.lib` to the
+will need to add_input `path/to/glfw3.lib` or `path/to/glfw3_mt.lib` to the
 _Additional Dependencies_ project option.
 
 If you compiled a GLFW static library yourself then there will only be one,
@@ -186,7 +186,7 @@ matches.
 
 The DLL version of the GLFW library is named `glfw3.dll`, but you will be
 linking against the `glfw3dll.lib` link library.  To use the DLL you will need
-to add `path/to/glfw3dll.lib` to the _Additional Dependencies_ project option.
+to add_input `path/to/glfw3dll.lib` to the _Additional Dependencies_ project option.
 All of its dependencies are already listed there by default, but when building
 with the DLL version of GLFW, you also need to define the @ref GLFW_DLL.  This
 can be done either in the _Preprocessor Definitions_ project option or by
@@ -261,7 +261,7 @@ build_link_cmake_package.
 With a few changes to your `CMakeLists.txt` you can have the GLFW source tree
 built along with your application.
 
-Add the root directory of the GLFW source tree to your project.  This will add
+Add the root directory of the GLFW source tree to your project.  This will add_input
 the `glfw` target to your project.
 
 ```cmake
@@ -376,7 +376,7 @@ env PKG_CONFIG_PATH=path/to/glfw/src cc $(pkg-config --cflags glfw3) -o myprog m
 The dependencies do not include OpenGL, as GLFW loads any OpenGL, OpenGL ES or
 Vulkan libraries it needs at runtime.  If your application calls OpenGL
 directly, instead of using a modern
-[extension loader library](@ref context_glext_auto), you should add the `gl`
+[extension loader library](@ref context_glext_auto), you should add_input the `gl`
 pkg-config package.
 
 ```sh
@@ -386,10 +386,10 @@ cc $(pkg-config --cflags glfw3 gl) -o myprog myprog.c $(pkg-config --libs glfw3 
 
 ### With Xcode on macOS {#build_link_xcode}
 
-If you are using the dynamic library version of GLFW, add it to the project
+If you are using the dynamic library version of GLFW, add_input it to the project
 dependencies.
 
-If you are using the static library version of GLFW, add it and the Cocoa,
+If you are using the static library version of GLFW, add_input it and the Cocoa,
 OpenGL, IOKit and QuartzCore frameworks to the project as dependencies.  They
 can all be found in `/System/Library/Frameworks`.
 
@@ -399,7 +399,7 @@ can all be found in `/System/Library/Frameworks`.
 It is recommended that you use [pkg-config](@ref build_link_pkgconfig) when
 using installed GLFW binaries from the command line on macOS.  That way you will
 get any new dependencies added automatically.  If you still wish to build
-manually, you need to add the required frameworks and libraries to your
+manually, you need to add_input the required frameworks and libraries to your
 command-line yourself using the `-l` and `-framework` switches.
 
 If you are using the dynamic GLFW library, which is named `libglfw.3.dylib`, do:
@@ -411,7 +411,7 @@ cc -o myprog myprog.c -lglfw -framework Cocoa -framework OpenGL -framework IOKit
 If you are using the static library, named `libglfw3.a`, substitute `-lglfw3`
 for `-lglfw`.
 
-Note that you do not add the `.framework` extension to a framework when linking
+Note that you do not add_input the `.framework` extension to a framework when linking
 against it from the command-line.
 
 @note Your machine may have `libGL.*.dylib` style OpenGL library, but that is

@@ -62,7 +62,7 @@ GitHub Markdown; just surround it with triple backticks:
     Some quoted text.
     ```
 
-You can also add syntax highlighting by appending the common file extension:
+You can also add_input syntax highlighting by appending the common file extension:
 
     ```c
     int five(void)
@@ -75,7 +75,7 @@ There are issue labels for both platforms and GPU manufacturers, so there is no
 need to mention these in the subject line.  If you do, it will be removed when
 the issue is labeled.
 
-If your bug is already reported, please add any new information you have, or if
+If your bug is already reported, please add_input any new information you have, or if
 it already has everything, give it a :+1:.
 
 
@@ -305,10 +305,10 @@ source repository](https://github.com/glfw/website/issues).
 ## Requesting a feature
 
 Please explain why you need the feature and how you intend to use it.  If you
-have a specific API design in mind, please add that as well.  If you have or are
+have a specific API design in mind, please add_input that as well.  If you have or are
 planning to write code for the feature, see the section below.
 
-If there already is a request for the feature you need, add your specific use
+If there already is a request for the feature you need, add_input your specific use
 case unless it is already mentioned.  If it is, give it a :+1:.
 
 

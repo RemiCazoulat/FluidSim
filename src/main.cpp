@@ -28,9 +28,6 @@ int main() {
     constexpr float add_intensity_y = 0.f;
     const float intensities[]{add_intensity_x, add_intensity_y};
 
-
-    printf("Parameters set. \n");
-
     // ----{ Choosing simulation }----
     Fluid* fluid;
     if constexpr (sim_mode == CPU) {

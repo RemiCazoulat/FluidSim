@@ -9,20 +9,20 @@ Current state of the simulation using the VELOCITY display mode :
 - implementing simulation of Fluid for games on CPU
 - making controls to interact with the simulation
 - displaying simulation with 2 modes : VELOCITY MODE and DENSITY MODE
-- Modifying bounds management to simplify it and to easily add objects and obstacles (with a mask array)
+- Modifying bounds management to simplify it and to easily add_input objects and obstacles (with a mask array)
 - Simplify project function on CPU and see if it works well (it doesn't work well)
 - passing everything on GPU using openGL to have better performance -it's still have to be optimized)
 
 
 ## To do
-- add a third dimension
+- add_input a third dimension
 - passing everything on GPU using Vulkan and compare the performance with the openGL simulation to see if Vulkan really worths a try
 - make a vorticity confinement step to improve performance and accuracy
 - make an interface (with Qt or ImGui) to have better interactions with the simulation (optional)
 - make a sound input (optional)
 
 ## Future of the project
-- learn how to transform the Fluid into plasma, and add magnets
+- learn how to transform the Fluid into plasma, and add_input magnets
 - make a simulation of a rocket engine
 - make a simulation of a nuclear fusion reactor
 

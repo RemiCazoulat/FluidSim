@@ -308,7 +308,7 @@ like Ubuntu have the `mingw-w64` package for both.
 
 GLFW has CMake toolchain files in the `CMake` subdirectory that set up
 cross-compilation of Windows binaries.  To use these files you set the
-`CMAKE_TOOLCHAIN_FILE` CMake variable with the `-D` flag add an option when
+`CMAKE_TOOLCHAIN_FILE` CMake variable with the `-D` flag add_input an option when
 configuring and generating the build files.
 
 ```sh

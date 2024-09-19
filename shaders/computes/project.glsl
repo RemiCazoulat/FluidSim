@@ -50,7 +50,6 @@ void step_2(ivec2 ij) {
     float s0y = imageLoad(grid, ij0).x;
     float s1y = imageLoad(grid, ij1).x;
     float s = s0x + s1x + s0y + s1y;
-    //if (s < 3.5) return;
     float p0x = imageLoad(p, i0j).x;
     float p1x = imageLoad(p, i1j).x;
     float p0y = imageLoad(p, ij0).x;

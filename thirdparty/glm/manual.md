@@ -289,7 +289,7 @@ When installed, GLM provides the CMake package configuration files `glmConfig.cm
 
 To use these configurations files, you may need to set the `glm_DIR` variable to the directory containing the configuration files `<installation prefix>/lib/cmake/glm/`.
 
-Use the `find_package` CMake command to load the configurations into your project. Lastly, either link your executable against the `glm::glm` target or add `${GLM_INCLUDE_DIRS}` to your target's include directories:
+Use the `find_package` CMake command to load the configurations into your project. Lastly, either link your executable against the `glm::glm` target or add_input `${GLM_INCLUDE_DIRS}` to your target's include directories:
 
 ```cmake
 set(glm_DIR <installation prefix>/lib/cmake/glm) # if necessary
@@ -297,7 +297,7 @@ find_package(glm REQUIRED)
 target_link_libraries(<your executable> glm::glm)
 ```
 
-To use GLM as a submodule in a project instead, use `add_subdirectory` to expose the same target, or add the directory to your target's
+To use GLM as a submodule in a project instead, use `add_subdirectory` to expose the same target, or add_input the directory to your target's
 
 ```cmake
 add_subdirectory(glm)
@@ -2137,10 +2137,10 @@ We can find our repository git url on the Github repository page. The url looks 
 
 #### Step 2: Synchronizing our fork
 
-We can use the following command to add `upstream` (original project repository) as a remote repository so that we can fetch the latest GLM commits into our branch and keep our forked copy is synchronized.
+We can use the following command to add_input `upstream` (original project repository) as a remote repository so that we can fetch the latest GLM commits into our branch and keep our forked copy is synchronized.
 
 ```plaintext
->>> git remote add upstream https://github.com/processing/processing.git
+>>> git remote add_input upstream https://github.com/processing/processing.git
 ```
 
 To synchronize our fork to the latest commit in the GLM repository, we can use the following command:
@@ -2199,7 +2199,7 @@ Some things to keep in mind for a pull request:
 
 * Keep it minimal: Try to make the minimum required changes to fix the issue. If we have added any debugging code, we should remove it.
 * A fix at a time: The pull request should deal with one issue at a time only, unless two issue are so interlinked they must be fixed together.
-* Write a test: GLM is largely unit tests. Unit tests are in `glm/test` directory. We should also add tests for the fixes we provide to ensure future regression doesn't happen.
+* Write a test: GLM is largely unit tests. Unit tests are in `glm/test` directory. We should also add_input tests for the fixes we provide to ensure future regression doesn't happen.
 * No whitespace changes: Avoid unnecessary formatting or whitespace changes in other parts of the code. Be careful with auto-format options in the code editor which can cause wide scale formatting changes.
 * Follow [GLM Code Style](#section9_3) for consistency.
 * Tests passes: Make sure GLM build and tests don't fail because of the changes.

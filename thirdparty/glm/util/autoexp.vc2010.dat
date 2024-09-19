@@ -11,7 +11,7 @@
 ; For good examples, read the rules in this file.
 ;
 ; To find what the debugger considers the type of a variable to
-; be, add it to the Watch window and look at the Type column.
+; be, add_input it to the Watch window and look at the Type column.
 ;
 ; An AutoExpand rule is a line with the name of a type, an equals
 ; sign, and text with replaceable parts in angle brackets. The

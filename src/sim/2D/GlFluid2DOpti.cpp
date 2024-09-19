@@ -89,7 +89,7 @@ GlFluid2DOpti::GlFluid2DOpti(const int width, const int height, const int cell_s
     mode_loc         = glGetUniformLocation(stepsProgram, "mode"        ); // which function call
     i_loc            = glGetUniformLocation(stepsProgram, "i"           );
     j_loc            = glGetUniformLocation(stepsProgram, "j"           );
-    r_loc            = glGetUniformLocation(stepsProgram, "r"           ); // for add
+    r_loc            = glGetUniformLocation(stepsProgram, "r"           ); // for add_input
     intensity_loc    = glGetUniformLocation(stepsProgram, "intensity"   );
     a_loc            = glGetUniformLocation(stepsProgram, "a"           ); // for diffuse
     dtw_loc          = glGetUniformLocation(stepsProgram, "dtw"         ); // for advect
@@ -121,7 +121,7 @@ GlFluid2DOpti::~GlFluid2DOpti() {
     glDeleteProgram(stepsProgram);
 }
 
-void GlFluid2DOpti::add(const int i,const int j ,const float r ,const float intensity, const int tex, const float dt) const {
+void GlFluid2DOpti::add_input(const int i, const int j , const float r , const float intensity, const int tex, const float dt) const {
     glUniform1i(mode_loc, INPUT);
     glUniform1i(i_loc, i);
     glUniform1i(j_loc, j);
@@ -131,33 +131,8 @@ void GlFluid2DOpti::add(const int i,const int j ,const float r ,const float inte
     glUniform1f(dt_loc, dt);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    printf("add finished. \n");
-}
-
-void GlFluid2DOpti::input_step(const float r, const float* intensities, const float dt) {
-    if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / cell_size;
-        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
-
-        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(left_mouse_pressed || middle_mouse_pressed) {
-                if (left_mouse_pressed){
-                    add(i, j, r, (mouse_x - force_x), U_T, dt);
-                    add(i, j, r, -(mouse_y - force_y),V_T, dt);
-
-                }
-                if(middle_mouse_pressed) {
-                    add(i, j, r, intensities[0], U_PERM_T, dt);
-                    add(i, j, r, intensities[1], V_PERM_T, dt);
-                }
-            }
-        }
-        force_x = mouse_x;
-        force_y = mouse_y;
-    }
-    add_source(DENS_T, DENS_PERM_T, dt);
-    add_source(U_T, U_PERM_T, dt);
-    add_source(V_T, V_PERM_T, dt);
+    //printf("add_input finished. \n");
+    //printf("x : %i \n", tex);
 }
 
 void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
@@ -167,6 +142,34 @@ void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
     glUniform1f(dt_loc, dt);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+}
+
+void GlFluid2DOpti::input_step(const float r, const float* intensities, const float dt) {
+    glUseProgram(stepsProgram);
+    if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
+        const int i = static_cast<int>(mouse_x) / cell_size;
+        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+
+        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
+            if(left_mouse_pressed || middle_mouse_pressed) {
+                if (left_mouse_pressed){
+                    add_input(i, j, r, (mouse_x - force_x), U_T, dt);
+                    add_input(i, j, r, -(mouse_y - force_y), V_T, dt);
+
+                }
+                if(middle_mouse_pressed) {
+                    add_input(i, j, r, intensities[0], U_PERM_T, dt);
+                    add_input(i, j, r, intensities[1], V_PERM_T, dt);
+                }
+            }
+        }
+        force_x = mouse_x;
+        force_y = mouse_y;
+    }
+    add_source(DENS_T, DENS_PERM_T, dt);
+    add_source(U_T, U_PERM_T, dt);
+    add_source(V_T, V_PERM_T, dt);
 }
 
 void GlFluid2DOpti::swap(const int x, const int y) const {

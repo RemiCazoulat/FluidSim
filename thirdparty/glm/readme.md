@@ -84,7 +84,7 @@ vcpkg install glm
 ```
 
 ## CMake using FetchContent
-You can add glm to your CMake project to be built together.
+You can add_input glm to your CMake project to be built together.
 
 Add to the `CMakeLists.txt` file:
 ```cmake

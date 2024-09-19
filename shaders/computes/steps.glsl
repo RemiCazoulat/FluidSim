@@ -109,8 +109,8 @@ void add(ivec2 coord) {
     float s = imageLoad(grid, coord).x;
     if (s == 0.0) return;
     if (sqrt(pow(coord.x - i, 2) + pow(coord.y - j, 2)) < r ) {
-        vec4 val = read_tex(x_tex, coord);
-        write_tex(x_tex, coord, val + intensity * dt);
+        vec4 val = read_tex(x_tex, coord) + intensity * dt;
+        write_tex(x_tex, coord, val);
     }
 }
 
@@ -119,6 +119,7 @@ void source(ivec2 coord) {
     vec4 y_val = read_tex(y_tex, coord);
     x_val += y_val * dt;
     write_tex( x_tex, coord, x_val);
+    imageStore(color, coord, vec4(coord.x, coord.y, 0.0, 0.0));
 }
 
 void diffuse(ivec2 ij) {
@@ -287,7 +288,7 @@ void bound_v(ivec2 ij) {
 
 
 vec3 xy2hsv2rgb(float x, float y, float r_max){
-    float r,g,b;
+    float r, g, b;
     float h = atan(y, x) * 180 / PI + 180;
     float s = 1.0;
     float v = sqrt(x * x + y * y) / r_max;
@@ -303,7 +304,7 @@ vec3 xy2hsv2rgb(float x, float y, float r_max){
         case 3: r = p; g = q; b = v; break;
         case 4: r = t; g = p; b = v; break;
         case 5: r = v; g = p; b = q; break;
-        default :r = 1, g = 1, b = 1;
+        default:r = 1, g = 1, b = 1;
     }
     return vec3(r, g, b);
 }
@@ -316,6 +317,7 @@ void draw(ivec2 coord) {
         rgb = xy2hsv2rgb(x, y, 0.5);
     }
     imageStore(color, coord, vec4(rgb, 1.0));
+    //read_tex(COLOR_T, coord);
 }
 
 void main() {

@@ -697,7 +697,7 @@
     </enum>
 
     <request name="offer">
-      <description summary="add an offered mime type">
+      <description summary="add_input an offered mime type">
 	This request adds a mime type to the set of mime types
 	advertised to targets.  Can be called several times to offer
 	multiple types.
@@ -1188,8 +1188,8 @@
       </description>
       <entry name="default" value="0" summary="no preference, apply default policy"/>
       <entry name="scale" value="1" summary="scale, preserve the surface's aspect ratio and center on output"/>
-      <entry name="driver" value="2" summary="switch output mode to the smallest mode that can fit the surface, add black borders to compensate size mismatch"/>
-      <entry name="fill" value="3" summary="no upscaling, center on output and add black borders to compensate size mismatch"/>
+      <entry name="driver" value="2" summary="switch output mode to the smallest mode that can fit the surface, add_input black borders to compensate size mismatch"/>
+      <entry name="fill" value="3" summary="no upscaling, center on output and add_input black borders to compensate size mismatch"/>
     </enum>
 
     <request name="set_fullscreen">
@@ -1632,7 +1632,7 @@
 	All requests that need a commit to become effective are documented
 	to affect double-buffered state.
 
-	Other interfaces may add further double-buffered surface state.
+	Other interfaces may add_input further double-buffered surface state.
       </description>
     </request>
 
@@ -2384,7 +2384,7 @@
       <entry name="no_keymap" value="0"
 	     summary="no keymap; client must understand how to interpret the raw keycode"/>
       <entry name="xkb_v1" value="1"
-	     summary="libxkbcommon compatible, null-terminated string; to determine the xkb keycode, clients must add 8 to the key event keycode"/>
+	     summary="libxkbcommon compatible, null-terminated string; to determine the xkb keycode, clients must add_input 8 to the key event keycode"/>
     </enum>
 
     <event name="keymap">
@@ -2896,8 +2896,8 @@
       </description>
     </request>
 
-    <request name="add">
-      <description summary="add rectangle to region">
+    <request name="add_input">
+      <description summary="add_input rectangle to region">
 	Add the specified rectangle to the region.
       </description>
       <arg name="x" type="int" summary="region-local x coordinate"/>
