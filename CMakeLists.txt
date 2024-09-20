@@ -2,8 +2,21 @@ cmake_minimum_required(VERSION 3.28)
 project(FluidSim)
 
 set(CMAKE_CXX_STANDARD 17)
+# opengl
+find_package(OpenGL REQUIRED)
+# glfw
+add_subdirectory(thirdparty/glfw)
+# glm
+add_subdirectory(thirdparty/glm)
+# glad
+add_library(glad "thirdparty/glad/src/glad.c")
+target_include_directories(glad PUBLIC thirdparty/glad/include)
+# Dear ImGui
+set(IMGUI_DIR thirdparty/imgui)
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
 
-add_executable(FluidSim
+add_executable(
+        ${PROJECT_NAME}
         src/main.cpp
         include/shaders/shader.h
         include/shaders/compute.h
@@ -21,16 +34,22 @@ add_executable(FluidSim
         include/sim/Fluid.h
         src/sim/2D/GlFluid2DOpti.cpp
         include/sim/2D/GlFluid2DOpti.h
+        # Dear ImGui
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
 )
 
-add_subdirectory(thirdparty/glfw)
-add_subdirectory(thirdparty/glm)
-
-add_library(glad "thirdparty/glad/src/glad.c")
-target_include_directories(glad PUBLIC thirdparty/glad/include)
-
-
-find_package(OpenGL REQUIRED)
-
-target_link_libraries(FluidSim glfw glm::glm glad OpenGL::GL)
+target_link_libraries(
+        FluidSim
+        glfw
+        glm::glm
+        glad
+        OpenGL::GL
+)
 
