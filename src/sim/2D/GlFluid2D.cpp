@@ -5,8 +5,8 @@
 #include "../../../include/sim/2D/GlFluid2D.h"
 #include "../../../include/shaders/compute.h"
 
-GlFluid2D::GlFluid2D(const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
-        : Fluid2D(width, height, cell_size)
+GlFluid2D::GlFluid2D(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
+        : Fluid2D(window, width, height, cell_size)
 {
     // init variables
     this->diffusion = diff;
@@ -206,6 +206,7 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     const auto end_step_time = glfwGetTime();
     DRAW_STEP_TIME += end_step_time - step_time;
 
+    //renderer->rendering(color_tex);
     return color_tex;
 }
 

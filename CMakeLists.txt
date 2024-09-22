@@ -17,6 +17,15 @@ include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
 
 add_executable(
         ${PROJECT_NAME}
+        # Dear ImGui
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        # Simulation
         src/main.cpp
         include/shaders/shader.h
         include/shaders/compute.h
@@ -34,15 +43,7 @@ add_executable(
         include/sim/Fluid.h
         src/sim/2D/GlFluid2DOpti.cpp
         include/sim/2D/GlFluid2DOpti.h
-        # Dear ImGui
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
-        ${IMGUI_DIR}/imgui.cpp
-        ${IMGUI_DIR}/imgui_draw.cpp
-        ${IMGUI_DIR}/imgui_demo.cpp
-        ${IMGUI_DIR}/imgui_tables.cpp
-        ${IMGUI_DIR}/imgui_widgets.cpp
+        src/sim/Fluid.cpp
 )
 
 target_link_libraries(

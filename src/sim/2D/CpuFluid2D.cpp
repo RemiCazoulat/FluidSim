@@ -6,8 +6,8 @@
 #define SWAP(x0, x) {float* tmp = x0; (x0) = x; x = tmp;}
 
 
-CpuFluid2D::CpuFluid2D(const int width, const int height ,const int cell_size, const float diff, const float visc, const int sub_step)
-: Fluid2D(width, height, cell_size)
+CpuFluid2D::CpuFluid2D(GLFWwindow* window, const int width, const int height ,const int cell_size, const float diff, const float visc, const int sub_step)
+: Fluid2D(window, width, height, cell_size)
 {
     this->grid_spacing = 1.f / static_cast<float>(height);
     this->diff = diff;
@@ -359,6 +359,7 @@ GLuint CpuFluid2D::draw_step(const DRAW_MODE mode) {
         }
     }
     const GLuint colorTex = createTextureVec4(color, width, height);
+    renderer->rendering(colorTex);
     return colorTex;
 }
 

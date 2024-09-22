@@ -29,8 +29,8 @@
 #define BOUND_V   7
 #define DRAW      8
 
-GlFluid2DOpti::GlFluid2DOpti(const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
-: Fluid2D(width, height, cell_size)
+GlFluid2DOpti::GlFluid2DOpti(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
+: Fluid2D(window, width, height, cell_size)
 {
     // ----------{ init variables }----------
     this->diffusion = diff;
@@ -255,6 +255,7 @@ GLuint GlFluid2DOpti::draw_step(DRAW_MODE mode) {
     glUniform1i(draw_mode_loc, mode);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    renderer->rendering(color_tex);
     return color_tex;
 }
 

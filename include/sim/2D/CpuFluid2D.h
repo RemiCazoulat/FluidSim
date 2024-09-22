@@ -37,13 +37,13 @@ class CpuFluid2D final : public Fluid2D {
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
 public:
-    CpuFluid2D(int width, int height, int cell_size, float diff, float visc, int sub_step);
+    CpuFluid2D(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
     ~CpuFluid2D() override;
     void input_step(float r, const float* intensities, float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;
-    [[nodiscard]] GLuint draw_step(DRAW_MODE mode) override;
+    GLuint draw_step(DRAW_MODE mode) override;
     void debug() override;
 };
 
