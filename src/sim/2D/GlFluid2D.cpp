@@ -206,7 +206,7 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     const auto end_step_time = glfwGetTime();
     DRAW_STEP_TIME += end_step_time - step_time;
 
-    //renderer->rendering(color_tex);
+    renderer->rendering(color_tex);
     return color_tex;
 }
 
