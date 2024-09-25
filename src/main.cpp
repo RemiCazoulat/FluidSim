@@ -67,10 +67,14 @@ int main() {
     bool smoke_perm = false;
     bool smoke_add = true;
     bool smoke_remove = false;
+    float smoke_intensity[3] = {0.0f, 0.0f, 0.0f};
     float smoke_radius = 1;
     bool obstacles_add = false;
     bool obstacles_remove = false;
     float obstacles_radius = 1;
+    bool vel_perm = false;
+    bool vel_add = true;
+    bool vel_remove = false;
     float vel_intensity[3] = {0.0f, 0.0f, 0.0f};
     float vel_radius = 1;
 
@@ -120,6 +124,7 @@ int main() {
     // ----{ Main Loop }----
     int frame_number = 0;
     double total_time = 0.0;
+    double frame_time = 0.0;
     double previous_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         // time management
@@ -165,7 +170,6 @@ int main() {
         // Smoke
         ImGui::Text("Smoke :");
         ImGui::ColorEdit3("Color", smoke_color);
-        ImGui::SliderFloat("Smoke Radius", &smoke_radius, 0, 20);
 
         if (ImGui::Button("Perm (S)")) {
             smoke_perm = true;
@@ -184,6 +188,20 @@ int main() {
             smoke_add = false;
             smoke_remove = true;
         }
+        ImGui::SliderFloat("Smoke Radius", &smoke_radius, 0, 20);
+
+        float x = 0;
+        float y = 0;
+        float z = 0;
+        float w_avail = ImGui::GetContentRegionAvail().x * 0.2f;
+        ImGui::PushItemWidth(w_avail);
+        ImGui::SliderFloat("x", &x, 0, 20); ImGui::SameLine();
+        ImGui::SliderFloat("y", &y, 0, 20); ImGui::SameLine();
+        ImGui::SliderFloat("z", &z, 0, 20); ImGui::SameLine();
+        ImGui::PopItemWidth();
+        ImGui::Text("Intensity");
+        smoke_intensity[0] = x; smoke_intensity[1] = y; smoke_intensity[2] = z;
+
         ImGui::Separator();
         // Obstacles
         ImGui::Text("Obstacles :");
@@ -200,11 +218,27 @@ int main() {
         ImGui::Separator();
         // Velocity
         ImGui::Text("Velocity :");
+        if (ImGui::Button("Perm (V)")) {
+            vel_perm = true;
+            vel_add = false;
+            vel_remove = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Add (V)")) {
+            vel_perm = false;
+            vel_add = true;
+            vel_remove = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Remove (V)")) {
+            vel_perm = false;
+            vel_add = false;
+            vel_remove = true;
+        }
         ImGui::SliderFloat("Vel Radius", &vel_radius, 0, 20);
-        float x = 0;
-        float y = 0;
-        float z = 0;
-        float w_avail = ImGui::GetContentRegionAvail().x * 0.2f;
+        x = 0;
+        y = 0;
+        z = 0;
         ImGui::PushItemWidth(w_avail);
         ImGui::SliderFloat("x", &x, 0, 20); ImGui::SameLine();
         ImGui::SliderFloat("y", &y, 0, 20); ImGui::SameLine();
@@ -222,7 +256,6 @@ int main() {
 #pragma region menu_frame
         menu_pos = ImVec2(input_pos.x + input_size.x, input_pos.y);
         ImGui::SetNextWindowPos(menu_pos, ImGuiCond_Always);
-        //ImGui::Begin("Menu");
         ImGui::SetNextWindowBgAlpha(0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::Begin("Menu", nullptr,
@@ -247,6 +280,22 @@ int main() {
 #pragma endregion
         // Debug Frame
 #pragma region debug_frame
+        ImGui::SetNextWindowPos(right_up_pos, ImGuiCond_Always, right_up_pivot);
+        ImGui::SetNextWindowSize(ImVec2(0, 0));
+        ImGui::SetNextWindowBgAlpha(0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::Begin("Debug" , nullptr,
+                     ImGuiWindowFlags_NoTitleBar |
+                     ImGuiWindowFlags_NoResize |
+                     ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoScrollbar);
+        ImGui::SetWindowFontScale(zoom);
+        ImGui::Text("%.2f FPS (%.2f ms)", 1.f / frame_time, frame_time * 1000.f);
+        ImGui::Text("Time : %.5f", total_time * time_accel);
+        ImGui::Text("Real time : %.5f", total_time);
+        ImGui::Text("Screen : %i", frame_number);
+        ImGui::End();
+
 #pragma endregion
         // Simulation Frame
 #pragma region simulation_frame
@@ -325,6 +374,7 @@ int main() {
         // ----{ Swap Buffers }----
         glfwSwapBuffers(window);
         // time management
+        frame_time = glfwGetTime() - current_time;
         total_time += glfwGetTime() - current_time;
         frame_number++;
     }
