@@ -2,16 +2,10 @@
 #include "../include/sim/2D/CpuFluid2D.h"
 #include "../include/sim/2D/GlFluid2D.h"
 #include "../include/sim/2D/GlFluid2DOpti.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "../thirdparty/stb_image.h"
 
-enum SIM_MODE {
-    CPU,
-    GPU
-};
 
-enum SIM_DIM {
-    TWO_D,
-    THREE_D
-};
 
 GLFWwindow* initWindow(const int width, const int height, const int cell_size) {
     const int window_width = width * cell_size;
@@ -39,6 +33,29 @@ GLFWwindow* initWindow(const int width, const int height, const int cell_size) {
     return window;
 }
 
+GLuint image2Tex(const char* filename) {
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+    if (data == nullptr) {
+        std::cerr << "Failed to load image!" << std::endl;
+        return 0;
+    }
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (channels == 3) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    } else if (channels == 4) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data);
+    return texture;
+}
 
 int main() {
     // ----{ Temporary panel }----
@@ -94,10 +111,10 @@ int main() {
     ImVec2 input_size = left_up_pos;
     ImVec2 menu_pos = left_up_pos;
 
-    const int values[] = {25, 50, 75, 100, 125, 150, 175, 200, 225, 250};
-    const char* valueNames[] = {"25", "50", "75", "100", "125", "150", "175", "200", "225", "250"};
+    const int sub_step_values[] = {25, 50, 75, 100, 125, 150, 175, 200, 225, 250};
+    const char* sub_step_names[] = {"25", "50", "75", "100", "125", "150", "175", "200", "225", "250"};
+    int sub_step_index = 0;
 
-    int selectedValueIndex = 0;
 
 
 
@@ -120,6 +137,9 @@ int main() {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
+    // init textures for ImGui
+    GLuint color_wheel_tex = image2Tex("../resources/images/ui/color_wheel.png");
+
 
     // ----{ Main Loop }----
     int frame_number = 0;
@@ -299,6 +319,19 @@ int main() {
         ImGui::End();
 
 #pragma endregion
+        // color wheel frame
+#pragma region color_wheel_frame
+        ImGui::SetNextWindowPos(right_down_pos, ImGuiCond_Always, right_down_pivot);
+        ImGui::SetNextWindowSize(ImVec2(0, 0));
+        ImGui::SetNextWindowBgAlpha(0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::Begin("Color wheel" , nullptr,
+                     ImGuiWindowFlags_NoTitleBar |
+                     ImGuiWindowFlags_NoResize |
+                     ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoScrollbar);
+        ImGui::Image((void*)(intptr_t)color_wheel_tex, ImVec2(150, 150));
+        ImGui::End();
         // Simulation Frame
 #pragma region simulation_frame
         menu_pos = ImVec2(input_pos.x, input_pos.y + input_size.y + 20);
@@ -339,11 +372,11 @@ int main() {
         ImGui::InputFloat("Viscosity", &viscosity_rate, 0.1f, 1.0f, "%.11f");
 
 
-        if (ImGui::BeginCombo("Sub steps", valueNames[selectedValueIndex])) {
-            for (int i = 0; i < IM_ARRAYSIZE(values); i++) {
-                bool isSelected = (selectedValueIndex == i);
-                if (ImGui::Selectable(valueNames[i], isSelected)) {
-                    selectedValueIndex = i; // Met à jour l'index sélectionné
+        if (ImGui::BeginCombo("Sub steps", sub_step_names[sub_step_index])) {
+            for (int i = 0; i < IM_ARRAYSIZE(sub_step_values); i++) {
+                bool isSelected = (sub_step_index == i);
+                if (ImGui::Selectable(sub_step_names[i], isSelected)) {
+                    sub_step_index = i; // Met à jour l'index sélectionné
                 }
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus(); // Met le focus sur l'élément sélectionné
@@ -355,7 +388,7 @@ int main() {
 
         if(ImGui::Button("/!\\")) {
         }
-        sub_step = values[selectedValueIndex];
+        sub_step = sub_step_values[sub_step_index];
         ImGui::Text("Sub steps selected : %d", sub_step);
 
         ImGui::Separator();
@@ -380,6 +413,7 @@ int main() {
         total_time += glfwGetTime() - current_time;
         frame_number++;
     }
+
 
     // ----{ Debug }----
     fluid->debug();

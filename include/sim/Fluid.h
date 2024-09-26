@@ -8,18 +8,15 @@
 #define FLUID_H
 
 #include "../../include/libraries.h"
+#include "SimData.h"
 
-enum DRAW_MODE {
-    VELOCITY,
-    DENSITY,
-    PRESSURE
-};
 
 class Fluid {
 protected:
     ImGuiIO io;
     GLFWwindow* window;
 public:
+    SimData data;
     explicit Fluid(GLFWwindow* window);
     virtual ~Fluid() = default;
     virtual void input_step(float r, const float *intensities, float dt) = 0;

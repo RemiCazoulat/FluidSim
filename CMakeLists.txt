@@ -44,6 +44,9 @@ add_executable(
         src/sim/2D/GlFluid2DOpti.cpp
         include/sim/2D/GlFluid2DOpti.h
         src/sim/Fluid.cpp
+        #thirdparty
+        thirdparty/stb_image.h
+        include/sim/SimData.h
 )
 
 target_link_libraries(
