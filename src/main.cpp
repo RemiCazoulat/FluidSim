@@ -146,6 +146,7 @@ int main() {
         // Input Frame
 #pragma region input_frame
         ImGui::SetNextWindowPos(left_up_pos, ImGuiCond_Always, left_up_pivot);
+        ImGui::SetNextWindowSize(ImVec2(0, 0));
         ImGui::Begin("Input");
         ImGui::SetWindowFontScale(zoom);
         ImGui::Text("Input Mode : ");
@@ -256,6 +257,7 @@ int main() {
 #pragma region menu_frame
         menu_pos = ImVec2(input_pos.x + input_size.x, input_pos.y);
         ImGui::SetNextWindowPos(menu_pos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(0, 0));
         ImGui::SetNextWindowBgAlpha(0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::Begin("Menu", nullptr,
@@ -300,8 +302,8 @@ int main() {
         // Simulation Frame
 #pragma region simulation_frame
         menu_pos = ImVec2(input_pos.x, input_pos.y + input_size.y + 20);
-        ImGui::SetNextWindowPos(menu_pos, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(input_size.x, 0));
+        ImGui::SetNextWindowPos(left_down_pos, ImGuiCond_Always, left_down_pivot);
+        ImGui::SetNextWindowSize(ImVec2(0, 0));
         ImGui::Begin("Simulation");
         ImGui::SetWindowFontScale(zoom);
         if (ImGui::Button("2D")) {
