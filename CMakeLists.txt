@@ -46,7 +46,9 @@ add_executable(
         src/sim/Fluid.cpp
         #thirdparty
         thirdparty/stb_image.h
-        include/sim/SimData.h
+        include/SimData.h
+        src/ui/Interface.cpp
+        include/ui/Interface.h
 )
 
 target_link_libraries(

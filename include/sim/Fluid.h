@@ -8,7 +8,7 @@
 #define FLUID_H
 
 #include "../../include/libraries.h"
-#include "SimData.h"
+#include "FluidSim/include/SimData.h"
 
 
 class Fluid {
@@ -16,7 +16,6 @@ protected:
     ImGuiIO io;
     GLFWwindow* window;
 public:
-    SimData data;
     explicit Fluid(GLFWwindow* window);
     virtual ~Fluid() = default;
     virtual void input_step(float r, const float *intensities, float dt) = 0;

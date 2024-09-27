@@ -2,8 +2,8 @@
 #include "../include/sim/2D/CpuFluid2D.h"
 #include "../include/sim/2D/GlFluid2D.h"
 #include "../include/sim/2D/GlFluid2DOpti.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "../thirdparty/stb_image.h"
+#include "../include/ui/Interface.h"
+
 
 
 
@@ -31,30 +31,6 @@ GLFWwindow* initWindow(const int width, const int height, const int cell_size) {
         std::cerr << "Failed to initialize OpenGL context" << std::endl;
     }
     return window;
-}
-
-GLuint image2Tex(const char* filename) {
-    int width, height, channels;
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
-    if (data == nullptr) {
-        std::cerr << "Failed to load image!" << std::endl;
-        return 0;
-    }
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if (channels == 3) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    } else if (channels == 4) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    }
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(data);
-    return texture;
 }
 
 int main() {
@@ -115,12 +91,8 @@ int main() {
     const char* sub_step_names[] = {"25", "50", "75", "100", "125", "150", "175", "200", "225", "250"};
     int sub_step_index = 0;
 
-
-
-
     // ----{ init functions }----
     GLFWwindow* window = initWindow(width, height, cell_size);
-    std::cout << glGetString(GL_VERSION) << std::endl;
 
     // ----{ Choosing simulation }----
     Fluid* fluid;
@@ -138,19 +110,16 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
     // init textures for ImGui
-    GLuint color_wheel_tex = image2Tex("../resources/images/ui/color_wheel.png");
 
 
     // ----{ Main Loop }----
     int frame_number = 0;
     double total_time = 0.0;
     double frame_time = 0.0;
-    double previous_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         // time management
         const auto current_time = glfwGetTime();
-        const float dt = (float)(current_time - previous_time) * time_accel;
-        previous_time = current_time;
+        const float dt = (float)(frame_time) * time_accel;
 
         // ----{ Simulation }----
         glfwPollEvents();
@@ -267,9 +236,6 @@ int main() {
         ImGui::PopItemWidth();
         ImGui::Text("Intensity");
         vel_intensity[0] = x; vel_intensity[1] = y; vel_intensity[2] = z;
-
-
-        //ImGui::SliderFloat3("Intensity", vel_intensity, 0.0, 100.0);
         input_size = ImGui::GetWindowSize();
         ImGui::End();
 #pragma endregion
@@ -319,20 +285,7 @@ int main() {
         ImGui::End();
 
 #pragma endregion
-        // color wheel frame
-#pragma region color_wheel_frame
-        ImGui::SetNextWindowPos(right_down_pos, ImGuiCond_Always, right_down_pivot);
-        ImGui::SetNextWindowSize(ImVec2(0, 0));
-        ImGui::SetNextWindowBgAlpha(0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::Begin("Color wheel" , nullptr,
-                     ImGuiWindowFlags_NoTitleBar |
-                     ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoScrollbar);
-        ImGui::Image((void*)(intptr_t)color_wheel_tex, ImVec2(150, 150));
-        ImGui::End();
-        // Simulation Frame
+        // simulation frame
 #pragma region simulation_frame
         menu_pos = ImVec2(input_pos.x, input_pos.y + input_size.y + 20);
         ImGui::SetNextWindowPos(left_down_pos, ImGuiCond_Always, left_down_pivot);
@@ -404,9 +357,6 @@ int main() {
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        // ----{ rendering }----
-        // ----{ Swap Buffers }----
         glfwSwapBuffers(window);
         // time management
         frame_time = glfwGetTime() - current_time;
