@@ -32,6 +32,10 @@ GLuint image2Tex(const char* filename) {
 
 Interface::Interface(GLFWwindow* window, SimData* simData) {
     this->simData = simData;
+    left_up_pos = ImVec2(0.0f, 0.0f);
+    right_up_pos = ImVec2((float)(simData->window_width), 0.0f);
+    left_down_pos = ImVec2(0.0f, (float)(simData->window_height));
+    right_down_pos = ImVec2((float)(simData->window_width), (float)(simData->window_height));
     // ----{ init ImGui }----
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -102,19 +106,7 @@ void Interface::runInputWindow() {
     }
     ImGui::SliderFloat("Smoke Radius", &simData->smoke_radius, 0, 20);
 
-    float x = 0;
-    float y = 0;
-    float z = 0;
-    float w_avail = ImGui::GetContentRegionAvail().x * 0.2f;
-    ImGui::PushItemWidth(w_avail);
-    ImGui::SliderFloat("x", &x, 0, 20); ImGui::SameLine();
-    ImGui::SliderFloat("y", &y, 0, 20); ImGui::SameLine();
-    ImGui::SliderFloat("z", &z, 0, 20); ImGui::SameLine();
-    ImGui::PopItemWidth();
-    ImGui::Text("Intensity");
-    simData->smoke_intensity[0] = x;
-    simData->smoke_intensity[1] = y;
-    simData->smoke_intensity[2] = z;
+    ImGui::SliderFloat("Intensity", &simData->smoke_intensity, 0, 100);
 
     ImGui::Separator();
     // Obstacles
@@ -150,9 +142,10 @@ void Interface::runInputWindow() {
         simData->vel_remove = true;
     }
     ImGui::SliderFloat("Vel Radius", &simData->vel_radius, 0, 20);
-    x = 0;
-    y = 0;
-    z = 0;
+    float x = simData->vel_intensity[0];
+    float y = simData->vel_intensity[1];
+    float z = simData->vel_intensity[2];
+    float w_avail = ImGui::GetContentRegionAvail().x * 0.2f;
     ImGui::PushItemWidth(w_avail);
     ImGui::SliderFloat("x", &x, 0, 20); ImGui::SameLine();
     ImGui::SliderFloat("y", &y, 0, 20); ImGui::SameLine();
@@ -206,8 +199,8 @@ void Interface::runSimulationWindow() {
 
     ImGui::Separator();
     ImGui::Text("Fluid infos");
-    ImGui::InputFloat("Diffusion", &simData->diffusion_rate, 0.1f, 1.0f, "%.11f");
-    ImGui::InputFloat("Viscosity", &simData->viscosity_rate, 0.1f, 1.0f, "%.11f");
+    ImGui::InputFloat("Diffusion", &simData->diffusion, 0.1f, 1.0f, "%.11f");
+    ImGui::InputFloat("Viscosity", &simData->viscosity, 0.1f, 1.0f, "%.11f");
 
 
     if (ImGui::BeginCombo("Sub steps", sub_step_names[sub_step_index])) {
@@ -276,7 +269,7 @@ void Interface::runMenuWindow() {
     ImGui::End();
 }
 
-void Interface::runDebugWindow(const float dt, int &frame_number, float &total_time) {
+void Interface::runDebugWindow(const float dt, int &frame_number, double &total_time) {
     if (!is_init) {
         printf("[ERROR] Frame is not initialized. Call method initFrame() "
                "before calling other methods of the Interface class. \n");
@@ -327,5 +320,11 @@ void Interface::renderFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     is_init = false;
+}
+
+Interface::~Interface() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
 

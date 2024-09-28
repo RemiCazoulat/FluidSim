@@ -41,10 +41,9 @@ void Fluid2D::cursor_position_callback(GLFWwindow* window, const double xpos, co
     mouse_y = static_cast<float>(ypos);
 }
 
-Fluid2D::Fluid2D(GLFWwindow * window, const int width, const int height, const int cell_size) : Fluid(window) {
-    this->width = width;
-    this->height = height;
-    this->cell_size = cell_size;
+Fluid2D::Fluid2D(GLFWwindow * window, SimData* simData) : Fluid(window, simData) {
+    this->width = simData->width;
+    this->height = simData->height;
     this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);

@@ -28,11 +28,13 @@ struct SimData {
     int width = static_cast<int>(128.f * real_res);
     int height = static_cast<int>(72.f * real_res);
     int cell_size = static_cast<int>(16.f / real_res);
+    float h_w = 1.f / (float)(width);
+    float h_h = 1.f / (float)(height);
     int window_width = width * cell_size;
     int window_height = height * cell_size;
     // Fluid infos
-    float diffusion_rate = 0.0001f;
-    float viscosity_rate = 0.00000000001f;
+    float diffusion = 0.0001f;
+    float viscosity = 0.00000000001f;
     int sub_step = 25;
     // simulation infos
     float time_accel = 1.f;
@@ -48,12 +50,12 @@ struct SimData {
     bool smoke_perm = false;
     bool smoke_add = true;
     bool smoke_remove = false;
-    float smoke_intensity[3] = {0.0f, 0.0f, 0.0f};
+    float smoke_intensity = 1.0f;
     float smoke_radius = 1 * real_res;
     // obstacles
     bool obstacles_add = false;
     bool obstacles_remove = false;
-    float obstacles_radius = 1;
+    float obstacles_radius = 1 * real_res;
     // velocity
     bool vel_perm = false;
     bool vel_add = true;

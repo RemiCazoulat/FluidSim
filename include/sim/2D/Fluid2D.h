@@ -16,11 +16,10 @@ protected:
     static int left_mouse_pressed, right_mouse_pressed , middle_mouse_pressed;
     int width;
     int height;
-    int cell_size;
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 public:
-    explicit Fluid2D( GLFWwindow* window, int width, int height, int cell_size);
+    explicit Fluid2D( GLFWwindow* window, SimData* simData);
     ~Fluid2D() override;
 };
 

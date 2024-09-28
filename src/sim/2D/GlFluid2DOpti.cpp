@@ -29,14 +29,11 @@
 #define BOUND_V   7
 #define DRAW      8
 
-GlFluid2DOpti::GlFluid2DOpti(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
-: Fluid2D(window, width, height, cell_size)
+GlFluid2DOpti::GlFluid2DOpti(GLFWwindow* window, SimData* simData)
+: Fluid2D(window, simData)
 {
     // ----------{ init variables }----------
-    this->diffusion = diff;
-    this->viscosity = visc;
-    this->sub_step = sub_step;
-    this->grid_spacing = 1.f / static_cast<float>(height);
+
     const int grid_size = width * height;
     grid = new float[grid_size]();
     const auto* empty = new float[grid_size]();
@@ -145,22 +142,47 @@ void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
 
 }
 
-void GlFluid2DOpti::input_step(const float r, const float* intensities, const float dt) {
+void GlFluid2DOpti::input_step(const float dt) {
     glUseProgram(stepsProgram);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / cell_size;
-        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+        const int i = static_cast<int>(mouse_x) / simData->cell_size;
+        const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
 
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
             if(left_mouse_pressed || middle_mouse_pressed) {
-                if (left_mouse_pressed){
-                    add_input(i, j, r, (mouse_x - force_x), U_T, dt);
-                    add_input(i, j, r, -(mouse_y - force_y), V_T, dt);
-
-                }
-                if(middle_mouse_pressed) {
-                    add_input(i, j, r, intensities[0], U_PERM_T, dt);
-                    add_input(i, j, r, intensities[1], V_PERM_T, dt);
+                if (left_mouse_pressed) {
+                    if (simData->smoke) {
+                        if (simData->smoke_add) {
+                            add_input(i, j, simData->smoke_radius, simData->smoke_intensity, dens_tex, dt);
+                        }
+                        if (simData->smoke_perm) {
+                            add_input(i, j, simData->smoke_radius, simData->smoke_intensity, dens_perm_tex, dt);
+                        }
+                        if (simData->smoke_remove) {
+                            //TODO: make smoke_remove
+                        }
+                    }
+                    if (simData->velocity) {
+                        if (simData->vel_add) {
+                            add_input(i, j, simData->vel_radius, (mouse_x - force_x), u_tex, dt);
+                            add_input(i, j, simData->vel_radius, -(mouse_y - force_y), v_tex, dt);
+                        }
+                        if (simData->vel_perm) {
+                            add_input(i, j, simData->vel_radius, simData->vel_intensity[0], u_tex, dt);
+                            add_input(i, j, simData->vel_radius, simData->vel_intensity[1], v_tex, dt);
+                        }
+                        if (simData->vel_remove) {
+                            //TODO: make vel_remove
+                        }
+                    }
+                    if (simData->obstacles) {
+                        if (simData->obstacles_add) {
+                            //TODO: make obstacles_add
+                        }
+                        if (simData->obstacles_remove) {
+                            //TODO: make obstacles_remove
+                        }
+                    }
                 }
             }
         }
@@ -187,7 +209,7 @@ void GlFluid2DOpti::diffuse(const int x, const int x0, const float diffusion_rat
     const float a = dt * diffusion_rate * static_cast<float>(width) * static_cast<float>(height);
     glUniform1f(a_loc, a);
     glUniform1f(dt_loc, dt);
-    for(int k = 0; k < sub_step; k ++) {
+    for(int k = 0; k <  simData->sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
@@ -207,12 +229,12 @@ void GlFluid2DOpti::advect(const int x, const int x0, float dt) const {
 
 void GlFluid2DOpti::project() const {
     glUniform1i(mode_loc, PROJECT);
-    glUniform1f(grid_spacing_loc, grid_spacing);
+    glUniform1f(grid_spacing_loc,  simData->h_w);
     glUniform1i(stage_loc, 1);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glUniform1i(stage_loc, 2);
-    for(int k = 0; k < sub_step; k ++) {
+    for(int k = 0; k <  simData->sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
@@ -238,8 +260,8 @@ void GlFluid2DOpti::pressure_step(float dt) {
 void GlFluid2DOpti::velocity_step(float dt) {
     add_source (U_T, U_PREV_T, dt);
     add_source (V_T, V_PREV_T, dt);
-    swap(U_T, U_PREV_T); diffuse (U_T, U_PREV_T, viscosity, dt);
-    swap(V_T, V_PREV_T); diffuse (V_T, V_PREV_T, viscosity, dt);
+    swap(U_T, U_PREV_T); diffuse (U_T, U_PREV_T,  simData->viscosity, dt);
+    swap(V_T, V_PREV_T); diffuse (V_T, V_PREV_T,  simData->viscosity, dt);
     project();
     set_bounds_vel();
     swap(U_T, U_PREV_T);

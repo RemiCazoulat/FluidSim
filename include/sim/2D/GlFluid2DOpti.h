@@ -11,11 +11,6 @@
 
 
 class GlFluid2DOpti : public Fluid2D {
-    // variables
-    int sub_step;
-    float grid_spacing;
-    float diffusion;
-    float viscosity;
     // arrays
     float* grid;
     // compute programs
@@ -59,9 +54,9 @@ class GlFluid2DOpti : public Fluid2D {
     void project() const;
     void set_bounds_vel() const;
 public:
-    GlFluid2DOpti(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    GlFluid2DOpti(GLFWwindow* window, SimData* simData);
     ~GlFluid2DOpti() override;
-    void input_step(float r, const float* intensities, float dt) override;
+    void input_step(float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

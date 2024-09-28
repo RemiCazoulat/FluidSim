@@ -5,14 +5,11 @@
 #include "../../../include/sim/2D/GlFluid2D.h"
 #include "../../../include/shaders/compute.h"
 
-GlFluid2D::GlFluid2D(GLFWwindow* window, const int width, const int height, const int cell_size, const float diff, const float visc, const int sub_step)
-        : Fluid2D(window, width, height, cell_size)
+GlFluid2D::GlFluid2D(GLFWwindow* window, SimData* simData)
+        : Fluid2D(window, simData)
 {
     // init variables
-    this->diffusion = diff;
-    this->viscosity = visc;
-    this->sub_step = sub_step;
-    this->grid_spacing = 1.f / static_cast<float>(height);
+
     // init debug variables
     this->BINDING_TIME = 0;
     this->DISPATCH_TIME = 0;
@@ -24,7 +21,7 @@ GlFluid2D::GlFluid2D(GLFWwindow* window, const int width, const int height, cons
     this->DRAW_STEP_TIME = 0;
     this->TOTAL_STEPS = 0;
     // init arrays
-    const int grid_size = width * height;
+    int grid_size = width * height;
     grid = new float[grid_size]();
     const auto* empty = new float[grid_size]();
     const auto* emptyVec4 = new float[grid_size * 4]();
@@ -47,12 +44,12 @@ GlFluid2D::GlFluid2D(GLFWwindow* window, const int width, const int height, cons
     grid_tex           = createTextureVec1(grid, width, height);
     dens_tex           = createTextureVec1(empty, width, height);
     dens_prev_tex      = createTextureVec1(empty, width, height);
-    dens_permanent_tex = createTextureVec1(empty, width, height);
+    dens_perm_tex = createTextureVec1(empty, width, height);
     pressure_tex       = createTextureVec1(empty, width, height);
     u_tex              = createTextureVec1(empty, width, height);
     v_tex              = createTextureVec1(empty, width, height);
-    u_permanent_tex    = createTextureVec1(empty, width, height);
-    v_permanent_tex    = createTextureVec1(empty, width, height);
+    u_perm_tex    = createTextureVec1(empty, width, height);
+    v_perm_tex    = createTextureVec1(empty, width, height);
     u_prev_tex         = createTextureVec1(empty, width, height);
     v_prev_tex         = createTextureVec1(empty, width, height);
     color_tex          = createTextureVec4(emptyVec4, width, height);
@@ -74,12 +71,12 @@ GlFluid2D::~GlFluid2D() {
     glDeleteTextures(1, &grid_tex);
     glDeleteTextures(1, &dens_tex);
     glDeleteTextures(1, &dens_prev_tex);
-    glDeleteTextures(1, &dens_permanent_tex);
+    glDeleteTextures(1, &dens_perm_tex);
     glDeleteTextures(1, &pressure_tex);
     glDeleteTextures(1, &u_tex);
     glDeleteTextures(1, &v_tex);
-    glDeleteTextures(1, &u_permanent_tex);
-    glDeleteTextures(1, &v_permanent_tex);
+    glDeleteTextures(1, &u_perm_tex);
+    glDeleteTextures(1, &v_perm_tex);
     glDeleteTextures(1, &u_prev_tex);
     glDeleteTextures(1, &v_prev_tex);
     glDeleteTextures(1, &color_tex);
@@ -109,7 +106,7 @@ void GlFluid2D::diffuse(const GLuint x, const GLuint x0, const float diff, const
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     glUseProgram(diffuseProgram);
     glUniform1f(glGetUniformLocation(diffuseProgram, "a"), a);
-    bind_and_run({x, x0, grid_tex}, sub_step);
+    bind_and_run({x, x0, grid_tex},  simData->sub_step);
 }
 
 void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
@@ -126,7 +123,8 @@ void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
 void GlFluid2D::project() {
     auto previous_time = glfwGetTime();
     glUseProgram(projectProgram);
-    glUniform1f(glGetUniformLocation(projectProgram, "h"), grid_spacing);
+    glUniform1f(glGetUniformLocation(projectProgram, "h_w"),  simData->h_w);
+    glUniform1f(glGetUniformLocation(projectProgram, "h_h"),  simData->h_h);
     const GLint step_loc = glGetUniformLocation(projectProgram, "step");
     bind({u_tex, v_tex, u_prev_tex, v_prev_tex, grid_tex});
 
@@ -139,7 +137,7 @@ void GlFluid2D::project() {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     // step 2
     glUniform1i(step_loc, 2);
-    for(int k = 0; k < sub_step; k ++) {
+    for(int k = 0; k <  simData->sub_step; k ++) {
         glDispatchCompute(width / 64,height / 1,1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
@@ -172,8 +170,8 @@ void GlFluid2D::velocity_step(const float dt) {
 
     add_source (u_tex, u_prev_tex, dt);
     add_source (v_tex, v_prev_tex, dt);
-    swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex, viscosity, dt);
-    swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex, viscosity, dt);
+    swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex,  simData->viscosity, dt);
+    swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex,  simData->viscosity, dt);
     project ();
     set_vel_bound();
     swap(u_prev_tex, u_tex);
@@ -210,7 +208,7 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     return color_tex;
 }
 
-void GlFluid2D::add(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
+void GlFluid2D::add_input(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
     glUseProgram(inputProgram);
     glUniform1i(glGetUniformLocation(inputProgram, "i"), i);
     glUniform1i(glGetUniformLocation(inputProgram, "j"), j);
@@ -220,28 +218,56 @@ void GlFluid2D::add(const int i, const int j, const float r, const float intensi
     bind_and_run({tex, grid_tex}, 1);
 }
 
-void GlFluid2D::input_step(const float r, const float* intensities, const float dt) {
+void GlFluid2D::input_step( const float dt) {
     const auto step_time = glfwGetTime();
 
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / cell_size;
-        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+        const int i = static_cast<int>(mouse_x) / simData->cell_size;
+        const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(middle_mouse_pressed) {
-                add(i, j, r, intensities[0], u_permanent_tex, dt);
-                add(i, j, r, intensities[1], v_permanent_tex, dt);
-            }
             if (left_mouse_pressed){
-                add(i, j, r,  (mouse_x - force_x), u_tex, dt);
-                add(i, j, r, -(mouse_y - force_y), v_tex, dt);
+                if(simData->smoke) {
+                    if(simData->smoke_add) {
+                        add_input(i, j,simData->smoke_radius,simData->smoke_intensity, dens_tex, dt);
+                    }
+                    if(simData->smoke_perm) {
+                        add_input(i, j, simData->smoke_radius, simData->smoke_intensity, dens_perm_tex, dt);
+                    }
+                    if(simData->smoke_remove) {
+                        //TODO: make smoke_remove
+                    }
+                }
+                if(simData->velocity) {
+                    if(simData->vel_add) {
+                        add_input(i, j,simData->vel_radius, (mouse_x - force_x), u_tex, dt);
+                        add_input(i, j,simData->vel_radius,-(mouse_y - force_y), v_tex, dt);
+                        printf("passing here \n");
+                    }
+                    if(simData->vel_perm) {
+                        add_input(i, j,simData->vel_radius, simData->vel_intensity[0], u_tex, dt);
+                        add_input(i, j,simData->vel_radius,simData->vel_intensity[1], v_tex, dt);
+                    }
+                    if(simData->vel_remove) {
+                        //TODO: make vel_remove
+                    }
+                }
+                if(simData->obstacles) {
+                    if(simData->obstacles_add) {
+                        //TODO: make obstacles_add
+                    }
+                    if(simData->obstacles_remove) {
+                        //TODO: make obstacles_remove
+                    }
+                }
             }
         }
         force_x = mouse_x;
         force_y = mouse_y;
     }
-    add_source(dens_tex, dens_permanent_tex, dt);
-    add_source(u_tex, u_permanent_tex, dt);
-    add_source(v_tex, v_permanent_tex, dt);
+    add_source(dens_tex, dens_perm_tex, dt);
+    add_source(u_tex, u_perm_tex, dt);
+    add_source(v_tex, v_perm_tex, dt);
+
     const auto end_step_time = glfwGetTime();
     INPUT_STEP_TIME += end_step_time - step_time;
 }

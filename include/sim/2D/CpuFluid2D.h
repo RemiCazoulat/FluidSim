@@ -9,20 +9,16 @@
 #include "Fluid2D.h"
 
 class CpuFluid2D final : public Fluid2D {
-    int sub_step;
-    float grid_spacing;
-    float diff;
-    float visc;
 
     float* grid;
     float* dens;
     float* dens_prev;
-    float* dens_permanent;
+    float* dens_perm;
     float* pressure;
     float* u;
     float* v;
     float *u_permanent;
-    float *v_permanent;
+    float *v_perm;
     float* u_prev;
     float* v_prev;
     float* color;
@@ -37,9 +33,9 @@ class CpuFluid2D final : public Fluid2D {
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
 public:
-    CpuFluid2D(GLFWwindow* window, int width, int height, int cell_size, float diff, float visc, int sub_step);
+    CpuFluid2D(GLFWwindow* window, SimData* simData);
     ~CpuFluid2D() override;
-    void input_step(float r, const float* intensities, float dt) override;
+    void input_step(float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

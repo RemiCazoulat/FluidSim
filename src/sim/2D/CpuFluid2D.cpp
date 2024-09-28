@@ -6,24 +6,21 @@
 #define SWAP(x0, x) {float* tmp = x0; (x0) = x; x = tmp;}
 
 
-CpuFluid2D::CpuFluid2D(GLFWwindow* window, const int width, const int height ,const int cell_size, const float diff, const float visc, const int sub_step)
-: Fluid2D(window, width, height, cell_size)
+CpuFluid2D::CpuFluid2D(GLFWwindow* window, SimData* simData)
+: Fluid2D(window, simData)
 {
-    this->grid_spacing = 1.f / static_cast<float>(height);
-    this->diff = diff;
-    this->visc = visc;
-    this->sub_step = sub_step;
+
     const int gridSize = width * height;
     grid = new float[gridSize]();
     u_permanent = new float[gridSize]();
-    v_permanent = new float[gridSize]();
+    v_perm = new float[gridSize]();
     u = new float[gridSize]();
     v = new float[gridSize]();
     u_prev = new float[gridSize]();
     v_prev = new float[gridSize]();
     dens = new float[gridSize]();
     dens_prev = new float[gridSize]();
-    dens_permanent = new float[gridSize]();
+    dens_perm = new float[gridSize]();
     pressure = new float[gridSize]();
     color = new float[gridSize * 4]();
 
@@ -51,12 +48,12 @@ CpuFluid2D::~CpuFluid2D() {
     delete[] u;
     delete[] v;
     delete[] u_permanent;
-    delete[] v_permanent;
+    delete[] v_perm;
     delete[] u_prev;
     delete[] v_prev;
     delete[] dens;
     delete[] dens_prev;
-    delete[] dens_permanent;
+    delete[] dens_perm;
     delete[] pressure;
     delete[] color;
 }
@@ -67,7 +64,7 @@ void CpuFluid2D::add_source(float* x, const float* s, const float dt) const {
 
 void CpuFluid2D::diffuse(float* x, const float* x0, const float diffusion_rate, const float dt) const {
     const float a = dt * diffusion_rate * static_cast<float>(width) * static_cast<float>(height);
-    for (int k = 0 ; k < sub_step ; k++ ) {
+    for (int k = 0 ; k < simData->sub_step ; k++ ) {
         for ( int j = 1 ; j < height - 1; j++ ) {
             const int jw = j * width;
             const int jw0 = (j - 1) * width;
@@ -124,7 +121,7 @@ void CpuFluid2D::advect(float * z, const float * z0, const float * u_vel, const 
 }
 
 void CpuFluid2D::project(float * p, float * div) const {
-    const float h = grid_spacing;
+    const float h =  simData->h_w;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
         const int j1w = (j + 1) * width;
@@ -138,7 +135,7 @@ void CpuFluid2D::project(float * p, float * div) const {
             div[i + jw] = -0.5f * h * d;
         }
     }
-    for (int k = 0; k < sub_step ;k++ ) {
+    for (int k = 0; k <  simData->sub_step ;k++ ) {
         for (int j = 1 ; j < height - 1 ; j++ ) {
             const int jw = j * width;
             const int j1w = (j + 1) * width;
@@ -188,22 +185,22 @@ void CpuFluid2D::pressure_step(const float dt) {
             const int i0 = i - 1;
             const int i1 = i + 1;
             const float d = u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
-            pressure[ i + jw] = d / 4 * dens[i + jw] * grid_spacing / dt;
+            pressure[ i + jw] = d / 4 * dens[i + jw] *  simData->h_w / dt;
         }
     }
 }
 
 void CpuFluid2D::density_step(const float dt) {
     add_source(dens, dens_prev, dt);
-    SWAP(dens_prev, dens) diffuse(dens, dens_prev, diff, dt);
+    SWAP(dens_prev, dens) diffuse(dens, dens_prev,  simData->diffusion, dt);
     SWAP(dens_prev, dens) advect(dens, dens_prev, u, v, dt);
 }
 
 void CpuFluid2D::velocity_step(const float dt) {
     add_source (u, u_prev, dt);
     add_source (v, v_prev, dt);
-    SWAP(u_prev, u) diffuse (u, u_prev, visc, dt);
-    SWAP(v_prev, v) diffuse (v, v_prev, visc, dt);
+    SWAP(u_prev, u) diffuse (u, u_prev,  simData->viscosity, dt);
+    SWAP(v_prev, v) diffuse (v, v_prev,  simData->viscosity, dt);
     project (u_prev, v_prev);
     set_vel_bound();
     SWAP( u_prev, u)
@@ -244,27 +241,52 @@ void CpuFluid2D::add(const int x, const int y, float* t, const float intensity) 
     t[x + y * width] += intensity;
 }
 
-void CpuFluid2D::input_step(const float r, const float* intensities, const float dt) {
-    const int r_int = static_cast<int>(r);
+void CpuFluid2D::input_step(const float dt) {
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / cell_size;
-        const int j = static_cast<int>((static_cast<float>(cell_size * height) - mouse_y)) / cell_size;
+        const int i = static_cast<int>(mouse_x) / simData->cell_size;
+        const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
 
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(left_mouse_pressed || middle_mouse_pressed) {
+            if(left_mouse_pressed ) {
+                int r_int = 0;
+                int r_float = 0.f;
+                if(simData->smoke) r_int = (int)(simData->smoke_radius);
+                if(simData->obstacles) r_int = (int)(simData->obstacles_radius);
+                if(simData->velocity) r_int = (int)(simData->vel_radius);
+
+                if(simData->smoke) r_float = simData->smoke_radius;
+                if(simData->obstacles) r_float = simData->obstacles_radius;
+                if(simData->velocity) r_float = simData->vel_radius;
                 for(int x = -r_int; x <= r_int; x++) {
                     for(int y = -r_int; y <= r_int; y++) {
                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
-                            if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r)) {
-                                if(middle_mouse_pressed) {
-                                    add(i + x, j + y, u_permanent, intensities[0]);
-                                    add(i + x, j + y, v_permanent, intensities[1]);
-
+                            if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r_float)) {
+                                if(simData->smoke) {
+                                    if(simData->smoke_add) {
+                                        add(i + x, j + y, dens,simData->smoke_intensity);
+                                    }
+                                    if(simData->smoke_perm) {
+                                        add(i + x, j + y, dens_perm, simData->smoke_intensity);
+                                    }
+                                    if(simData->smoke_remove) {
+                                        //TODO: make remove smoke
+                                    }
                                 }
-                                if (left_mouse_pressed){
-                                    //add_vel(i + x, j + y, (mouse_x - force_x) , (mouse_y - force_y));
-                                    add(i + x, j + y, u_prev, (mouse_x - force_x));
-                                    add(i + x, j + y, v_prev, -(mouse_y - force_y));
+                                if(simData->obstacles) {
+                                   //TODO: make obstacles
+                                }
+                                if(simData->velocity) {
+                                    if(simData->vel_add) {
+                                        add(i + x, j + y, u,simData->vel_intensity[0]);
+                                        add(i + x, j + y, v,simData->vel_intensity[1]);
+                                    }
+                                    if(simData->vel_perm) {
+                                        add(i + x, j + y, v_perm, simData->vel_intensity[0]);
+                                        add(i + x, j + y, v_perm, simData->vel_intensity[1]);
+                                    }
+                                    if(simData->vel_remove) {
+                                        // TODO: make vel remove
+                                    }
 
                                 }
                             }
@@ -276,17 +298,17 @@ void CpuFluid2D::input_step(const float r, const float* intensities, const float
             }
         }
     }
-    add_source(dens, dens_permanent, dt);
+    add_source(dens, dens_perm, dt);
     add_source(u, u_permanent, dt);
-    add_source(v, v_permanent, dt);
+    add_source(v, v_perm, dt);
 }
 
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
     constexpr float s = 1.f;
     const float v = std::sqrt(x * x + y * y) / r_max;
-    const int segment = static_cast<int>(h / 60) % 6;  // Determine dans quel segment H tombe
-    const float f = h / 60 - static_cast<float>(segment);  // Facteur fractionnaire de H
+    const int segment = static_cast<int>(h / 60) % 6;
+    const float f = h / 60 - static_cast<float>(segment);
     const float p = v * (1 - s);
     const float q = v * (1 - s * f);
     const float t = v * (1 - s * (1 - f));
