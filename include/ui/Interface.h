@@ -10,9 +10,9 @@
 
 
 class Interface {
-    GLFWwindow* window = nullptr;
-    Fluid* fluid = nullptr;
-    SimData* simData = nullptr;
+    GLFWwindow* window;
+    Fluid* fluid;
+    SimData* simData;
 
     float zoom = 1.4f;
     ImVec2 left_up_pos;

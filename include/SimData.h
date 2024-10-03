@@ -8,7 +8,8 @@
 
 enum SIM_MODE {
     CPU,
-    GPU
+    GL,
+    VK,
 };
 
 enum SIM_DIM {
@@ -24,7 +25,7 @@ enum DRAW_MODE {
 
 struct SimData {
     //grid infos
-    int resolution = 1; // READONLY
+    int resolution = 2; // READONLY
     int real_res = (int)(std::pow(2, resolution));
     int gen_width = 72;
     int gen_height = 72;
@@ -41,7 +42,7 @@ struct SimData {
     int sub_step = 25;
     // simulation infos
     float time_accel = 1.f;
-    SIM_MODE sim_mode = CPU; // READONLY
+    SIM_MODE sim_mode = GL; // READONLY
     SIM_DIM sim_dim = TWO_D; // READONLY
     DRAW_MODE draw_mode = VELOCITY;
     // mode

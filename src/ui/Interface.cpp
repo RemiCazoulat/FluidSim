@@ -145,7 +145,7 @@ void Interface::runInputWindow() {
         simData->vel_remove = true;
     }
     ImGui::SliderFloat("Vel Radius", &simData->ui_vel_radius, 0, 20);
-    simData->vel_radius = simData->ui_vel_radius * simData->real_res;
+    simData->vel_radius = simData->ui_vel_radius * (float)(simData->real_res);
     float x = simData->vel_intensity[0];
     float y = simData->vel_intensity[1];
     float z = simData->vel_intensity[2];
@@ -184,9 +184,9 @@ void Interface::runSimulationWindow() {
     if (ImGui::Button("CPU")) {
         ImGui::OpenPopup("Go in CPU mode");
     }
+    float prev_time_a = simData->time_accel;
     if (ImGui::BeginPopupModal("Go in CPU mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        float prev_time_a = simData->time_accel;
         simData->time_accel = 0.f;
         ImGui::Text("Are you sure you want to change into CPU mode ?");
         ImGui::Separator();
@@ -194,8 +194,9 @@ void Interface::runSimulationWindow() {
         {
             max_res = 2;
             int new_res = simData->resolution <= max_res ? simData->resolution : max_res;
-            simData->change_res(new_res);
-            fluid = new CpuFluid2D(window, simData);
+            simData->change_res(new_res); printf("test \n");
+            delete fluid;printf("test \n");
+            fluid = new CpuFluid2D(window, simData);printf("test \n");
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
@@ -205,6 +206,8 @@ void Interface::runSimulationWindow() {
         }
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
+    }
+    else {
         simData->time_accel = prev_time_a;
     }
     ImGui::SameLine();

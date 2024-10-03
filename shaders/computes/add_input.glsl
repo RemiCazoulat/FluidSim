@@ -1,6 +1,6 @@
 #version 460 core
 
-layout (local_size_x = 64, local_size_y = 1) in;
+layout (local_size_x = 8, local_size_y = 8) in;
 
 layout (r32f, binding = 0) uniform image2D tex;
 layout (r32f, binding = 1) uniform image2D grid;

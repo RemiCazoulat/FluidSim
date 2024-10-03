@@ -8,19 +8,7 @@
 #include "Fluid2D.h"
 
 class GlFluid2D final : public Fluid2D {
-
-
-    // debug variables
-    double BINDING_TIME;
-    double DISPATCH_TIME;
-
-    double INPUT_STEP_TIME;
-    double DENSITY_STEP_TIME;
-    double VELOCITY_STEP_TIME;
-    double PRESSURE_STEP_TIME;
-    double DRAW_STEP_TIME;
-    int TOTAL_STEPS;
-    // arrays
+   // arrays
     float* grid;
     // compute programs
     GLuint inputProgram;
@@ -55,7 +43,7 @@ class GlFluid2D final : public Fluid2D {
     void add_input(int i, int j, float r, float intensity, GLuint tex, float dt);
     // utils
     void bind_and_run(const std::vector<GLuint> &textures, int how_many_times);
-    void bind(const std::vector<GLuint> & textures);
+    static void bind(const std::vector<GLuint> & textures);
 
 public:
 

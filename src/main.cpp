@@ -4,10 +4,7 @@
 #include "../include/sim/2D/GlFluid2DOpti.h"
 #include "../include/ui/Interface.h"
 
-GLFWwindow* initWindowGladGlfw(const int width, const int height, const int cell_size) {
-    const int window_width = width * cell_size;
-    const int window_height = height * cell_size;
-    // Initialize GLFW
+void initGlfw() {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         exit(-1);
@@ -15,27 +12,30 @@ GLFWwindow* initWindowGladGlfw(const int width, const int height, const int cell
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // Create a GLFW window
-    GLFWwindow *window = glfwCreateWindow(window_width, window_height, "OpenGL 2D Fluid", nullptr, nullptr);
+}
+GLFWwindow* initWindow(const int w_width, const int w_height) {
+    GLFWwindow *window = glfwCreateWindow(w_width, w_height, "OpenGL 2D Fluid", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
-    // Load OpenGL functions using glfwGetProcAddress
+    return window;
+}
+void initOpenGL() {
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize OpenGL context" << std::endl;
     }
-    return window;
 }
-
 
 int main() {
 
     // ----{ init functions }----
+    initGlfw();
     auto* simData = new SimData;
-    GLFWwindow* window = initWindowGladGlfw(simData->width, simData->height, simData->cell_size);
+    GLFWwindow* window = initWindow(simData->window_width, simData->window_height);
+    initOpenGL();
 
     // ----{ Choosing simulation }----
     Fluid* fluid;
@@ -64,10 +64,10 @@ int main() {
         // ----{ UI }----
         interface->initFrame();
         interface->runInputWindow();
-        interface->runSimulationWindow();
         interface->runMenuWindow();
         interface->runDebugWindow(dt, frame_number, total_time);
         interface->runColorWheelWindow();
+        interface->runSimulationWindow();
         interface->renderFrame();
 
         // swap buffers
