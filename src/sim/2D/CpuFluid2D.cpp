@@ -24,7 +24,7 @@ CpuFluid2D::CpuFluid2D(GLFWwindow* window, SimData* simData)
     pressure = new float[gridSize]();
     color = new float[gridSize * 4]();
 
-    constexpr float r = 10.f;
+    const float r = 5.f * simData->real_res;
     const int circle_x = width / 2;
     const int circle_y = height / 2;
     for (int j = 0; j < height; j ++) {
@@ -121,7 +121,7 @@ void CpuFluid2D::advect(float * z, const float * z0, const float * u_vel, const 
 }
 
 void CpuFluid2D::project(float * p, float * div) const {
-    const float h =  simData->h_w;
+    const float h =  simData->h;
     for (int j = 1 ; j < height - 1 ; j++ ) {
         const int jw = j * width;
         const int j1w = (j + 1) * width;
@@ -185,7 +185,7 @@ void CpuFluid2D::pressure_step(const float dt) {
             const int i0 = i - 1;
             const int i1 = i + 1;
             const float d = u[i1 + jw] - u[i0 + jw] + v[i + j1w] - v[i + j0w];
-            pressure[ i + jw] = d / 4 * dens[i + jw] *  simData->h_w / dt;
+            pressure[ i + jw] = d / 4 * dens[i + jw] *  simData->h / dt;
         }
     }
 }
@@ -249,18 +249,18 @@ void CpuFluid2D::input_step(const float dt) {
         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
             if(left_mouse_pressed ) {
                 int r_int = 0;
-                int r_float = 0.f;
+                float r_float = 0.f;
                 if(simData->smoke) r_int = (int)(simData->smoke_radius);
                 if(simData->obstacles) r_int = (int)(simData->obstacles_radius);
                 if(simData->velocity) r_int = (int)(simData->vel_radius);
-
                 if(simData->smoke) r_float = simData->smoke_radius;
                 if(simData->obstacles) r_float = simData->obstacles_radius;
                 if(simData->velocity) r_float = simData->vel_radius;
+
                 for(int x = -r_int; x <= r_int; x++) {
                     for(int y = -r_int; y <= r_int; y++) {
                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
-                            if (std::sqrt(static_cast<float>(x * x + y * y)) < static_cast<float>(r_float)) {
+                            if (std::sqrt(static_cast<float>(x * x + y * y)) < r_float) {
                                 if(simData->smoke) {
                                     if(simData->smoke_add) {
                                         add(i + x, j + y, dens,simData->smoke_intensity);
@@ -277,8 +277,8 @@ void CpuFluid2D::input_step(const float dt) {
                                 }
                                 if(simData->velocity) {
                                     if(simData->vel_add) {
-                                        add(i + x, j + y, u,simData->vel_intensity[0]);
-                                        add(i + x, j + y, v,simData->vel_intensity[1]);
+                                        add(i + x, j + y, u, (mouse_x - force_x) * dt * 1 / (float)(simData->real_res));
+                                        add(i + x, j + y, v,-(mouse_y - force_y) * dt * 1 / (float)(simData->real_res));
                                     }
                                     if(simData->vel_perm) {
                                         add(i + x, j + y, v_perm, simData->vel_intensity[0]);
@@ -362,7 +362,7 @@ GLuint CpuFluid2D::draw_step(const DRAW_MODE mode) {
             if(mode == VELOCITY) {
                 const float x = u[ij];
                 const float y = v[ij];
-                xy2hsv2rgb(x, y, r, g, b, r_max);
+                xy2hsv2rgb(x, y, r, g, b, 0.5);
             }
             if(mode == DENSITY) {
                 float x = dens[ij];

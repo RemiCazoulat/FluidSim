@@ -123,8 +123,7 @@ void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
 void GlFluid2D::project() {
     auto previous_time = glfwGetTime();
     glUseProgram(projectProgram);
-    glUniform1f(glGetUniformLocation(projectProgram, "h_w"),  simData->h_w);
-    glUniform1f(glGetUniformLocation(projectProgram, "h_h"),  simData->h_h);
+    glUniform1f(glGetUniformLocation(projectProgram, "h"),  simData->h);
     const GLint step_loc = glGetUniformLocation(projectProgram, "step");
     bind({u_tex, v_tex, u_prev_tex, v_prev_tex, grid_tex});
 
@@ -172,12 +171,14 @@ void GlFluid2D::velocity_step(const float dt) {
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex,  simData->viscosity, dt);
     swap(v_prev_tex, v_tex); diffuse (v_tex, v_prev_tex,  simData->viscosity, dt);
+    set_vel_bound();
     project ();
     set_vel_bound();
     swap(u_prev_tex, u_tex);
     swap(v_prev_tex, v_tex);
     advect (u_tex, u_prev_tex, dt);
     advect (v_tex, v_prev_tex, dt);
+    set_vel_bound();
     project ();
     set_vel_bound();
 
@@ -241,7 +242,6 @@ void GlFluid2D::input_step( const float dt) {
                     if(simData->vel_add) {
                         add_input(i, j,simData->vel_radius, (mouse_x - force_x), u_tex, dt);
                         add_input(i, j,simData->vel_radius,-(mouse_y - force_y), v_tex, dt);
-                        printf("passing here \n");
                     }
                     if(simData->vel_perm) {
                         add_input(i, j,simData->vel_radius, simData->vel_intensity[0], u_tex, dt);

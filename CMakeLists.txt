@@ -49,6 +49,7 @@ add_executable(
         include/SimData.h
         src/ui/Interface.cpp
         include/ui/Interface.h
+        src/SimData.cpp
 )
 
 target_link_libraries(

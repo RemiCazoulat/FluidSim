@@ -4,7 +4,7 @@
 #include "../include/sim/2D/GlFluid2DOpti.h"
 #include "../include/ui/Interface.h"
 
-GLFWwindow* initWindow(const int width, const int height, const int cell_size) {
+GLFWwindow* initWindowGladGlfw(const int width, const int height, const int cell_size) {
     const int window_width = width * cell_size;
     const int window_height = height * cell_size;
     // Initialize GLFW
@@ -30,11 +30,12 @@ GLFWwindow* initWindow(const int width, const int height, const int cell_size) {
     return window;
 }
 
+
 int main() {
 
     // ----{ init functions }----
     auto* simData = new SimData;
-    GLFWwindow* window = initWindow(simData->width, simData->height, simData->cell_size);
+    GLFWwindow* window = initWindowGladGlfw(simData->width, simData->height, simData->cell_size);
 
     // ----{ Choosing simulation }----
     Fluid* fluid;
@@ -43,7 +44,7 @@ int main() {
     } else {
         fluid = new GlFluid2D(window, simData);
     }
-    auto* interface = new Interface(window, simData);
+    auto* interface = new Interface(window, fluid, simData);
 
     // ----{ Main Loop }----
     int frame_number = 0;
@@ -60,7 +61,7 @@ int main() {
         fluid->velocity_step(dt);
         fluid->density_step(dt);
         fluid->draw_step(simData->draw_mode);
-        // ----{ Ui }----
+        // ----{ UI }----
         interface->initFrame();
         interface->runInputWindow();
         interface->runSimulationWindow();

@@ -6,9 +6,12 @@
 #define FLUIDSIM_INTERFACE_H
 #include "../libraries.h"
 #include "FluidSim/include/SimData.h"
+#include "FluidSim/include/sim/Fluid.h"
 
 
 class Interface {
+    GLFWwindow* window = nullptr;
+    Fluid* fluid = nullptr;
     SimData* simData = nullptr;
 
     float zoom = 1.4f;
@@ -26,13 +29,15 @@ class Interface {
     // sub step combobox variables
     const int sub_step_values[11] = {1,25, 50, 75, 100, 125, 150, 175, 200, 225, 250};
     const char* sub_step_names[11] = {"1","25", "50", "75", "100", "125", "150", "175", "200", "225", "250"};
-    int sub_step_index = 0;
+    int sub_step_index = 1;
     // textures for images
     GLuint color_wheel_tex;
     // verifying variables
     bool is_init = false;
+    // min and max variables
+    int max_res = 4;
 public:
-    explicit Interface(GLFWwindow* window, SimData* simData);
+    explicit Interface(GLFWwindow* window, Fluid* fluid, SimData* simData);
     ~Interface();
     void initFrame();
     void runInputWindow();

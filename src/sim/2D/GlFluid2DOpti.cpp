@@ -229,7 +229,7 @@ void GlFluid2DOpti::advect(const int x, const int x0, float dt) const {
 
 void GlFluid2DOpti::project() const {
     glUniform1i(mode_loc, PROJECT);
-    glUniform1f(grid_spacing_loc,  simData->h_w);
+    glUniform1f(grid_spacing_loc,  simData->h);
     glUniform1i(stage_loc, 1);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

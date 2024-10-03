@@ -5,6 +5,7 @@
 #include "../../include/ui/Interface.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../thirdparty/stb_image.h"
+#include "FluidSim/include/sim/2D/CpuFluid2D.h"
 
 GLuint image2Tex(const char* filename) {
     int width, height, channels;
@@ -30,7 +31,9 @@ GLuint image2Tex(const char* filename) {
     return texture;
 }
 
-Interface::Interface(GLFWwindow* window, SimData* simData) {
+Interface::Interface(GLFWwindow* window, Fluid* fluid, SimData* simData) {
+    this->window = window;
+    this->fluid = fluid;
     this->simData = simData;
     left_up_pos = ImVec2(0.0f, 0.0f);
     right_up_pos = ImVec2((float)(simData->window_width), 0.0f);
@@ -141,15 +144,16 @@ void Interface::runInputWindow() {
         simData->vel_add = false;
         simData->vel_remove = true;
     }
-    ImGui::SliderFloat("Vel Radius", &simData->vel_radius, 0, 20);
+    ImGui::SliderFloat("Vel Radius", &simData->ui_vel_radius, 0, 20);
+    simData->vel_radius = simData->ui_vel_radius * simData->real_res;
     float x = simData->vel_intensity[0];
     float y = simData->vel_intensity[1];
     float z = simData->vel_intensity[2];
     float w_avail = ImGui::GetContentRegionAvail().x * 0.2f;
     ImGui::PushItemWidth(w_avail);
-    ImGui::SliderFloat("x", &x, 0, 20); ImGui::SameLine();
-    ImGui::SliderFloat("y", &y, 0, 20); ImGui::SameLine();
-    ImGui::SliderFloat("z", &z, 0, 20); ImGui::SameLine();
+    ImGui::SliderFloat("x", &x, -20, 20); ImGui::SameLine();
+    ImGui::SliderFloat("y", &y, -20, 20); ImGui::SameLine();
+    ImGui::SliderFloat("z", &z, -20, 20); ImGui::SameLine();
     ImGui::PopItemWidth();
     ImGui::Text("Intensity");
     simData->vel_intensity[0] = x;
@@ -178,6 +182,30 @@ void Interface::runSimulationWindow() {
     }
     ImGui::Text("Simulation mode");
     if (ImGui::Button("CPU")) {
+        ImGui::OpenPopup("Go in CPU mode");
+    }
+    if (ImGui::BeginPopupModal("Go in CPU mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        float prev_time_a = simData->time_accel;
+        simData->time_accel = 0.f;
+        ImGui::Text("Are you sure you want to change into CPU mode ?");
+        ImGui::Separator();
+        if (ImGui::Button("Ok", ImVec2(120, 0)))
+        {
+            max_res = 2;
+            int new_res = simData->resolution <= max_res ? simData->resolution : max_res;
+            simData->change_res(new_res);
+            fluid = new CpuFluid2D(window, simData);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::EndPopup();
+        simData->time_accel = prev_time_a;
     }
     ImGui::SameLine();
 
@@ -188,7 +216,7 @@ void Interface::runSimulationWindow() {
     if (ImGui::Button("Vk")) {
     }
 
-    ImGui::SliderInt("Resolution", &simData->resolution, 0, 4);
+    ImGui::SliderInt("Resolution", &simData->resolution, 0, max_res);
 
     float w_avail = ImGui::GetContentRegionAvail().x * 0.3f;
     ImGui::PushItemWidth(w_avail);

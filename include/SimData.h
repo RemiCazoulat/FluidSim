@@ -4,6 +4,7 @@
 
 #ifndef FLUIDSIM_SIMDATA_H
 #define FLUIDSIM_SIMDATA_H
+#include "libraries.h"
 
 enum SIM_MODE {
     CPU,
@@ -23,24 +24,26 @@ enum DRAW_MODE {
 
 struct SimData {
     //grid infos
-    int resolution = 3;
-    float real_res = (float)(std::pow(2, resolution));
-    int width = static_cast<int>(128.f * real_res);
-    int height = static_cast<int>(72.f * real_res);
-    int cell_size = static_cast<int>(16.f / real_res);
-    float h_w = 1.f / (float)(width);
-    float h_h = 1.f / (float)(height);
-    int window_width = width * cell_size;
-    int window_height = height * cell_size;
+    int resolution = 1; // READONLY
+    int real_res = (int)(std::pow(2, resolution));
+    int gen_width = 72;
+    int gen_height = 72;
+    int gen_cell_size = 16;
+    int width = gen_width * real_res;
+    int height = gen_height * real_res;
+    int cell_size = gen_cell_size / real_res;
+    float h = 1.f / (float)(height);
+    int window_width = gen_width * gen_cell_size;
+    int window_height = gen_height * gen_cell_size;
     // Fluid infos
     float diffusion = 0.0001f;
     float viscosity = 0.00000000001f;
     int sub_step = 25;
     // simulation infos
     float time_accel = 1.f;
-    SIM_MODE sim_mode = GPU;
+    SIM_MODE sim_mode = CPU; // READONLY
+    SIM_DIM sim_dim = TWO_D; // READONLY
     DRAW_MODE draw_mode = VELOCITY;
-    SIM_DIM sim_dim = TWO_D;
     // mode
     bool smoke = false;
     bool obstacles = false;
@@ -51,17 +54,23 @@ struct SimData {
     bool smoke_add = true;
     bool smoke_remove = false;
     float smoke_intensity = 1.0f;
-    float smoke_radius = 1 * real_res;
+    float smoke_radius = 1.f * (float)(real_res);
     // obstacles
     bool obstacles_add = false;
     bool obstacles_remove = false;
-    float obstacles_radius = 1 * real_res;
+    float obstacles_radius = 1.f * (float)(real_res);
     // velocity
     bool vel_perm = false;
     bool vel_add = true;
     bool vel_remove = false;
     float vel_intensity[3] = {0.0f, 0.0f, 0.0f};
-    float vel_radius = 1 * real_res;
+    float ui_vel_radius = 1;
+    float vel_radius = ui_vel_radius * (float)(real_res);
+
+    void change_res(int new_res);
+    void change_sim_mode(SIM_MODE new_sim_mode);
+    void change_sim_dim(SIM_DIM new_sim_dim);
 };
 
 #endif //FLUIDSIM_SIMDATA_H
+

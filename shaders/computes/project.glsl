@@ -9,8 +9,7 @@ layout (r32f, binding = 3) uniform image2D div;
 layout (r32f, binding = 4) uniform image2D grid;
 
 // Variables à passer en uniform
-uniform float h_w;
-uniform float h_h;
+uniform float h;
 uniform int step;
 
 void step_1(ivec2 ij) {
@@ -36,7 +35,7 @@ void step_1(ivec2 ij) {
     s = s0x + s1x + s0y + s1y;
     //float divergence = -0.5 * h * (u1x - u0x + v1y - v0y);
     //float divergence = -1/s * h * (u1x - u0x + v1y - v0y);
-    float divergence = -1/s * (h_w * (u1x - u0x) + h_h * (v1y -v0y));
+    float divergence = -1/s * (h * (u1x - u0x) + h * (v1y -v0y));
     imageStore(div, ij, vec4(divergence, 0.0, 0.0, 0.0));
 }
 
@@ -76,8 +75,8 @@ void step_3(ivec2 ij) {
     float p1y = imageLoad(p, ij1).x;
     float old_u = imageLoad(u, ij).x;
     float old_v = imageLoad(v, ij).x;
-    float new_u = old_u - (p1x - p0x) / (h_w * 2);
-    float new_v = old_v - (p1y - p0y) / (h_h * 2);
+    float new_u = old_u - (p1x - p0x) / (h * 2);
+    float new_v = old_v - (p1y - p0y) / (h * 2);
     //float new_u = old_u - (p1x - p0x) / (h * (s1x + s0x));
     //float new_v = old_v - (p1y - p0y) / (h * (s1y + s0y));
 
