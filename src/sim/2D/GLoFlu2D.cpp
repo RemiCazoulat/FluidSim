@@ -2,7 +2,7 @@
 // Created by Rémi on 15/09/2024.
 //
 
-#include "../../../include/sim/2D/GlFluid2DOpti.h"
+#include "../../../include/sim/2D/GLoFlu2D.h"
 #include "../../../include/shaders/compute.h"
 
 // macros for textures
@@ -29,8 +29,8 @@
 #define BOUND_V   7
 #define DRAW      8
 
-GlFluid2DOpti::GlFluid2DOpti(GLFWwindow* window, SimData* simData)
-: Fluid2D(window, simData)
+GLoFlu2D::GLoFlu2D(GLFWwindow* window, SimData* simData)
+: Flu2D(window, simData)
 {
     // ----------{ init variables }----------
 
@@ -101,7 +101,7 @@ GlFluid2DOpti::GlFluid2DOpti(GLFWwindow* window, SimData* simData)
     delete[] emptyVec4;
 }
 
-GlFluid2DOpti::~GlFluid2DOpti() {
+GLoFlu2D::~GLoFlu2D() {
     delete[] grid;
     glDeleteTextures(1, &grid_tex);
     glDeleteTextures(1, &dens_tex);
@@ -118,7 +118,7 @@ GlFluid2DOpti::~GlFluid2DOpti() {
     glDeleteProgram(stepsProgram);
 }
 
-void GlFluid2DOpti::add_input(const int i, const int j , const float r , const float intensity, const int tex, const float dt) const {
+void GLoFlu2D::add_input(const int i, const int j , const float r , const float intensity, const int tex, const float dt) const {
     glUniform1i(mode_loc, INPUT);
     glUniform1i(i_loc, i);
     glUniform1i(j_loc, j);
@@ -132,7 +132,7 @@ void GlFluid2DOpti::add_input(const int i, const int j , const float r , const f
     //printf("x : %i \n", tex);
 }
 
-void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
+void GLoFlu2D::add_source(const int x, const int s, float dt) const {
     glUniform1i(mode_loc, SOURCE);
     glUniform1i(x_tex_loc, x);
     glUniform1i(y_tex_loc, s);
@@ -142,7 +142,7 @@ void GlFluid2DOpti::add_source(const int x, const int s, float dt) const {
 
 }
 
-void GlFluid2DOpti::input_step(const float dt) {
+void GLoFlu2D::input_step(const float dt) {
     glUseProgram(stepsProgram);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / simData->cell_size;
@@ -194,7 +194,7 @@ void GlFluid2DOpti::input_step(const float dt) {
     add_source(V_T, V_PERM_T, dt);
 }
 
-void GlFluid2DOpti::swap(const int x, const int y) const {
+void GLoFlu2D::swap(const int x, const int y) const {
     glUniform1i(mode_loc, SWAP);
     glUniform1i(x_tex_loc, x);
     glUniform1i(y_tex_loc, y);
@@ -202,7 +202,7 @@ void GlFluid2DOpti::swap(const int x, const int y) const {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-void GlFluid2DOpti::diffuse(const int x, const int x0, const float diffusion_rate, const float dt) const {
+void GLoFlu2D::diffuse(const int x, const int x0, const float diffusion_rate, const float dt) const {
     glUniform1i(mode_loc, DIFFUSE);
     glUniform1i(x_tex_loc, x);
     glUniform1i(y_tex_loc, x0);
@@ -215,7 +215,7 @@ void GlFluid2DOpti::diffuse(const int x, const int x0, const float diffusion_rat
     }
 }
 
-void GlFluid2DOpti::advect(const int x, const int x0, float dt) const {
+void GLoFlu2D::advect(const int x, const int x0, float dt) const {
     glUniform1i(mode_loc, ADVECT);
     glUniform1i(x_tex_loc, x);
     glUniform1i(y_tex_loc, x0);
@@ -227,7 +227,7 @@ void GlFluid2DOpti::advect(const int x, const int x0, float dt) const {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-void GlFluid2DOpti::project() const {
+void GLoFlu2D::project() const {
     glUniform1i(mode_loc, PROJECT);
     glUniform1f(grid_spacing_loc,  simData->h);
     glUniform1i(stage_loc, 1);
@@ -243,21 +243,21 @@ void GlFluid2DOpti::project() const {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-void GlFluid2DOpti::set_bounds_vel() const {
+void GLoFlu2D::set_bounds_vel() const {
     glUniform1i(mode_loc, BOUND_V);
     glDispatchCompute(width / 64,height / 1,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-void GlFluid2DOpti::density_step(float dt) {
+void GLoFlu2D::density_step(float dt) {
 
 }
 
-void GlFluid2DOpti::pressure_step(float dt) {
+void GLoFlu2D::pressure_step(float dt) {
 
 }
 
-void GlFluid2DOpti::velocity_step(float dt) {
+void GLoFlu2D::velocity_step(float dt) {
     add_source (U_T, U_PREV_T, dt);
     add_source (V_T, V_PREV_T, dt);
     swap(U_T, U_PREV_T); diffuse (U_T, U_PREV_T,  simData->viscosity, dt);
@@ -272,7 +272,7 @@ void GlFluid2DOpti::velocity_step(float dt) {
     set_bounds_vel();
 }
 
-GLuint GlFluid2DOpti::draw_step(DRAW_MODE mode) {
+GLuint GLoFlu2D::draw_step(DRAW_MODE mode) {
     glUniform1i(mode_loc, DRAW);
     glUniform1i(draw_mode_loc, mode);
     glDispatchCompute(width / 64,height / 1,1);
@@ -281,6 +281,6 @@ GLuint GlFluid2DOpti::draw_step(DRAW_MODE mode) {
     return color_tex;
 }
 
-void GlFluid2DOpti::debug() {
+void GLoFlu2D::debug() {
 
 }

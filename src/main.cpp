@@ -1,7 +1,7 @@
 #include "../../include/shaders/Renderer.h"
-#include "../include/sim/2D/CpuFluid2D.h"
-#include "../include/sim/2D/GlFluid2D.h"
-#include "../include/sim/2D/GlFluid2DOpti.h"
+#include "../include/sim/2D/cpuFlu2D.h"
+#include "../include/sim/2D/GLFlu2D.h"
+#include "../include/sim/2D/GLoFlu2D.h"
 #include "../include/ui/Interface.h"
 
 void initGlfw() {
@@ -38,13 +38,17 @@ int main() {
     initOpenGL();
 
     // ----{ Choosing simulation }----
-    Fluid* fluid;
-    if (simData->sim_mode == CPU) {
-        fluid = new CpuFluid2D(window, simData);
-    } else {
-        fluid = new GlFluid2D(window, simData);
-    }
-    auto* interface = new Interface(window, fluid, simData);
+    constexpr int fluid_nbr = 3;
+    Fluid* fluids[fluid_nbr];
+
+    // according to enum SIM_MODE in SimData.h file
+    fluids[0] = new cpuFlu2D(window, simData);
+    fluids[1] = new GLFlu2D(window, simData);
+    fluids[2] = new GLoFlu2D(window, simData);
+
+
+    Interface* interface;
+    interface = new Interface(window, simData);
 
     // ----{ Main Loop }----
     int frame_number = 0;
@@ -57,10 +61,10 @@ int main() {
 
         // ----{ Simulation }----
         glfwPollEvents();
-        fluid->input_step(dt);
-        fluid->velocity_step(dt);
-        fluid->density_step(dt);
-        fluid->draw_step(simData->draw_mode);
+        fluids[simData->sim_mode]->input_step(dt);
+        fluids[simData->sim_mode]->velocity_step(dt);
+        fluids[simData->sim_mode]->density_step(dt);
+        fluids[simData->sim_mode]->draw_step(simData->draw_mode);
         // ----{ UI }----
         interface->initFrame();
         interface->runInputWindow();
@@ -81,6 +85,8 @@ int main() {
     // ----{ Clean Up }----
     delete simData;
     delete interface;
-    delete fluid;
+    for(Fluid* & fluid : fluids) {
+        delete fluid;
+    }
     return 0;
 }

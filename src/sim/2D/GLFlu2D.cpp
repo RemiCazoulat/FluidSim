@@ -2,11 +2,11 @@
 // Created by remi.cazoulat on 20/08/2024.
 //
 
-#include "../../../include/sim/2D/GlFluid2D.h"
+#include "../../../include/sim/2D/GLFlu2D.h"
 #include "../../../include/shaders/compute.h"
 
-GlFluid2D::GlFluid2D(GLFWwindow* window, SimData* simData)
-        : Fluid2D(window, simData)
+GLFlu2D::GLFlu2D(GLFWwindow* window, SimData* simData)
+        : Flu2D(window, simData)
 {
     // init arrays
     int grid_size = width * height;
@@ -54,7 +54,7 @@ GlFluid2D::GlFluid2D(GLFWwindow* window, SimData* simData)
     delete[] emptyVec4;
 }
 
-GlFluid2D::~GlFluid2D() {
+GLFlu2D::~GLFlu2D() {
     delete[] grid;
     glDeleteTextures(1, &grid_tex);
     glDeleteTextures(1, &dens_tex);
@@ -78,26 +78,26 @@ GlFluid2D::~GlFluid2D() {
 // ////////////////////////
 //  maths methods
 // ////////////////////////
-void GlFluid2D::add_source(const GLuint x, const GLuint s, const float dt) {
+void GLFlu2D::add_source(const GLuint x, const GLuint s, const float dt) {
     glUseProgram(addProgram);
     glUniform1f(glGetUniformLocation(addProgram, "dt"), dt);
     bind_and_run({x, s}, 1);
 }
 
-void GlFluid2D::swap(GLuint &x, GLuint &y) noexcept {
+void GLFlu2D::swap(GLuint &x, GLuint &y) noexcept {
     const GLuint tmp = x;
     x = y;
     y = tmp;
 }
 
-void GlFluid2D::diffuse(const GLuint x, const GLuint x0, const float diff, const float dt) {
+void GLFlu2D::diffuse(const GLuint x, const GLuint x0, const float diff, const float dt) {
     const float a = dt * diff * static_cast<float>(width) * static_cast<float>(height);
     glUseProgram(diffuseProgram);
     glUniform1f(glGetUniformLocation(diffuseProgram, "a"), a);
     bind_and_run({x, x0, grid_tex},  simData->sub_step);
 }
 
-void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
+void GLFlu2D::advect(const GLuint z, const GLuint z0, const float dt) {
     const float dtw = dt * static_cast<float>(width);
     const float dth = dt * static_cast<float>(height);
     glUseProgram(advectProgram);
@@ -108,7 +108,7 @@ void GlFluid2D::advect(const GLuint z, const GLuint z0, const float dt) {
     bind_and_run({z, z0, u_prev_tex, v_prev_tex, grid_tex}, 1);
 }
 
-void GlFluid2D::project() {
+void GLFlu2D::project() {
     glUseProgram(projectProgram);
     glUniform1f(glGetUniformLocation(projectProgram, "h"),  simData->h);
     const GLint step_loc = glGetUniformLocation(projectProgram, "step");
@@ -130,16 +130,16 @@ void GlFluid2D::project() {
     // end
 }
 
-void GlFluid2D::set_vel_bound() {
+void GLFlu2D::set_vel_bound() {
     glUseProgram(boundProgram);
     bind_and_run({u_tex, v_tex, grid_tex}, 1);
 }
 
-void GlFluid2D::density_step(float dt) {
+void GLFlu2D::density_step(float dt) {
     //TODO: add_input density step
 }
 
-void GlFluid2D::velocity_step(const float dt) {
+void GLFlu2D::velocity_step(const float dt) {
     add_source (u_tex, u_prev_tex, dt);
     add_source (v_tex, v_prev_tex, dt);
     swap(u_prev_tex, u_tex); diffuse (u_tex, u_prev_tex,  simData->viscosity, dt);
@@ -156,11 +156,11 @@ void GlFluid2D::velocity_step(const float dt) {
     set_vel_bound();
 }
 
-void GlFluid2D::pressure_step(float dt) {
+void GLFlu2D::pressure_step(float dt) {
     //TODO : add_input pressure step
 }
 
-GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
+GLuint GLFlu2D::draw_step(const DRAW_MODE mode) {
 
     glUseProgram(drawProgram);
     glUniform1i(glGetUniformLocation(drawProgram, "draw_mode"), mode);
@@ -170,7 +170,7 @@ GLuint GlFluid2D::draw_step(const DRAW_MODE mode) {
     return color_tex;
 }
 
-void GlFluid2D::add_input(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
+void GLFlu2D::add_input(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
     glUseProgram(inputProgram);
     glUniform1i(glGetUniformLocation(inputProgram, "i"), i);
     glUniform1i(glGetUniformLocation(inputProgram, "j"), j);
@@ -180,7 +180,7 @@ void GlFluid2D::add_input(const int i, const int j, const float r, const float i
     bind_and_run({tex, grid_tex}, 1);
 }
 
-void GlFluid2D::input_step( const float dt) {
+void GLFlu2D::input_step(const float dt) {
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / simData->cell_size;
         const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
@@ -228,7 +228,7 @@ void GlFluid2D::input_step( const float dt) {
     add_source(v_tex, v_perm_tex, dt);
 }
 
-void GlFluid2D::bind_and_run(const std::vector<GLuint> &textures, const int how_many_time) {
+void GLFlu2D::bind_and_run(const std::vector<GLuint> &textures, const int how_many_time) {
     for (size_t i = 0; i < textures.size(); i++) {
         glBindImageTexture(i, textures[i], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     }
@@ -238,13 +238,13 @@ void GlFluid2D::bind_and_run(const std::vector<GLuint> &textures, const int how_
     }
 }
 
-void GlFluid2D::bind(const std::vector<GLuint> &textures) {
+void GLFlu2D::bind(const std::vector<GLuint> &textures) {
     for (size_t i = 0; i < textures.size(); i++) {
         glBindImageTexture(i, textures[i], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     }
 }
 
-void GlFluid2D::debug() {
+void GLFlu2D::debug() {
 
 }
 

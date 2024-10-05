@@ -5,7 +5,7 @@
 #include "../../include/ui/Interface.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../thirdparty/stb_image.h"
-#include "FluidSim/include/sim/2D/CpuFluid2D.h"
+#include "FluidSim/include/sim/2D/cpuFlu2D.h"
 
 GLuint image2Tex(const char* filename) {
     int width, height, channels;
@@ -31,9 +31,7 @@ GLuint image2Tex(const char* filename) {
     return texture;
 }
 
-Interface::Interface(GLFWwindow* window, Fluid* fluid, SimData* simData) {
-    this->window = window;
-    this->fluid = fluid;
+Interface::Interface(GLFWwindow* window, SimData* simData) {
     this->simData = simData;
     left_up_pos = ImVec2(0.0f, 0.0f);
     right_up_pos = ImVec2((float)(simData->window_width), 0.0f);
@@ -184,19 +182,16 @@ void Interface::runSimulationWindow() {
     if (ImGui::Button("CPU")) {
         ImGui::OpenPopup("Go in CPU mode");
     }
-    float prev_time_a = simData->time_accel;
     if (ImGui::BeginPopupModal("Go in CPU mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        simData->time_accel = 0.f;
         ImGui::Text("Are you sure you want to change into CPU mode ?");
         ImGui::Separator();
         if (ImGui::Button("Ok", ImVec2(120, 0)))
         {
             max_res = 2;
             int new_res = simData->resolution <= max_res ? simData->resolution : max_res;
-            simData->change_res(new_res); printf("test \n");
-            delete fluid;printf("test \n");
-            fluid = new CpuFluid2D(window, simData);printf("test \n");
+            simData->change_res(new_res);
+            simData->sim_mode = CPU;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
@@ -207,15 +202,50 @@ void Interface::runSimulationWindow() {
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
     }
-    else {
-        simData->time_accel = prev_time_a;
-    }
     ImGui::SameLine();
 
     if (ImGui::Button("GL")) {
+        ImGui::OpenPopup("Go in GL mode");
+    }
+    if (ImGui::BeginPopupModal("Go in GL mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to change into GL mode ?");
+        ImGui::Separator();
+        if (ImGui::Button("Ok", ImVec2(120, 0)))
+        {
+            simData->sim_mode = GL;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::EndPopup();
     }
     ImGui::SameLine();
-
+    if (ImGui::Button("GLo")) {
+        ImGui::OpenPopup("Go in GL optimized mode");
+    }
+    if (ImGui::BeginPopupModal("Go in GL optimized mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to change into GL optimized mode ?");
+        ImGui::Separator();
+        if (ImGui::Button("Ok", ImVec2(120, 0)))
+        {
+            simData->sim_mode = GLo;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::EndPopup();
+    }
+    ImGui::SameLine();
     if (ImGui::Button("Vk")) {
     }
 
@@ -238,10 +268,10 @@ void Interface::runSimulationWindow() {
         for (int i = 0; i < IM_ARRAYSIZE(sub_step_values); i++) {
             bool isSelected = (sub_step_index == i);
             if (ImGui::Selectable(sub_step_names[i], isSelected)) {
-                sub_step_index = i; // Met à jour l'index sélectionné
+                sub_step_index = i;
             }
             if (isSelected) {
-                ImGui::SetItemDefaultFocus(); // Met le focus sur l'élément sélectionné
+                ImGui::SetItemDefaultFocus();
             }
         }
         ImGui::EndCombo();
@@ -300,6 +330,16 @@ void Interface::runMenuWindow() {
     ImGui::End();
 }
 
+const char* simModeToString(SIM_MODE mode) {
+    switch (mode) {
+        case CPU: return "CPU";
+        case GL: return "GL";
+        case GLo: return "GLo";
+        case VK: return "VK";
+        default: return "Unknown";
+    }
+}
+
 void Interface::runDebugWindow(const float dt, int &frame_number, double &total_time) {
     if (!is_init) {
         printf("[ERROR] Frame is not initialized. Call method initFrame() "
@@ -317,9 +357,11 @@ void Interface::runDebugWindow(const float dt, int &frame_number, double &total_
                  ImGuiWindowFlags_NoScrollbar);
     ImGui::SetWindowFontScale(zoom);
     ImGui::Text("%.2f FPS (%.2f ms)", 1.f / dt, dt * 1000.f);
+    ImGui::Text("%.2f avg FPS (%.2f ms)", frame_number / total_time , (total_time / frame_number)* 1000.f);
     ImGui::Text("Time : %.5f", total_time * simData->time_accel);
     ImGui::Text("Real time : %.5f", total_time);
     ImGui::Text("Screen : %i", frame_number);
+    ImGui::Text("sim mode : %s", simModeToString(simData->sim_mode));
     ImGui::End();
 }
 

@@ -2,18 +2,18 @@
 // Created by remi.cazoulat on 11/09/2024.
 //
 
-#include "../../../include/sim/2D/Fluid2D.h"
+#include "../../../include/sim/2D/Flu2D.h"
 
-float Fluid2D::force_x = 0.0f;
-float Fluid2D::force_y = 0.0f;
-float Fluid2D::mouse_x = 0.0f;
-float Fluid2D::mouse_y = 0.0f;
-int Fluid2D::left_mouse_pressed = 0;
-int Fluid2D::right_mouse_pressed = 0;
-int Fluid2D::middle_mouse_pressed = 0;
+float Flu2D::force_x = 0.0f;
+float Flu2D::force_y = 0.0f;
+float Flu2D::mouse_x = 0.0f;
+float Flu2D::mouse_y = 0.0f;
+int Flu2D::left_mouse_pressed = 0;
+int Flu2D::right_mouse_pressed = 0;
+int Flu2D::middle_mouse_pressed = 0;
 
 
-void Fluid2D::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
+void Flu2D::mouse_button_callback(GLFWwindow* window, const int button, const int action, int mods) {
     ImGuiIO& io = ImGui::GetIO();
     if (io.WantCaptureMouse) {
         return;
@@ -36,12 +36,12 @@ void Fluid2D::mouse_button_callback(GLFWwindow* window, const int button, const 
 }
 
 
-void Fluid2D::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
+void Flu2D::cursor_position_callback(GLFWwindow* window, const double xpos, const double ypos) {
     mouse_x = static_cast<float>(xpos);
     mouse_y = static_cast<float>(ypos);
 }
 
-Fluid2D::Fluid2D(GLFWwindow * window, SimData* simData) : Fluid(window, simData) {
+Flu2D::Flu2D(GLFWwindow * window, SimData* simData) : Fluid(window, simData) {
     this->width = simData->width;
     this->height = simData->height;
     this->renderer = new Renderer("../shaders/vert2d.glsl", "../shaders/frag2d.glsl");
@@ -49,7 +49,7 @@ Fluid2D::Fluid2D(GLFWwindow * window, SimData* simData) : Fluid(window, simData)
     glfwSetCursorPosCallback(window, cursor_position_callback);
 }
 
-Fluid2D::~Fluid2D() {
+Flu2D::~Flu2D() {
     delete renderer;
     glfwDestroyWindow(window);
     glfwTerminate();

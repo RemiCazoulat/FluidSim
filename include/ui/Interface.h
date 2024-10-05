@@ -10,8 +10,6 @@
 
 
 class Interface {
-    GLFWwindow* window;
-    Fluid* fluid;
     SimData* simData;
 
     float zoom = 1.4f;
@@ -37,7 +35,7 @@ class Interface {
     // min and max variables
     int max_res = 4;
 public:
-    explicit Interface(GLFWwindow* window, Fluid* fluid, SimData* simData);
+    explicit Interface(GLFWwindow* window, SimData* simData);
     ~Interface();
     void initFrame();
     void runInputWindow();

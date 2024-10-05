@@ -9,6 +9,7 @@
 enum SIM_MODE {
     CPU,
     GL,
+    GLo,
     VK,
 };
 

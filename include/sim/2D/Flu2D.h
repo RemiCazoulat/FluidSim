@@ -9,7 +9,7 @@
 #include "../../shaders/Renderer.h"
 
 
-class Fluid2D : public Fluid {
+class Flu2D : public Fluid {
 protected:
     Renderer *renderer;
     static float force_x, force_y , mouse_x, mouse_y;
@@ -19,8 +19,8 @@ protected:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 public:
-    explicit Fluid2D( GLFWwindow* window, SimData* simData);
-    ~Fluid2D() override;
+    explicit Flu2D(GLFWwindow* window, SimData* simData);
+    ~Flu2D() override;
 };
 
 #endif //FLUID2D_H

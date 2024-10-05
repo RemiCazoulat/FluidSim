@@ -6,9 +6,9 @@
 #define CPUFLUID2D_H
 
 
-#include "Fluid2D.h"
+#include "Flu2D.h"
 
-class CpuFluid2D final : public Fluid2D {
+class cpuFlu2D final : public Flu2D {
 
     float* grid;
     float* dens;
@@ -33,8 +33,8 @@ class CpuFluid2D final : public Fluid2D {
     [[nodiscard]] float find_max(const float* x) const;
     [[nodiscard]] float find_min(const float* x) const;
 public:
-    CpuFluid2D(GLFWwindow* window, SimData* simData);
-    ~CpuFluid2D() override;
+    cpuFlu2D(GLFWwindow* window, SimData* simData);
+    ~cpuFlu2D() override;
     void input_step(float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;

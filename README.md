@@ -32,9 +32,9 @@ Current state of the simulation using the VELOCITY display mode :
 ```plain text 
 Fluid
 │
-├── 2D/Fluid2D
-│   ├── CpuFluid2D
-│   ├── GlFluid2D
+├── 2D/Flu2D
+│   ├── cpuFlu2D
+│   ├── GLFlu2D
 │   └── VkFluid2D
 │
 └── 3D/Fluid3D

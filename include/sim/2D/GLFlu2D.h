@@ -5,9 +5,9 @@
 #ifndef GLFLUID2D_H
 #define GLFLUID2D_H
 
-#include "Fluid2D.h"
+#include "Flu2D.h"
 
-class GlFluid2D final : public Fluid2D {
+class GLFlu2D final : public Flu2D {
    // arrays
     float* grid;
     // compute programs
@@ -48,8 +48,8 @@ class GlFluid2D final : public Fluid2D {
 public:
 
     // public and override methods
-    GlFluid2D(GLFWwindow* window, SimData* simData);
-    ~GlFluid2D() override;
+    GLFlu2D(GLFWwindow* window, SimData* simData);
+    ~GLFlu2D() override;
     void input_step( float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;

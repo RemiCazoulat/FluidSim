@@ -32,17 +32,17 @@ add_executable(
         src/shaders/compute.cpp
         include/libraries.h
         src/shaders/shader.cpp
-        src/sim/2D/GlFluid2D.cpp
-        include/sim/2D/GlFluid2D.h
+        src/sim/2D/GLFlu2D.cpp
+        include/sim/2D/GLFlu2D.h
         src/shaders/Renderer.cpp
         include/shaders/Renderer.h
-        include/sim/2D/Fluid2D.h
-        src/sim/2D/CpuFluid2D.cpp
-        include/sim/2D/CpuFluid2D.h
-        src/sim/2D/Fluid2D.cpp
+        include/sim/2D/Flu2D.h
+        src/sim/2D/cpuFlu2D.cpp
+        include/sim/2D/cpuFlu2D.h
+        src/sim/2D/Flu2D.cpp
         include/sim/Fluid.h
-        src/sim/2D/GlFluid2DOpti.cpp
-        include/sim/2D/GlFluid2DOpti.h
+        src/sim/2D/GLoFlu2D.cpp
+        include/sim/2D/GLoFlu2D.h
         src/sim/Fluid.cpp
         #thirdparty
         thirdparty/stb_image.h
@@ -50,6 +50,8 @@ add_executable(
         src/ui/Interface.cpp
         include/ui/Interface.h
         src/SimData.cpp
+        include/sim/2D/VkFlu2D.cpp
+        include/sim/2D/VkFlu2D.h
 )
 
 target_link_libraries(
