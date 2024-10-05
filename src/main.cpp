@@ -14,7 +14,7 @@ void initGlfw() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 }
 GLFWwindow* initWindow(const int w_width, const int w_height) {
-    GLFWwindow *window = glfwCreateWindow(w_width, w_height, "OpenGL 2D Fluid", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(w_width, w_height, "Smoker Engine", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

@@ -8,7 +8,7 @@
 #include "Flu2D.h"
 
 
-class VkFlu2D : public Flu2D {
+class VkFlu2D  {
 
 };
 

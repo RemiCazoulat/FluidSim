@@ -50,8 +50,8 @@ add_executable(
         src/ui/Interface.cpp
         include/ui/Interface.h
         src/SimData.cpp
-        include/sim/2D/VkFlu2D.cpp
-        include/sim/2D/VkFlu2D.h
+        #include/sim/2D/VkFlu2D.cpp
+        #include/sim/2D/VkFlu2D.h
 )
 
 target_link_libraries(
