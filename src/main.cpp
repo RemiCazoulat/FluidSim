@@ -3,6 +3,7 @@
 #include "../include/sim/2D/GLFlu2D.h"
 #include "../include/sim/2D/GLoFlu2D.h"
 #include "../include/ui/Interface.h"
+#define MINIAUDIO_IMPLEMENTATION
 
 void initGlfw() {
     if (!glfwInit()) {

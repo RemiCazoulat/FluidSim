@@ -24,9 +24,14 @@ enum DRAW_MODE {
     PRESSURE
 };
 
+enum INPUT_MODE {
+    MOUSE,
+    SOUND
+};
+
 struct SimData {
     //grid infos
-    int resolution = 2; // READONLY
+    int resolution = 3; // READONLY
     int real_res = (int)(std::pow(2, resolution));
     int gen_width = 72;
     int gen_height = 72;
@@ -41,12 +46,14 @@ struct SimData {
     float diffusion = 0.0001f;
     float viscosity = 0.00000000001f;
     int sub_step = 25;
+    float epsilon = 0.1;
     // simulation infos
     float time_accel = 1.f;
     SIM_MODE sim_mode = GL; // READONLY
     SIM_DIM sim_dim = TWO_D; // READONLY
     DRAW_MODE draw_mode = VELOCITY;
-    // mode
+    INPUT_MODE input_mode = MOUSE;
+            // mode
     bool smoke = false;
     bool obstacles = false;
     bool velocity = true;

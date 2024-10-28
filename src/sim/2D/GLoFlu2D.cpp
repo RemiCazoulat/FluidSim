@@ -30,7 +30,7 @@
 #define DRAW      8
 
 GLoFlu2D::GLoFlu2D(GLFWwindow* window, SimData* simData)
-: Flu2D(window, simData)
+: Fluid2D(window, simData)
 {
     // ----------{ init variables }----------
 
@@ -141,8 +141,7 @@ void GLoFlu2D::add_source(const int x, const int s, float dt) const {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 }
-
-void GLoFlu2D::input_step(const float dt) {
+void GLoFlu2D::mouse_input(float dt) {
     glUseProgram(stepsProgram);
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / simData->cell_size;
@@ -192,6 +191,9 @@ void GLoFlu2D::input_step(const float dt) {
     add_source(DENS_T, DENS_PERM_T, dt);
     add_source(U_T, U_PERM_T, dt);
     add_source(V_T, V_PERM_T, dt);
+}
+void GLoFlu2D::sound_input(float dt) {
+
 }
 
 void GLoFlu2D::swap(const int x, const int y) const {

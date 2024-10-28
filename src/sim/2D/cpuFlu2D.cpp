@@ -7,7 +7,7 @@
 
 
 cpuFlu2D::cpuFlu2D(GLFWwindow* window, SimData* simData)
-: Flu2D(window, simData)
+: Fluid2D(window, simData)
 {
 
     const int gridSize = width * height;
@@ -22,6 +22,11 @@ cpuFlu2D::cpuFlu2D(GLFWwindow* window, SimData* simData)
     dens_prev = new float[gridSize]();
     dens_perm = new float[gridSize]();
     pressure = new float[gridSize]();
+    omega = new float[gridSize]();
+    gradu = new float[gridSize]();
+    gradv = new float[gridSize]();
+    cfu = new float[gridSize]();
+    cfv = new float[gridSize]();
     color = new float[gridSize * 4]();
 
     const float r = 5.f * simData->real_res;
@@ -55,6 +60,11 @@ cpuFlu2D::~cpuFlu2D() {
     delete[] dens_prev;
     delete[] dens_perm;
     delete[] pressure;
+    delete[] omega;
+    delete[] gradu;
+    delete[] gradv;
+    delete[] cfu;
+    delete[] cfv;
     delete[] color;
 }
 
@@ -210,6 +220,7 @@ void cpuFlu2D::velocity_step(const float dt) {
     set_vel_bound();
     project (u_prev, v_prev);
     set_vel_bound();
+    //confine(simData->epsilon);
 }
 
 void cpuFlu2D::set_vel_bound() const {
@@ -241,67 +252,71 @@ void cpuFlu2D::add(const int x, const int y, float* t, const float intensity) co
     t[x + y * width] += intensity;
 }
 
-void cpuFlu2D::input_step(const float dt) {
-    if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
-        const int i = static_cast<int>(mouse_x) / simData->cell_size;
-        const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
+ void cpuFlu2D::mouse_input(float dt) {
+     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
+         const int i = static_cast<int>(mouse_x) / simData->cell_size;
+         const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
 
-        if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
-            if(left_mouse_pressed ) {
-                int r_int = 0;
-                float r_float = 0.f;
-                if(simData->smoke) r_int = (int)(simData->smoke_radius);
-                if(simData->obstacles) r_int = (int)(simData->obstacles_radius);
-                if(simData->velocity) r_int = (int)(simData->vel_radius);
-                if(simData->smoke) r_float = simData->smoke_radius;
-                if(simData->obstacles) r_float = simData->obstacles_radius;
-                if(simData->velocity) r_float = simData->vel_radius;
+         if (i >= 1 && i < width - 1 && j >= 1 && j < height - 1) {
+             if(left_mouse_pressed ) {
+                 int r_int = 0;
+                 float r_float = 0.f;
+                 if(simData->smoke) r_int = (int)(simData->smoke_radius);
+                 if(simData->obstacles) r_int = (int)(simData->obstacles_radius);
+                 if(simData->velocity) r_int = (int)(simData->vel_radius);
+                 if(simData->smoke) r_float = simData->smoke_radius;
+                 if(simData->obstacles) r_float = simData->obstacles_radius;
+                 if(simData->velocity) r_float = simData->vel_radius;
 
-                for(int x = -r_int; x <= r_int; x++) {
-                    for(int y = -r_int; y <= r_int; y++) {
-                        if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
-                            if (std::sqrt(static_cast<float>(x * x + y * y)) < r_float) {
-                                if(simData->smoke) {
-                                    if(simData->smoke_add) {
-                                        add(i + x, j + y, dens,simData->smoke_intensity);
-                                    }
-                                    if(simData->smoke_perm) {
-                                        add(i + x, j + y, dens_perm, simData->smoke_intensity);
-                                    }
-                                    if(simData->smoke_remove) {
-                                        //TODO: make remove smoke
-                                    }
-                                }
-                                if(simData->obstacles) {
-                                   //TODO: make obstacles
-                                }
-                                if(simData->velocity) {
-                                    if(simData->vel_add) {
-                                        add(i + x, j + y, u, (mouse_x - force_x) * dt * 1 / (float)(simData->real_res));
-                                        add(i + x, j + y, v,-(mouse_y - force_y) * dt * 1 / (float)(simData->real_res));
-                                    }
-                                    if(simData->vel_perm) {
-                                        add(i + x, j + y, v_perm, simData->vel_intensity[0]);
-                                        add(i + x, j + y, v_perm, simData->vel_intensity[1]);
-                                    }
-                                    if(simData->vel_remove) {
-                                        // TODO: make vel remove
-                                    }
+                 for(int x = -r_int; x <= r_int; x++) {
+                     for(int y = -r_int; y <= r_int; y++) {
+                         if (i + x >= 1 && i + x < width - 1 && j + y >= 1 && j + y < height - 1) {
+                             if (std::sqrt(static_cast<float>(x * x + y * y)) < r_float) {
+                                 if(simData->smoke) {
+                                     if(simData->smoke_add) {
+                                         add(i + x, j + y, dens,simData->smoke_intensity);
+                                     }
+                                     if(simData->smoke_perm) {
+                                         add(i + x, j + y, dens_perm, simData->smoke_intensity);
+                                     }
+                                     if(simData->smoke_remove) {
+                                         //TODO: make remove smoke
+                                     }
+                                 }
+                                 if(simData->obstacles) {
+                                     //TODO: make obstacles
+                                 }
+                                 if(simData->velocity) {
+                                     if(simData->vel_add) {
+                                         add(i + x, j + y, u, (mouse_x - force_x) * dt * 1 / (float)(simData->real_res));
+                                         add(i + x, j + y, v,-(mouse_y - force_y) * dt * 1 / (float)(simData->real_res));
+                                     }
+                                     if(simData->vel_perm) {
+                                         add(i + x, j + y, v_perm, simData->vel_intensity[0]);
+                                         add(i + x, j + y, v_perm, simData->vel_intensity[1]);
+                                     }
+                                     if(simData->vel_remove) {
+                                         // TODO: make vel remove
+                                     }
 
-                                }
-                            }
-                        }
-                    }
-                }
-                force_x = mouse_x;
-                force_y = mouse_y;
-            }
-        }
-    }
-    add_source(dens, dens_perm, dt);
-    add_source(u, u_permanent, dt);
-    add_source(v, v_perm, dt);
-}
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 force_x = mouse_x;
+                 force_y = mouse_y;
+             }
+         }
+     }
+     add_source(dens, dens_perm, dt);
+     add_source(u, u_permanent, dt);
+     add_source(v, v_perm, dt);
+ }
+
+ void cpuFlu2D::sound_input(float dt) {
+
+ }
 
 static void xy2hsv2rgb(const float x, const float y, float &r, float &g, float &b, const float r_max) {
     const float h = std::atan2(y, x) * 180 / static_cast<float>(3.14159265358979323846) + 180;
@@ -409,4 +424,68 @@ float cpuFlu2D::find_min(const float* x) const {
     }
     return min;
 }
+
+ void cpuFlu2D::compute_vorticity() {
+     for(int j = 1; j < height - 1; ++j) {
+         const int jw = j * width;
+         const int j0w = (j - 1) * width;
+         const int j1w = (j + 1) * width;
+
+         for(int i = 1; i < width - 1; ++i) {
+             float du_dy = (u[i + 1 + jw] - u[i - 1 + jw]) / (2.0f * simData->h);
+             float dv_dx = (v[i + j1w] - v[i + j0w]) / (2.0f * simData->h);
+             omega[i + jw] = dv_dx - du_dy;
+         }
+     }
+ }
+
+ void cpuFlu2D::compute_vorticity_grad() {
+     for(int j = 1; j < height - 1; ++j) {
+         const int jw = j * width;
+         const int j0w = (j - 1) * width;
+         const int j1w = (j + 1) * width;
+         for(int i = 1; i < width - 1; ++i) {
+             //float abs_omega = std::abs(omega[i + jw]);
+             float abs_omega_right = std::abs(omega[i + 1 + jw]);
+             float abs_omega_left = std::abs(omega[i - 1 + jw]);
+             float abs_omega_up = std::abs(omega[i + j1w]);
+             float abs_omega_down = std::abs(omega[i + j0w]);
+
+             gradu[i + jw] = (abs_omega_right - abs_omega_left) / (2.0f * simData->h);
+             gradv[i + jw] = (abs_omega_up - abs_omega_down) / (2.0f * simData->h);
+         }
+     }
+ }
+
+ void cpuFlu2D::compute_confinement_force(float epsilon) {
+    compute_vorticity_grad();
+    for(int j = 1; j < height - 1; ++j) {
+        const int jw = j * width;
+        for(int i = 1; i < width - 1; ++i) {
+            const int index = i + jw;
+            float norm = (float)std::sqrt((float)(gradu[index] * gradu[index] + gradv[index] * gradv[index])) + 1e-5f;
+            float Fx = epsilon * simData->h * std::abs(omega[index]) * (gradu[index] / norm);
+            float Fy = epsilon * simData->h * std::abs(omega[index]) * (gradv[index] / norm);
+            cfu[index] = Fx;
+            cfv[index] = Fy;
+        }
+     }
+ }
+
+ void cpuFlu2D::apply_confinement_force() {
+     for(int j = 1; j < height - 1; ++j) {
+         const int jw = j * width;
+         for(int i = 1; i < width - 1; ++i) {
+             const int index = i + jw;
+             u[index] += cfu[index];
+             v[index] += cfv[index];
+         }
+     }
+ }
+
+ void cpuFlu2D::confine(float epsilon) {
+    compute_vorticity();
+     compute_confinement_force(epsilon);
+     apply_confinement_force();
+ }
 

@@ -6,12 +6,12 @@
 #define GLFLUID2DOPTI_H
 
 
-#include "Flu2D.h"
+#include "Fluid2D.h"
 
 
 // Trying to optimize OpenGL simulation by using only one compute shader.
 // /!\ not working for now.
-class GLoFlu2D : public Flu2D {
+class GLoFlu2D : public Fluid2D {
     // arrays
     float* grid;
     // compute programs
@@ -54,10 +54,12 @@ class GLoFlu2D : public Flu2D {
     void advect(int x_tex, int x0_tex, float dt) const;
     void project() const;
     void set_bounds_vel() const;
+
+    void mouse_input(float dt) override;
+    void sound_input(float dt) override;
 public:
     GLoFlu2D(GLFWwindow* window, SimData* simData);
     ~GLoFlu2D() override;
-    void input_step(float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

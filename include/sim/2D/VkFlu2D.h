@@ -5,7 +5,7 @@
 #ifndef FLUIDSIM_VKFLU2D_H
 #define FLUIDSIM_VKFLU2D_H
 
-#include "Flu2D.h"
+#include "Fluid2D.h"
 
 
 class VkFlu2D  {

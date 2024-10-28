@@ -1,4 +1,7 @@
 #version 460 core
+#define D_VELOCITY      0
+#define D_DENSITY       1
+#define D_PRESSURE      2
 
 layout (local_size_x = 8, local_size_y = 8) in;
 
@@ -38,18 +41,16 @@ void main(){
     float x =  imageLoad(u, ij).x;
     float y =  imageLoad(v, ij).x;
     vec3 rgb = vec3(1.0);
-    if(draw_mode == 0) {
+    if(draw_mode == D_VELOCITY) {
         rgb = xy2hsv2rgb(x, y, 0.5);
 
     }
-    /*
-    if(draw_mode == 1) {
+    if(draw_mode == D_DENSITY) {
         float d = imageLoad(color, ij).r;
         float delta_d = 1.0 - 0.0;
         d = (d + delta_d - 1.0) / delta_d;
-        r = d; g = d; b = d;
+        rgb = vec3(d);
     }
-    */
     /*
     if (draw_mode == 2) {
         float p = imageLoad(color, ij).r;

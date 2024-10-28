@@ -15,4 +15,5 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "../thirdparty/miniaudio.h"
 #endif //LIBRARIES_H

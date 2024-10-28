@@ -5,9 +5,9 @@
 #ifndef GLFLUID2D_H
 #define GLFLUID2D_H
 
-#include "Flu2D.h"
+#include "Fluid2D.h"
 
-class GLFlu2D final : public Flu2D {
+class GLFlu2D final : public Fluid2D {
    // arrays
     float* grid;
     // compute programs
@@ -33,6 +33,10 @@ class GLFlu2D final : public Flu2D {
     GLuint v_prev_tex;
     GLuint color_tex;
 
+    // input methods
+    void mouse_input(float dt) override;
+    void sound_input(float dt) override;
+
     // private methods
     void add_source(GLuint x, GLuint s, float dt);
     static void swap(GLuint &x, GLuint &y) noexcept;
@@ -41,6 +45,7 @@ class GLFlu2D final : public Flu2D {
     void project();
     void set_vel_bound();
     void add_input(int i, int j, float r, float intensity, GLuint tex, float dt);
+
     // utils
     void bind_and_run(const std::vector<GLuint> &textures, int how_many_times);
     static void bind(const std::vector<GLuint> & textures);
@@ -50,7 +55,6 @@ public:
     // public and override methods
     GLFlu2D(GLFWwindow* window, SimData* simData);
     ~GLFlu2D() override;
-    void input_step( float dt) override;
     void density_step(float dt) override;
     void velocity_step(float dt) override;
     void pressure_step(float dt) override;

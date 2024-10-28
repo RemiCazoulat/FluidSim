@@ -11,10 +11,13 @@ class Fluid {
 protected:
     GLFWwindow* window;
     SimData* simData;
+    virtual void mouse_input(float dt) = 0;
+    virtual void sound_input(float dt) = 0;
+
 public:
     explicit Fluid(GLFWwindow* window, SimData* simData);
     virtual ~Fluid() = default;
-    virtual void input_step(float dt) = 0;
+    void input_step(float dt);
     virtual void density_step(float dt) = 0;
     virtual void velocity_step(float dt) = 0;
     virtual void pressure_step(float dt) = 0;

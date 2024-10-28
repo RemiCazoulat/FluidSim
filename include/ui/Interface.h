@@ -34,6 +34,9 @@ class Interface {
     bool is_init = false;
     // min and max variables
     int max_res = 4;
+
+    void runMouseInputWindow();
+    void runSoundInputWindow();
 public:
     explicit Interface(GLFWwindow* window, SimData* simData);
     ~Interface();

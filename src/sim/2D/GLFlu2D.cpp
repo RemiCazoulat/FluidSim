@@ -6,7 +6,7 @@
 #include "../../../include/shaders/compute.h"
 
 GLFlu2D::GLFlu2D(GLFWwindow* window, SimData* simData)
-        : Flu2D(window, simData)
+        : Fluid2D(window, simData)
 {
     // init arrays
     int grid_size = width * height;
@@ -14,18 +14,18 @@ GLFlu2D::GLFlu2D(GLFWwindow* window, SimData* simData)
     const auto* empty = new float[grid_size]();
     const auto* emptyVec4 = new float[grid_size * 4]();
     // setting initial bounds and obstacles
-    constexpr float r = 10.f;
-    const int circle_x = width / 2;
-    const int circle_y = height / 2;
+    //constexpr float r = 10.f;
+    //const int circle_x = width / 2;
+    //const int circle_y = height / 2;
     for (int j = 0; j < height; j ++) {
         const int jw = j * width;
         for(int i = 0; i < width; i ++) {
             const int index = i + jw;
             if (i == 0 || j == 0 || i == width - 1 || j == height - 1) grid[index] = 0.0;
             else grid[index] = 1.0;
-            const int dist_x = circle_x - i;
-            const int dist_y = circle_y - j;
-            if(std::sqrt(dist_x * dist_x + dist_y * dist_y) < r) grid[index] = 0.0;
+            //const int dist_x = circle_x - i;
+            //const int dist_y = circle_y - j;
+            //if(std::sqrt(dist_x * dist_x + dist_y * dist_y) < r) grid[index] = 0.0;
         }
     }
     // ---------- { Init Textures }----------
@@ -136,7 +136,9 @@ void GLFlu2D::set_vel_bound() {
 }
 
 void GLFlu2D::density_step(float dt) {
-    //TODO: add_input density step
+    add_source(dens_tex, dens_prev_tex, dt);
+    swap(dens_tex, dens_prev_tex); diffuse (dens_tex, dens_prev_tex,  simData->diffusion, dt);
+    swap(dens_tex, dens_prev_tex); advect (dens_tex, dens_prev_tex, dt);
 }
 
 void GLFlu2D::velocity_step(const float dt) {
@@ -149,8 +151,8 @@ void GLFlu2D::velocity_step(const float dt) {
     set_vel_bound();
     swap(u_prev_tex, u_tex);
     swap(v_prev_tex, v_tex);
-    advect (u_tex, u_prev_tex, dt);
-    advect (v_tex, v_prev_tex, dt);
+    advect(u_tex, u_prev_tex, dt);
+    advect(v_tex, v_prev_tex, dt);
     set_vel_bound();
     project ();
     set_vel_bound();
@@ -170,6 +172,8 @@ GLuint GLFlu2D::draw_step(const DRAW_MODE mode) {
     return color_tex;
 }
 
+
+
 void GLFlu2D::add_input(const int i, const int j, const float r, const float intensity, const GLuint tex, const float dt) {
     glUseProgram(inputProgram);
     glUniform1i(glGetUniformLocation(inputProgram, "i"), i);
@@ -180,7 +184,7 @@ void GLFlu2D::add_input(const int i, const int j, const float r, const float int
     bind_and_run({tex, grid_tex}, 1);
 }
 
-void GLFlu2D::input_step(const float dt) {
+void GLFlu2D::mouse_input(float dt) {
     if (left_mouse_pressed || right_mouse_pressed || middle_mouse_pressed) {
         const int i = static_cast<int>(mouse_x) / simData->cell_size;
         const int j = static_cast<int>((static_cast<float>(simData->cell_size * height) - mouse_y)) / simData->cell_size;
@@ -194,28 +198,41 @@ void GLFlu2D::input_step(const float dt) {
                         add_input(i, j, simData->smoke_radius, simData->smoke_intensity, dens_perm_tex, dt);
                     }
                     if(simData->smoke_remove) {
-                        //TODO: make smoke_remove
+                        add_input(i, j, simData->smoke_radius, 0, dens_perm_tex, 0);
                     }
                 }
                 if(simData->velocity) {
                     if(simData->vel_add) {
-                        add_input(i, j,simData->vel_radius, (mouse_x - force_x), u_tex, dt);
+                        add_input(i, j,simData->vel_radius,(mouse_x - force_x), u_tex, dt);
                         add_input(i, j,simData->vel_radius,-(mouse_y - force_y), v_tex, dt);
                     }
                     if(simData->vel_perm) {
-                        add_input(i, j,simData->vel_radius, simData->vel_intensity[0], u_tex, dt);
-                        add_input(i, j,simData->vel_radius,simData->vel_intensity[1], v_tex, dt);
+                        add_input(i, j,simData->vel_radius,simData->vel_intensity[0], u_perm_tex, dt);
+                        add_input(i, j,simData->vel_radius,simData->vel_intensity[1], v_perm_tex, dt);
                     }
                     if(simData->vel_remove) {
-                        //TODO: make vel_remove
+                        add_input(i, j,simData->vel_radius,0, u_tex, 0);
+                        add_input(i, j,simData->vel_radius,0, v_tex, 0);
+                        add_input(i, j,simData->vel_radius,0, u_perm_tex, 0);
+                        add_input(i, j,simData->vel_radius,0, v_perm_tex, 0);
                     }
                 }
                 if(simData->obstacles) {
                     if(simData->obstacles_add) {
-                        //TODO: make obstacles_add
+                        add_input(i, j,simData->obstacles_radius,0.0, u_tex, 0.0);
+                        add_input(i, j,simData->obstacles_radius,0.0, v_tex, 0.0);
+                        add_input(i, j,simData->obstacles_radius,0.0, dens_tex, 0.0);
+                        add_input(i, j,simData->obstacles_radius,0.0, u_prev_tex, 0.0);
+                        add_input(i, j,simData->obstacles_radius,0.0, v_prev_tex, 0.0);
+                        add_input(i, j,simData->obstacles_radius,0.0, dens_prev_tex, 0.0);
+                        add_input(i, j,simData->vel_radius,0, u_perm_tex, 0);
+                        add_input(i, j,simData->vel_radius,0, v_perm_tex, 0);
+                        add_input(i, j,simData->obstacles_radius,0.0, grid_tex, 0.0);
+
+
                     }
                     if(simData->obstacles_remove) {
-                        //TODO: make obstacles_remove
+                        add_input(i, j,simData->obstacles_radius,1.0, grid_tex, 0.0);
                     }
                 }
             }
@@ -226,6 +243,10 @@ void GLFlu2D::input_step(const float dt) {
     add_source(dens_tex, dens_perm_tex, dt);
     add_source(u_tex, u_perm_tex, dt);
     add_source(v_tex, v_perm_tex, dt);
+}
+
+void GLFlu2D::sound_input(float dt) {
+
 }
 
 void GLFlu2D::bind_and_run(const std::vector<GLuint> &textures, const int how_many_time) {

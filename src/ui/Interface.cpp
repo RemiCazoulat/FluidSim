@@ -5,7 +5,6 @@
 #include "../../include/ui/Interface.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../thirdparty/stb_image.h"
-#include "FluidSim/include/sim/2D/cpuFlu2D.h"
 
 GLuint image2Tex(const char* filename) {
     int width, height, channels;
@@ -55,17 +54,8 @@ void Interface::initFrame() {
     is_init = true;
 }
 
-void Interface::runInputWindow() {
-    if (!is_init) {
-        printf("[ERROR] Frame is not initialized. Call method initFrame() "
-               "before calling other methods of the Interface class. \n");
-        return;
-    }
-    ImGui::SetNextWindowPos(left_up_pos, ImGuiCond_Always, left_up_pivot);
-    ImGui::SetNextWindowSize(ImVec2(0, 0));
-    ImGui::Begin("Input");
-    ImGui::SetWindowFontScale(zoom);
-    ImGui::Text("Input Mode : ");
+void Interface::runMouseInputWindow() {
+    ImGui::Text("Mouse mode : ");
     if (ImGui::Button("Smoke")) {
         simData->smoke = true;
         simData->obstacles = false;
@@ -157,6 +147,39 @@ void Interface::runInputWindow() {
     simData->vel_intensity[0] = x;
     simData->vel_intensity[1] = y;
     simData->vel_intensity[2] = z;
+}
+
+void Interface::runSoundInputWindow() {
+
+}
+
+
+void Interface::runInputWindow() {
+    if (!is_init) {
+        printf("[ERROR] Frame is not initialized. Call method initFrame() "
+               "before calling other methods of the Interface class. \n");
+        return;
+    }
+    ImGui::SetNextWindowPos(left_up_pos, ImGuiCond_Always, left_up_pivot);
+    ImGui::SetNextWindowSize(ImVec2(0, 0));
+    ImGui::Begin("Input");
+    ImGui::SetWindowFontScale(zoom);
+    ImGui::Text("Input mode : ");
+    ImGui::SameLine();
+    if(ImGui::Button("Mouse")){
+        simData->input_mode = MOUSE;
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Sound")){
+        simData->input_mode = SOUND;
+    }
+    if(simData->input_mode == MOUSE) {
+        runMouseInputWindow();
+    }
+    else {
+        runSoundInputWindow();
+    }
+
     input_size = ImGui::GetWindowSize();
     ImGui::End();
 }
@@ -284,12 +307,15 @@ void Interface::runSimulationWindow() {
     ImGui::Text("Sub steps selected : %d", simData->sub_step);
 
     ImGui::Separator();
-    ImGui::Text("Drawing info");
+    ImGui::Text("Drawing mode");
     if(ImGui::Button("Velocity")) {
+        simData->draw_mode = VELOCITY;
     }; ImGui::SameLine();
     if(ImGui::Button("Density")) {
+        simData->draw_mode = DENSITY;
     }; ImGui::SameLine();
     if(ImGui::Button("Pressure")) {
+        simData->draw_mode = PRESSURE;
     }
     ImGui::End();
 }
@@ -400,4 +426,5 @@ Interface::~Interface() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
+
 

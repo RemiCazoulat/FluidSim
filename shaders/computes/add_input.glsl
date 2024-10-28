@@ -16,7 +16,11 @@ void main(){
     float s = imageLoad(grid, coord).x;
     if(s == 0.0) return;
     if(sqrt(pow(coord.x - i, 2) + pow(coord.y - j, 2)) < r ) {
-        float tex_val =  imageLoad(tex, coord).x;
-        imageStore(tex, coord, vec4(tex_val + intensity * dt, 0.0, 0.0, 0.0));
+        float new_val = intensity;
+        if(dt > 0.0) {
+            float tex_val =  imageLoad(tex, coord).x;
+            float new_val = tex_val + intensity * dt;
+        }
+        imageStore(tex, coord, vec4(new_val, 0.0, 0.0, 0.0));
     }
 }
