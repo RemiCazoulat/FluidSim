@@ -2,25 +2,33 @@ cmake_minimum_required(VERSION 3.28)
 project(FluidSim)
 
 set(CMAKE_CXX_STANDARD 17)
-# opengl
+
+# ---- OpenGL ----
 find_package(OpenGL REQUIRED)
-# glfw
+
+# ---- GLFW ----
 add_subdirectory(thirdparty/glfw)
-# glm
+
+# ---- GLM ----
 add_subdirectory(thirdparty/glm)
-# glad
+
+# ---- GLAD ----
 add_library(glad "thirdparty/glad/src/glad.c")
 target_include_directories(glad PUBLIC thirdparty/glad/include)
-# Dear ImGui
+
+# ---- Dear ImGui ----
 set(IMGUI_DIR thirdparty/imgui)
 include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
+
+# ---- kissfft ----
+add_subdirectory(thirdparty/kissfft)
 
 add_executable(
         ${PROJECT_NAME}
         # ----{ Simulation }----
         # mandatory files
-        include/libraries.h # libraries
         src/main.cpp # main
+        include/libraries.h # libraries
         include/shaders/shader.h # shader
         src/shaders/shader.cpp
         include/shaders/compute.h # compute shader
@@ -33,6 +41,8 @@ add_executable(
         src/SimData.cpp
         include/ui/Interface.h # Interface
         src/ui/Interface.cpp
+        include/SoundConvertor.h # Sound Convertor
+        src/SoundConvertor.cpp
         # 2D files
         include/sim/2D/Fluid2D.h # abstract Fluid2D class
         src/sim/2D/Fluid2D.cpp
@@ -53,17 +63,17 @@ add_executable(
         ${IMGUI_DIR}/imgui_demo.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/imgui_widgets.cpp
-        include/SoundConvertor.cpp
-        include/SoundConvertor.h
-
-
 )
 
+# ---- linking libraries ----
 target_link_libraries(
-        FluidSim
+        ${PROJECT_NAME}
         glfw
         glm::glm
         glad
         OpenGL::GL
+        kissfft
 )
 
+# ---- Including directories ----
+target_include_directories(${PROJECT_NAME} PRIVATE thirdparty/kissfft)
