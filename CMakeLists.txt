@@ -53,7 +53,6 @@ add_executable(
         src/sim/2D/GLoFlu2D.cpp # Optimized GL Fluid 2D (not working for now)
         include/sim/2D/GLoFlu2D.h
         # ----{ thirdparty }----
-        thirdparty/miniaudio.h
         thirdparty/stb_image.h
         # Dear ImGui
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp

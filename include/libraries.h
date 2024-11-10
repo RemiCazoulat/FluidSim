@@ -14,6 +14,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "../thirdparty/miniaudio.h"
 #include "kiss_fft.h"
+#include "../thirdparty/miniaudio.h"
 
